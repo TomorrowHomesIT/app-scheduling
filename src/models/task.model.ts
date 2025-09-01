@@ -1,9 +1,10 @@
-export interface Task {
+export interface ITask {
   id: number;
   name: string;
   supplierId: number;
   costCenterId: string;
-  progress: TaskProgress;
+  progress: ETaskProgress;
+  status: ETaskStatus;
   stageId: number;
 
   notes: string;
@@ -13,12 +14,7 @@ export interface Task {
   order: number;
 }
 
-export interface Supplier {
-  id: number;
-  name: string;
-}
-
-export enum TaskProgress {
+export enum ETaskProgress {
   ToCall = 1,
   Called = 2,
   Confirmed = 3,
@@ -27,13 +23,14 @@ export enum TaskProgress {
   NotRequired = 6,
 }
 
-export enum TaskStatus {
+export enum ETaskStatus {
+  None = 0,
   Scheduled = 1,
   ReScheduled = 2,
   Cancelled = 3,
 }
 
-export interface TaskStage {
+export interface ITaskStage {
   id: number;
   name: string;
   order: number;

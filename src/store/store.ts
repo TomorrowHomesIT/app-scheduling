@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import type { IFolder } from '@/models/folder.model';
 import type { IJob } from '@/models/job.model';
-import { folders as mockFolders, jobs as mockJobs } from './mock-data';
+import { folders as mockFolders, jobs as mockJobs } from '../lib/mock-data';
 
 interface AppStore {
   folders: IFolder[];

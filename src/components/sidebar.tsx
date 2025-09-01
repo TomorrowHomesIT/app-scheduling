@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import useAppStore from "@/lib/store";
+import useAppStore from "@/store/store";
 
 export function Sidebar() {
   const pathname = usePathname();

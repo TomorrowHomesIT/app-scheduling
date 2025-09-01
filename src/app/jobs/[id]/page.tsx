@@ -9,7 +9,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Button } from "@/components/ui/button";
 import { TaskTable } from "@/app/jobs/[id]/task-table";
 import { ChevronLeft } from "lucide-react";
-import useAppStore from "@/lib/store";
+import useAppStore from "@/store/store";
 
 interface JobDetailPageProps {
   params: Promise<{ id: string }>;

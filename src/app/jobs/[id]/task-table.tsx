@@ -46,9 +46,9 @@ const getProgressBadge = (progress: ETaskProgress) => {
 const getProgressColor = (progress: ETaskProgress) => {
   const colors = {
     [ETaskProgress.ToCall]: "bg-gray-500",
-    [ETaskProgress.Called]: "bg-yellow-500",
-    [ETaskProgress.Confirmed]: "bg-blue-500",
-    [ETaskProgress.Started]: "bg-purple-500",
+    [ETaskProgress.Called]: "bg-blue-500",
+    [ETaskProgress.Confirmed]: "bg-purple-500",
+    [ETaskProgress.Started]: "bg-pink-500",
     [ETaskProgress.Completed]: "bg-green-500",
     [ETaskProgress.NotRequired]: "bg-gray-400",
   };

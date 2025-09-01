@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronDown, ChevronRight, Search, Plus, Folder, ListChecks } from "lucide-react";
@@ -8,29 +8,31 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import type { IFolder } from "@/models/folder.model";
+import useAppStore from "@/lib/store";
 
-interface SidebarProps {
-  folders: IFolder[];
-}
-
-export function Sidebar({ folders }: SidebarProps) {
+export function Sidebar() {
   const pathname = usePathname();
-  const [expandedFolders, setExpandedFolders] = useState<Set<number>>(() => {
-    // Auto-expand folder if we're on a job page
-    const jobMatch = pathname.match(/\/jobs\/(\d+)/);
-    if (jobMatch) {
-      const jobId = parseInt(jobMatch[1], 10);
+  const { folders, currentJob, loadFolders } = useAppStore();
+  const [expandedFolders, setExpandedFolders] = useState<Set<number>>(new Set());
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Load folders on mount
+  useEffect(() => {
+    loadFolders();
+  }, [loadFolders]);
+
+  // Auto-expand folder when current job changes
+  useEffect(() => {
+    if (currentJob) {
       // Find which folder contains this job
       for (const folder of folders) {
-        if (folder.jobs?.some((job) => job.jobId === jobId)) {
-          return new Set([folder.id]);
+        if (folder.jobs?.some((job) => job.jobId === currentJob.id)) {
+          setExpandedFolders((prev) => new Set(prev).add(folder.id));
+          break;
         }
       }
     }
-    return new Set();
-  });
-  const [searchQuery, setSearchQuery] = useState("");
+  }, [currentJob, folders]);
 
   const toggleFolder = (folderId: number) => {
     const newExpanded = new Set(expandedFolders);
@@ -58,7 +60,7 @@ export function Sidebar({ folders }: SidebarProps) {
       }
       return null;
     })
-    .filter(Boolean) as IFolder[];
+    .filter((folder): folder is NonNullable<typeof folder> => folder !== null);
 
   return (
     <div className="flex h-full w-64 flex-col border-r bg-background">

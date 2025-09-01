@@ -1,14 +1,15 @@
 "use client";
 
-import { use, useEffect } from "react";
+import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { jobs, taskStages, suppliers } from "@/lib/mock-data";
+import { taskStages, suppliers } from "@/lib/mock-data";
 import { ETaskProgress } from "@/models/task.model";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { TaskTable } from "@/app/jobs/[id]/task-table";
 import { ChevronLeft } from "lucide-react";
+import useAppStore from "@/lib/store";
 
 interface JobDetailPageProps {
   params: Promise<{ id: string }>;
@@ -16,25 +17,36 @@ interface JobDetailPageProps {
 
 export default function JobDetailPage({ params }: JobDetailPageProps) {
   const { id } = use(params);
-  const jobId = parseInt(id, 10);
-  const job = jobs.find((j) => j.id === jobId);
+  const { currentJob, loadJob } = useAppStore();
+  const [error, setError] = useState<boolean>(false);
+  
+  // Load job on mount
+  useEffect(() => {
+    try {
+      loadJob(parseInt(id, 10));
+    } catch (error) {
+      setError(true);
+      console.error(error);
+    }
 
-  if (!job) {
-    notFound();
+    if (currentJob) document.title = currentJob.name
+  }, [id, loadJob, currentJob]);
+
+  if (error) {
+    return notFound();
   }
 
-  // Set browser title to job name
-  useEffect(() => {
-    document.title = job.name;
-  }, [job.name]);
+  if (!currentJob || currentJob.id !== Number(id)) {
+    return <div className="flex items-center justify-center h-full">Loading...</div>;
+  }
 
   const tasksByStage = taskStages.map((stage) => ({
     ...stage,
-    tasks: job.tasks.filter((task) => task.stageId === stage.id),
+    tasks: currentJob.tasks.filter((task) => task.stageId === stage.id),
   }));
 
-  const totalTasks = job.tasks.length;
-  const completedTasks = job.tasks.filter((task) => task.progress === ETaskProgress.Completed).length;
+  const totalTasks = currentJob.tasks.length;
+  const completedTasks = currentJob.tasks.filter((task) => task.progress === ETaskProgress.Completed).length;
 
   return (
     <div className="flex flex-col h-full">
@@ -47,7 +59,7 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
               </Button>
             </Link>
             <div>
-              <h1 className="text-2xl font-semibold">{job.name}</h1>
+              <h1 className="text-2xl font-semibold">{currentJob.name}</h1>
               <p className="text-sm text-muted-foreground">
                 {completedTasks} of {totalTasks} tasks completed
               </p>

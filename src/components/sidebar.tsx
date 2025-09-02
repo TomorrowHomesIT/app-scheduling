@@ -8,11 +8,13 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import useAppStore from "@/store/store";
+import useJobStore from "@/store/job-store";
+import useOwnersStore from "@/store/owners-store";
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { owners, currentJob, loadOwners } = useAppStore();
+  const { currentJob } = useJobStore();
+  const { owners, loadOwners } = useOwnersStore();
   const [expandedOwners, setExpandedOwners] = useState<Set<number>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
 

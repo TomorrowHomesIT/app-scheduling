@@ -9,7 +9,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Button } from "@/components/ui/button";
 import { TaskTable } from "@/app/jobs/[id]/task-table";
 import { ChevronLeft } from "lucide-react";
-import useAppStore from "@/store/store";
+import useJobStore from "@/store/job-store";
 import useSupplierStore from "@/store/supplier-store";
 
 interface JobDetailPageProps {
@@ -18,7 +18,7 @@ interface JobDetailPageProps {
 
 export default function JobDetailPage({ params }: JobDetailPageProps) {
   const { id } = use(params);
-  const { currentJob, loadJob } = useAppStore();
+  const { currentJob, loadJob } = useJobStore();
   const { loadSuppliers } = useSupplierStore();
 
   // Load suppliers when component mounts

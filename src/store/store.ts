@@ -1,15 +1,15 @@
 import { create } from "zustand";
-import type { IFolder } from "@/models/folder.model";
+import type { IOwner } from "@/models/owner.model";
 import type { IJob } from "@/models/job.model";
 import type { ITask } from "@/models/task.model";
-import { folders as mockFolders, jobs as mockJobs } from "../lib/mock-data";
+import { owners as mockOwners, jobs as mockJobs } from "../lib/mock-data";
 
 interface AppStore {
-  folders: IFolder[];
+  owners: IOwner[];
   jobs: IJob[];
   currentJob: IJob | null;
 
-  loadFolders: () => Promise<void>;
+  loadOwners: () => Promise<void>;
   loadJob: (id: number) => Promise<void>;
   setCurrentJob: (job: IJob | null) => void;
   updateTask: (taskId: number, updates: Partial<ITask>) => Promise<void>;
@@ -19,9 +19,9 @@ interface AppStore {
 const simulateApiDelay = () => new Promise((resolve) => setTimeout(resolve, 300));
 
 // Mock API functions
-const fetchFoldersFromApi = async (): Promise<IFolder[]> => {
+const fetchOwnersFromApi = async (): Promise<IOwner[]> => {
   await simulateApiDelay();
-  return mockFolders;
+  return mockOwners;
 };
 
 const fetchJobByIdFromApi = async (id: number): Promise<IJob | null> => {
@@ -45,13 +45,13 @@ const updateTaskApi = async (taskId: number, updates: Partial<ITask>): Promise<I
 };
 
 const useAppStore = create<AppStore>((set, get) => ({
-  folders: [],
+  owners: [],
   jobs: [],
   currentJob: null,
 
-  loadFolders: async () => {
-    const folders = await fetchFoldersFromApi();
-    set({ folders });
+  loadOwners: async () => {
+    const owners = await fetchOwnersFromApi();
+    set({ owners });
   },
 
   loadJob: async (id: number) => {

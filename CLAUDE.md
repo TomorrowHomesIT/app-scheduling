@@ -1,7 +1,7 @@
 # App Scheduling - Project Documentation
 
 ## Overview
-A Next.js-based scheduling application for managing construction jobs, tasks, and suppliers with a hierarchical folder structure.
+A Next.js-based scheduling application for managing construction jobs, tasks, and suppliers with a hierarchical owner structure.
 
 ## Tech Stack
 - **Framework**: Next.js 15 (App Router)
@@ -15,7 +15,7 @@ A Next.js-based scheduling application for managing construction jobs, tasks, an
 src/
 ├── app/
 │   ├── models/         # TypeScript interfaces and enums
-│   │   ├── folder.model.ts
+│   │   ├── owner.model.ts
 │   │   ├── job.model.ts
 │   │   ├── supplier.model.ts
 │   │   └── task.model.ts
@@ -30,7 +30,7 @@ src/
 │   │   ├── badge.tsx
 │   │   ├── button.tsx
 │   │   └── ...
-│   ├── sidebar.tsx     # Navigation sidebar with folders/jobs
+│   ├── sidebar.tsx     # Navigation sidebar with owners/jobs
 │   └── dashboard-layout.tsx
 └── lib/
     ├── mock-data.ts    # Mock data for development
@@ -41,10 +41,10 @@ src/
 ## Key Features
 
 ### 1. Hierarchical Navigation
-- Folders contain multiple jobs
+- Owners contain multiple jobs
 - Jobs contain tasks organized by stages
-- Sidebar with search functionality that filters jobs while maintaining folder structure
-- Auto-expands folder when navigating directly to a job
+- Sidebar with search functionality that filters jobs while maintaining owner structure
+- Auto-expands owner when navigating directly to a job
 
 ### 2. Task Management
 - Tasks grouped by stages (Base Stage, Frame Stage, etc.)
@@ -59,7 +59,7 @@ src/
 ### 3. Visual Indicators
 - Color-coded progress bars for task status
 - Supplier badges with customizable colors
-- Folder and job icons with matching colors
+- Owner and job icons with matching colors
 - PDF badges for document attachments
 
 ## Development Commands
@@ -98,11 +98,11 @@ npm run format
 - `purchaseOrderLinks`: Array of PO document links
 - `planLinks`: Array of plan document links
 
-### IFolder
+### IOwner
 - `id`: Unique identifier
-- `name`: Folder name
+- `name`: Owner name
 - `color`: Optional hex color for visual indicators
-- `jobs`: Array of IFolderJob references
+- `jobs`: Array of IOwnerJob references
 
 ### ISupplier
 - `id`: Unique identifier
@@ -111,9 +111,9 @@ npm run format
 ## Recent Changes
 
 ### Latest Updates
-- Implemented sidebar search that filters jobs while maintaining folder structure
-- Added color props to Folder and Supplier models
-- Added folder/checklist icons with color support in sidebar
+- Implemented sidebar search that filters jobs while maintaining owner structure
+- Added color props to Owner and Supplier models
+- Added owner/checklist icons with color support in sidebar
 - Removed checkboxes from task tables
 - Reorganized table columns: Name, Supplier, Start date, Notes, PO, Plans, Email Template, Progress
 - Added PDF badges for document attachments
@@ -160,7 +160,7 @@ Tested and optimized for modern browsers:
 - Group imports logically: React first, then external libraries, then local imports
 
 ### TypeScript Naming Conventions
-- **Interfaces**: Always prefix with `I` (e.g., `ITask`, `IFolder`, `ISupplier`)
+- **Interfaces**: Always prefix with `I` (e.g., `ITask`, `IOwner`, `ISupplier`)
 - **Enums**: Always prefix with `E` (e.g., `ETaskProgress`, `ETaskStatus`)
 - **Types**: Always prefix with `T` (e.g., `TCustomType`)
 - Use TypeScript interfaces for type safety

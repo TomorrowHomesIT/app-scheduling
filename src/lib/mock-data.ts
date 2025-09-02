@@ -1,4 +1,4 @@
-import type { IFolder } from "@/models/folder.model";
+import type { IOwner } from "@/models/owner.model";
 import type { IJob } from "@/models/job.model";
 import type { ITask, ITaskStage } from "@/models/task.model";
 import type { ISupplier } from "@/models/supplier.model";
@@ -563,24 +563,24 @@ export const jobs: IJob[] = [
   },
 ];
 
-export const folders: IFolder[] = [
+export const owners: IOwner[] = [
   {
     id: 8,
     name: "Juzzle",
     color: "#06b6d4",
     jobs: [
-      { folderId: 8, name: "MAM2137", jobId: 3 },
-      { folderId: 8, name: "WIN1983", jobId: 4 },
-      { folderId: 8, name: "MAM2130", jobId: 5 },
-      { folderId: 8, name: "MAM2003", jobId: 6 },
-      { folderId: 8, name: "MAM2114", jobId: 7 },
-      { folderId: 8, name: "MAM2238", jobId: 8 },
-      { folderId: 8, name: "MAM2115", jobId: 9 },
-      { folderId: 8, name: "MAM2142", jobId: 10 },
-      { folderId: 8, name: "ODE209", jobId: 11 },
-      { folderId: 8, name: "MAM2033", jobId: 12 },
-      { folderId: 8, name: "COB329", jobId: 13 },
-      { folderId: 8, name: "HRT134", jobId: 14 },
+      { ownerId: 8, name: "MAM2137", jobId: 3 },
+      { ownerId: 8, name: "WIN1983", jobId: 4 },
+      { ownerId: 8, name: "MAM2130", jobId: 5 },
+      { ownerId: 8, name: "MAM2003", jobId: 6 },
+      { ownerId: 8, name: "MAM2114", jobId: 7 },
+      { ownerId: 8, name: "MAM2238", jobId: 8 },
+      { ownerId: 8, name: "MAM2115", jobId: 9 },
+      { ownerId: 8, name: "MAM2142", jobId: 10 },
+      { ownerId: 8, name: "ODE209", jobId: 11 },
+      { ownerId: 8, name: "MAM2033", jobId: 12 },
+      { ownerId: 8, name: "COB329", jobId: 13 },
+      { ownerId: 8, name: "HRT134", jobId: 14 },
     ],
   },
 ];

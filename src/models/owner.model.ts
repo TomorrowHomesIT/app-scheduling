@@ -1,13 +1,13 @@
-export interface IFolder {
+export interface IOwner {
   id: number;
   name: string;
   userId?: string;
   color?: string;
-  jobs?: IFolderJob[];
+  jobs?: IOwnerJob[];
 }
 
-export interface IFolderJob {
-  folderId: number;
+export interface IOwnerJob {
+  ownerId: number;
   name: string;
   jobId: number;
 }

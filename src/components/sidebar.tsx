@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown, ChevronRight, Search, Plus, Folder, ListChecks } from "lucide-react";
+import { ChevronDown, ChevronRight, Search, Plus, Owner, ListChecks } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,55 +12,55 @@ import useAppStore from "@/store/store";
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { folders, currentJob, loadFolders } = useAppStore();
-  const [expandedFolders, setExpandedFolders] = useState<Set<number>>(new Set());
+  const { owners, currentJob, loadOwners } = useAppStore();
+  const [expandedOwners, setExpandedOwners] = useState<Set<number>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Load folders on mount
+  // Load owners on mount
   useEffect(() => {
-    loadFolders();
-  }, [loadFolders]);
+    loadOwners();
+  }, [loadOwners]);
 
-  // Auto-expand folder when current job changes
+  // Auto-expand owner when current job changes
   useEffect(() => {
     if (currentJob) {
-      // Find which folder contains this job
-      for (const folder of folders) {
-        if (folder.jobs?.some((job) => job.jobId === currentJob.id)) {
-          setExpandedFolders((prev) => new Set(prev).add(folder.id));
+      // Find which owner contains this job
+      for (const owner of owners) {
+        if (owner.jobs?.some((job) => job.jobId === currentJob.id)) {
+          setExpandedOwners((prev) => new Set(prev).add(owner.id));
           break;
         }
       }
     }
-  }, [currentJob, folders]);
+  }, [currentJob, owners]);
 
-  const toggleFolder = (folderId: number) => {
-    const newExpanded = new Set(expandedFolders);
-    if (newExpanded.has(folderId)) {
-      newExpanded.delete(folderId);
+  const toggleOwner = (ownerId: number) => {
+    const newExpanded = new Set(expandedOwners);
+    if (newExpanded.has(ownerId)) {
+      newExpanded.delete(ownerId);
     } else {
-      newExpanded.add(folderId);
+      newExpanded.add(ownerId);
     }
-    setExpandedFolders(newExpanded);
+    setExpandedOwners(newExpanded);
   };
 
-  const filteredFolders = folders
-    .map((folder) => {
-      if (!searchQuery) return folder;
+  const filteredOwners = owners
+    .map((owner) => {
+      if (!searchQuery) return owner;
 
-      const matchesFolder = folder.name.toLowerCase().includes(searchQuery.toLowerCase());
-      const filteredJobs = folder.jobs?.filter((job) => job.name.toLowerCase().includes(searchQuery.toLowerCase()));
+      const matchesOwner = owner.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const filteredJobs = owner.jobs?.filter((job) => job.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
-      // Show folder if it matches or has matching jobs
-      if (matchesFolder || (filteredJobs && filteredJobs.length > 0)) {
+      // Show owner if it matches or has matching jobs
+      if (matchesOwner || (filteredJobs && filteredJobs.length > 0)) {
         return {
-          ...folder,
-          jobs: searchQuery ? filteredJobs : folder.jobs,
+          ...owner,
+          jobs: searchQuery ? filteredJobs : owner.jobs,
         };
       }
       return null;
     })
-    .filter((folder): folder is NonNullable<typeof folder> => folder !== null);
+    .filter((owner): owner is NonNullable<typeof owner> => owner !== null);
 
   return (
     <div className="flex h-full w-64 flex-col border-r bg-background">
@@ -82,32 +82,32 @@ export function Sidebar() {
 
       <div className="flex-1 px-2 overflow-y-auto">
         <div className="space-y-1 p-2">
-          <div className="text-xs font-semibold text-muted-foreground mb-2">Folders</div>
-          {filteredFolders.map((folder) => (
+          <div className="text-xs font-semibold text-muted-foreground mb-2">Owners</div>
+          {filteredOwners.map((owner) => (
             <Collapsible
-              key={folder.id}
-              open={expandedFolders.has(folder.id)}
-              onOpenChange={() => toggleFolder(folder.id)}
+              key={owner.id}
+              open={expandedOwners.has(owner.id)}
+              onOpenChange={() => toggleOwner(owner.id)}
             >
               <CollapsibleTrigger asChild>
                 <Button variant="ghost" className="w-full justify-start p-2 h-auto font-normal group">
                   <span className="mr-2 relative inline-flex h-4 w-4 items-center justify-center">
-                    {expandedFolders.has(folder.id) ? (
+                    {expandedOwners.has(owner.id) ? (
                       <ChevronDown className="absolute h-4 w-4 opacity-0 transition-opacity group-hover:opacity-100" />
                     ) : (
                       <ChevronRight className="absolute h-4 w-4 opacity-0 transition-opacity group-hover:opacity-100" />
                     )}
-                    <Folder
+                    <Owner
                       className="absolute h-4 w-4 transition-opacity group-hover:opacity-0"
-                      style={{ color: folder.color || "#6b7280" }}
+                      style={{ color: owner.color || "#6b7280" }}
                     />
                   </span>
-                  <span className="flex-1 text-left">{folder.name}</span>
-                  <span className="text-xs text-muted-foreground">{folder.jobs?.length || 0}</span>
+                  <span className="flex-1 text-left">{owner.name}</span>
+                  <span className="text-xs text-muted-foreground">{owner.jobs?.length || 0}</span>
                 </Button>
               </CollapsibleTrigger>
               <CollapsibleContent className="ml-4">
-                {folder.jobs?.map((job) => (
+                {owner.jobs?.map((job) => (
                   <Link
                     key={job.jobId}
                     href={`/jobs/${job.jobId}`}
@@ -116,7 +116,7 @@ export function Sidebar() {
                       pathname === `/jobs/${job.jobId}` && "bg-accent font-bold",
                     )}
                   >
-                    <ListChecks className="h-4 w-4 flex-shrink-0" style={{ color: folder.color || "#6b7280" }} />
+                    <ListChecks className="h-4 w-4 flex-shrink-0" style={{ color: owner.color || "#6b7280" }} />
                     <span className="truncate">{job.name}</span>
                   </Link>
                 ))}

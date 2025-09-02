@@ -1,5 +1,6 @@
 export interface ITask {
   id: number;
+  jobId: number;
   name: string;
   supplierId: number;
   costCenterId: string;

@@ -2,9 +2,10 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Calendar } from "lucide-react";
 import { ETaskProgress, ETaskStatus } from "@/models/task.model";
 import type { ITask, ISupplier } from "@/models";
+import { DatePickerTrigger } from "@/components/modals/date-picker/date-picker-modal";
+import useAppStore from "@/store/store";
 
 interface TaskTableProps {
   tasks: ITask[];
@@ -96,14 +97,16 @@ const getStatusColor = (status: ETaskStatus) => {
   return colors[status];
 };
 
-const formatDate = (date: Date) => {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-  }).format(date);
-};
 
 export function TaskTable({ tasks, suppliers }: TaskTableProps) {
+  const { updateTask } = useAppStore();
+
+  const handleDateChange = async (taskId: number, date: Date | undefined) => {
+    if (date) {
+      await updateTask(taskId, { dueDate: date });
+    }
+  };
+
   return (
     <Table>
       <TableHeader>
@@ -137,11 +140,11 @@ export function TaskTable({ tasks, suppliers }: TaskTableProps) {
                   <span className="text-sm text-muted-foreground">-</span>
                 )}
               </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-1">
-                  <Calendar className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-sm">{formatDate(task.dueDate)}</span>
-                </div>
+              <TableCell className="p-0">
+                <DatePickerTrigger
+                  value={task.dueDate}
+                  onChange={(date) => handleDateChange(task.id, date)}
+                />
               </TableCell>
               <TableCell>
                 <span className="text-sm text-muted-foreground">{task.notes || "-"}</span>

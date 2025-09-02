@@ -153,6 +153,10 @@ Tested and optimized for modern browsers:
 - **IMPORTANT**: Always use named imports from React, never namespace imports
   - ✅ Correct: `import { useState, useEffect } from "react"`
   - ❌ Incorrect: `import * as React from "react"`
+- **React Types**: Always import React types directly as named imports
+  - ✅ Correct: `import { ReactNode, ComponentProps, FC } from "react"`
+  - ❌ Incorrect: `import * as React from "react"` then using `React.ReactNode`
+  - ❌ Incorrect: `React.ComponentProps`, `React.FC`, etc.
 - Use specific imports for better tree-shaking and cleaner code
 - Group imports logically: React first, then external libraries, then local imports
 

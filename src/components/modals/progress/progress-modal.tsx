@@ -48,7 +48,7 @@ export function ProgressModal({ value, onChange, open, onOpenChange }: ProgressM
                 key={progress}
                 variant="outline"
                 className={cn(
-                  "w-full h-12 px-4 cursor-pointer relative",
+                  "w-full h-12 px-4 relative",
                   config.className,
                   "hover:scale-[1.02] transition-transform duration-150",
                 )}

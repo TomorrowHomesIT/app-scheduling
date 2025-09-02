@@ -39,7 +39,7 @@ export function SendEmailModal({ onChange, open, onOpenChange }: SendEmailModalP
                 variant="ghost"
                 onClick={() => handleStatusSelect(status)}
                 className={cn(
-                  "w-full h-12 px-4 cursor-pointer",
+                  "w-full h-12 px-4",
                   config.className,
                   "hover:scale-[1.02] transition-transform duration-150",
                 )}

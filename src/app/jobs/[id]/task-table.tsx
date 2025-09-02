@@ -2,21 +2,23 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useEffect } from "react";
 import type { ETaskProgress, ETaskStatus } from "@/models/task.model";
-import type { ITask, ISupplier } from "@/models";
+import type { ITask } from "@/models";
 import { DatePickerTrigger } from "@/components/modals/date-picker/date-picker-modal";
 import { NotesTrigger } from "@/components/modals/notes/notes-modal";
 import { StatusTrigger } from "@/components/modals/send-email/send-email-modal";
 import { ProgressTrigger } from "@/components/modals/progress/progress-modal";
+import { SupplierTrigger } from "@/components/modals/supplier/supplier-modal";
 import { CTaskProgressConfig } from "@/models/task.const";
 import useAppStore from "@/store/store";
+import useSupplierStore from "@/store/supplier-store";
 
 interface TaskTableProps {
   tasks: ITask[];
-  suppliers: ISupplier[];
 }
 
-export function TaskTable({ tasks, suppliers }: TaskTableProps) {
+export function TaskTable({ tasks }: TaskTableProps) {
   const { updateTask } = useAppStore();
 
   const handleDateChange = async (taskId: number, date: Date | undefined) => {
@@ -42,6 +44,10 @@ export function TaskTable({ tasks, suppliers }: TaskTableProps) {
     await updateTask(taskId, { progress });
   };
 
+  const handleSupplierChange = async (taskId: number, supplierId: number | undefined) => {
+    await updateTask(taskId, { supplierId });
+  };
+
   return (
     <Table>
       <TableHeader>
@@ -59,19 +65,17 @@ export function TaskTable({ tasks, suppliers }: TaskTableProps) {
       </TableHeader>
       <TableBody>
         {tasks.map((task) => {
-          const supplier = suppliers.find((s) => s.id === task.supplierId);
           return (
             <TableRow key={task.id}>
               <TableCell>
                 <div className={`w-1 h-8 rounded ${CTaskProgressConfig[task.progress].progressColor}`} />
               </TableCell>
               <TableCell className="font-medium">{task.name}</TableCell>
-              <TableCell>
-                {supplier ? (
-                  <Badge variant="custom">{supplier.name}</Badge>
-                ) : (
-                  <span className="text-sm text-muted-foreground">-</span>
-                )}
+              <TableCell className="p-0">
+                <SupplierTrigger
+                  value={task.supplierId}
+                  onChange={(supplierId) => handleSupplierChange(task.id, supplierId)}
+                />
               </TableCell>
               <TableCell className="p-0">
                 <DatePickerTrigger value={task.startDate} onChange={(date) => handleDateChange(task.id, date)} />

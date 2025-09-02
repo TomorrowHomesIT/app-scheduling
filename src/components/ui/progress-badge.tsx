@@ -21,7 +21,7 @@ export function ProgressBadge({ progress, onClick, className }: ProgressBadgePro
     return (
       <Button
         variant="ghost"
-        className={cn("h-auto p-0 hover:bg-gray-200 cursor-pointer w-full justify-start", className)}
+        className={cn("h-auto p-0 hover:bg-gray-200 w-full justify-start", className)}
         onClick={onClick}
       >
         <Badge className={config.className}>

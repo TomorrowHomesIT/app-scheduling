@@ -5,8 +5,17 @@ import { jobs } from "@/lib/mock-data";
 import { ETaskProgress } from "@/models/task.model";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import useSupplierStore from "@/store/supplier-store";
+import { useEffect } from "react";
 
 export default function JobsPage() {
+  const { loadSuppliers } = useSupplierStore();
+
+  // Load suppliers when component mounts
+  useEffect(() => {
+    loadSuppliers();
+  }, [loadSuppliers]);
+
   return (
     <div className="flex flex-col h-full">
       <div className="border-b bg-background">

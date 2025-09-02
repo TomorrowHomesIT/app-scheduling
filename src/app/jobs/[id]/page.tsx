@@ -92,7 +92,7 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
-                  <TaskTable tasks={stage.tasks} suppliers={suppliers} />
+                  <TaskTable tasks={stage.tasks} />
                 </AccordionContent>
               </AccordionItem>
             );

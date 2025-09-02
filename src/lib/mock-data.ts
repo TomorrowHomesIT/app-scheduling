@@ -38,13 +38,14 @@ export const taskStages: ITaskStage[] = [
 const baseStageTasks: ITask[] = [
   {
     id: 1,
+    jobId: 1,
     name: "Wall Frame Pre Call Up",
     supplierId: 1,
     costCenterId: "CC001",
     progress: ETaskProgress.Completed,
     status: ETaskStatus.None,
     stageId: 1,
-    notes: "",
+    notes: "this is a really long note to test the notes modal",
     dueDate: new Date("2024-01-15"),
     purchaseOrderLinks: [],
     planLinks: ['https://www.google.com'],
@@ -52,6 +53,7 @@ const baseStageTasks: ITask[] = [
   },
   {
     id: 2,
+    jobId: 1,
     name: "Truss Pre Call up",
     supplierId: 2,
     costCenterId: "CC002",
@@ -66,6 +68,7 @@ const baseStageTasks: ITask[] = [
   },
   {
     id: 3,
+    jobId: 1,
     name: "Window Pre Call Up",
     supplierId: 3,
     costCenterId: "CC003",
@@ -80,6 +83,7 @@ const baseStageTasks: ITask[] = [
   },
   {
     id: 4,
+    jobId: 1,
     name: "Wall Mixer Call Up",
     supplierId: 4,
     costCenterId: "CC004",

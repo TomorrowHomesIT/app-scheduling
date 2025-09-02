@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ETaskProgress, ETaskStatus } from "@/models/task.model";
 import type { ITask, ISupplier } from "@/models";
 import { DatePickerTrigger } from "@/components/modals/date-picker/date-picker-modal";
+import { NotesTrigger } from "@/components/modals/notes/notes-modal";
 import useAppStore from "@/store/store";
 
 interface TaskTableProps {
@@ -107,6 +108,10 @@ export function TaskTable({ tasks, suppliers }: TaskTableProps) {
     }
   };
 
+  const handleNotesChange = async (taskId: number, notes: string | undefined) => {
+    await updateTask(taskId, { notes });
+  };
+
   return (
     <Table>
       <TableHeader>
@@ -146,8 +151,11 @@ export function TaskTable({ tasks, suppliers }: TaskTableProps) {
                   onChange={(date) => handleDateChange(task.id, date)}
                 />
               </TableCell>
-              <TableCell>
-                <span className="text-sm text-muted-foreground">{task.notes || "-"}</span>
+              <TableCell className="p-0 max-w-24">
+                <NotesTrigger
+                  value={task.notes}
+                  onChange={(notes) => handleNotesChange(task.id, notes)}
+                />
               </TableCell>
               <TableCell>
                 <div className="flex gap-1">

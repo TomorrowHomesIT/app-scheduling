@@ -54,9 +54,7 @@ export function ProgressModal({ value, onChange, open, onOpenChange }: ProgressM
                 )}
                 onClick={() => handleProgressSelect(progress)}
               >
-                {selectedProgress === progress && (
-                  <Check className="absolute left-4 h-5 w-5" />
-                )}
+                {selectedProgress === progress && <Check className="absolute left-4 h-5 w-5" />}
                 <span className="font-medium">{config.label}</span>
               </Button>
             );

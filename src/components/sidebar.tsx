@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown, ChevronRight, Search, Plus, Owner, ListChecks } from "lucide-react";
+import { ChevronDown, ChevronRight, Search, Plus, Folder, ListChecks } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,11 +84,7 @@ export function Sidebar() {
         <div className="space-y-1 p-2">
           <div className="text-xs font-semibold text-muted-foreground mb-2">Owners</div>
           {filteredOwners.map((owner) => (
-            <Collapsible
-              key={owner.id}
-              open={expandedOwners.has(owner.id)}
-              onOpenChange={() => toggleOwner(owner.id)}
-            >
+            <Collapsible key={owner.id} open={expandedOwners.has(owner.id)} onOpenChange={() => toggleOwner(owner.id)}>
               <CollapsibleTrigger asChild>
                 <Button variant="ghost" className="w-full justify-start p-2 h-auto font-normal group">
                   <span className="mr-2 relative inline-flex h-4 w-4 items-center justify-center">
@@ -97,7 +93,7 @@ export function Sidebar() {
                     ) : (
                       <ChevronRight className="absolute h-4 w-4 opacity-0 transition-opacity group-hover:opacity-100" />
                     )}
-                    <Owner
+                    <Folder
                       className="absolute h-4 w-4 transition-opacity group-hover:opacity-0"
                       style={{ color: owner.color || "#6b7280" }}
                     />

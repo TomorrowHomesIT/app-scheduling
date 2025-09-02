@@ -24,7 +24,7 @@ const useSupplierStore = create<SupplierStore>((set, get) => ({
 
   loadSuppliers: async () => {
     if (get().isLoaded) return; // Don't load if already loaded
-    
+
     const suppliers = await fetchSuppliersFromApi();
     set({ suppliers, isLoaded: true });
   },

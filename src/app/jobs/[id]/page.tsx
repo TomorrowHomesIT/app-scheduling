@@ -3,13 +3,14 @@
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { taskStages, suppliers } from "@/lib/mock-data";
+import { taskStages } from "@/lib/mock-data";
 import { ETaskProgress } from "@/models/task.model";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { TaskTable } from "@/app/jobs/[id]/task-table";
 import { ChevronLeft } from "lucide-react";
 import useAppStore from "@/store/store";
+import useSupplierStore from "@/store/supplier-store";
 
 interface JobDetailPageProps {
   params: Promise<{ id: string }>;
@@ -18,8 +19,14 @@ interface JobDetailPageProps {
 export default function JobDetailPage({ params }: JobDetailPageProps) {
   const { id } = use(params);
   const { currentJob, loadJob } = useAppStore();
+  const { loadSuppliers } = useSupplierStore();
+
+  // Load suppliers when component mounts
+  useEffect(() => {
+    loadSuppliers();
+  }, [loadSuppliers]);
   const [error, setError] = useState<boolean>(false);
-  
+
   // Load job on mount
   useEffect(() => {
     try {
@@ -29,7 +36,7 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
       console.error(error);
     }
 
-    if (currentJob) document.title = currentJob.name
+    if (currentJob) document.title = currentJob.name;
   }, [id, loadJob, currentJob]);
 
   if (error) {

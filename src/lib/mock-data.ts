@@ -48,7 +48,7 @@ const baseStageTasks: ITask[] = [
     notes: "this is a really long note to test the notes modal",
     startDate: new Date("2024-01-15"),
     purchaseOrderLinks: [],
-    planLinks: ['https://www.google.com'],
+    planLinks: ["https://www.google.com"],
     order: 1,
   },
   {
@@ -62,8 +62,8 @@ const baseStageTasks: ITask[] = [
     stageId: 1,
     notes: "",
     startDate: new Date("2024-01-16"),
-    purchaseOrderLinks: ['https://www.google.com','https://www.youtube.com'],
-    planLinks: ['https://www.google.com'],
+    purchaseOrderLinks: ["https://www.google.com", "https://www.youtube.com"],
+    planLinks: ["https://www.google.com"],
     order: 2,
   },
   {
@@ -452,11 +452,11 @@ export const jobs: IJob[] = [
     tasks: [
       ...baseStageTasks.slice(0, 15).map((task) => ({
         ...task,
-        id: task.id + 200
+        id: task.id + 200,
       })),
       ...frameStageTasks.slice(0, 2).map((task) => ({
         ...task,
-        id: task.id + 1100
+        id: task.id + 1100,
       })),
     ],
   },

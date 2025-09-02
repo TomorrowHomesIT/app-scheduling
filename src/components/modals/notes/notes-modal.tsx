@@ -52,9 +52,11 @@ export function NotesModal({ value, onChange, open, onOpenChange }: NotesModalPr
           />
         </div>
         <DialogFooter className="flex">
-          {value && <Button variant="destructive" className="mr-auto" onClick={handleRemove} disabled={!value}>
-            Remove
-          </Button>}
+          {value && (
+            <Button variant="destructive" className="mr-auto" onClick={handleRemove} disabled={!value}>
+              Remove
+            </Button>
+          )}
           <div className="flex gap-2">
             <Button variant="outline" onClick={handleCancel}>
               Cancel

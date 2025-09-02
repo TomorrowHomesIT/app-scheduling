@@ -15,7 +15,6 @@ interface SendEmailModalProps {
 }
 
 export function SendEmailModal({ onChange, open, onOpenChange }: SendEmailModalProps) {
-
   const handleStatusSelect = (status: ETaskStatus) => {
     onChange(status);
     onOpenChange(false);

@@ -20,8 +20,6 @@ interface SupplierModalProps {
 export function SupplierModal({ value, onChange, open, onOpenChange }: SupplierModalProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const { suppliers } = useSupplierStore();
-  const suppliersListRef = useRef<HTMLDivElement>(null);
-  const selectedSupplierRef = useRef<HTMLButtonElement>(null);
 
   // Filter suppliers based on search query
   const filteredSuppliers = useMemo(() => {
@@ -30,32 +28,8 @@ export function SupplierModal({ value, onChange, open, onOpenChange }: SupplierM
     return suppliers.filter((supplier) => supplier.name.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [suppliers, searchQuery]);
 
-  // Auto-scroll to selected supplier when modal opens
-  useEffect(() => {
-    if (open && value && selectedSupplierRef.current && suppliersListRef.current) {
-      const listElement = suppliersListRef.current;
-      const selectedElement = selectedSupplierRef.current;
-      
-      const listRect = listElement.getBoundingClientRect();
-      const selectedRect = selectedElement.getBoundingClientRect();
-      
-      const scrollTop = selectedElement.offsetTop - listElement.offsetTop - (listRect.height / 2) + (selectedRect.height / 2);
-      
-      listElement.scrollTo({
-        top: Math.max(0, scrollTop),
-        behavior: 'smooth'
-      });
-    }
-  }, [open, value]);
-
   const handleSupplierSelect = (supplier: ISupplier) => {
     onChange(supplier.id);
-    onOpenChange(false);
-    setSearchQuery(""); // Reset search when closing
-  };
-
-  const handleRemoveSupplier = () => {
-    onChange(undefined);
     onOpenChange(false);
     setSearchQuery(""); // Reset search when closing
   };
@@ -84,18 +58,15 @@ export function SupplierModal({ value, onChange, open, onOpenChange }: SupplierM
               className="pl-8"
             />
           </div>
-          
+
           {/* Suppliers List */}
-          <div ref={suppliersListRef} className="flex-1 overflow-y-auto space-y-2 min-h-0">
+          <div className="flex-1 overflow-y-auto space-y-2 min-h-0">
             {filteredSuppliers.length === 0 ? (
-              <div className="text-center text-muted-foreground py-8">
-                No suppliers found
-              </div>
+              <div className="text-center text-muted-foreground py-8">No suppliers found</div>
             ) : (
               filteredSuppliers.map((supplier) => (
                 <Button
                   key={supplier.id}
-                  ref={value === supplier.id ? selectedSupplierRef : undefined}
                   variant="outline"
                   className="w-full justify-between h-12 px-4"
                   onClick={() => handleSupplierSelect(supplier)}

@@ -53,9 +53,6 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
     tasks: currentJob.tasks.filter((task) => task.taskStageId === stage.id),
   }));
 
-  console.log(taskStages);
-  console.log(currentJob);
-
   const totalTasks = currentJob.tasks.length;
   const completedTasks = currentJob.tasks.filter((task) => task.progress === EJobTaskProgress.Completed).length;
 

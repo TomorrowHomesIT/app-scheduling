@@ -2,9 +2,10 @@ import { createClient } from "@/lib/supabase/server";
 import { toCamelCase } from "@/lib/api/casing";
 import type { IJob, IJobTask } from "@/models/job.model";
 
-export async function GET(_: Request, { params }: { params: { id: string } }) {
+export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient();
-  const jobId = parseInt(params.id, 10);
+  const { id } = await params;
+  const jobId = parseInt(id, 10);
 
   if (Number.isNaN(jobId)) {
     return Response.json({ error: "Invalid job ID" }, { status: 400 });

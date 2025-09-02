@@ -2,9 +2,10 @@ import { createClient } from "@/lib/supabase/server";
 import { toCamelCase } from "@/lib/api/casing";
 import type { IJobTask } from "@/models/job.model";
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient();
-  const taskId = parseInt(params.id, 10);
+  const { id } = await params;
+  const taskId = parseInt(id, 10);
 
   if (Number.isNaN(taskId)) {
     return Response.json({ error: "Invalid task ID" }, { status: 400 });
@@ -33,7 +34,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     // Update task in cf_job_tasks table
     const { data, error } = await supabase.from("cf_job_tasks").update(updateData).eq("id", taskId).select().single();
 
-    if (error) {
+    if (!data || error) {
       console.error("Error updating task:", error);
       return Response.json({ error }, { status: 500 });
     }

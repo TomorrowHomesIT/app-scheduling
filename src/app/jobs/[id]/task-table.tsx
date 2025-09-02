@@ -10,7 +10,7 @@ import { NotesTrigger } from "@/components/modals/notes/notes-modal";
 import { StatusTrigger } from "@/components/modals/send-email/send-email-modal";
 import { ProgressTrigger } from "@/components/modals/progress/progress-modal";
 import { SupplierTrigger } from "@/components/modals/supplier/supplier-modal";
-import { CTaskProgressConfig } from "@/models/task.const";
+import { CTaskProgressConfig } from "@/models/job.const";
 import useAppStore from "@/store/job-store";
 import useSupplierStore from "@/store/supplier-store";
 

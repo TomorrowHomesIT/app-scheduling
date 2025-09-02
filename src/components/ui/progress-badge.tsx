@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { EJobTaskProgress } from "@/models/job.model";
-import { CTaskProgressConfig } from "@/models/task.const";
+import { CTaskProgressConfig } from "@/models/job.const";
 import { cn } from "@/lib/utils";
 
 interface ProgressBadgeProps {

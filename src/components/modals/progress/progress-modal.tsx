@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ProgressBadge } from "@/components/ui/progress-badge";
 import { EJobTaskProgress } from "@/models/job.model";
-import { CTaskProgressConfig } from "@/models/task.const";
+import { CTaskProgressConfig } from "@/models/job.const";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";

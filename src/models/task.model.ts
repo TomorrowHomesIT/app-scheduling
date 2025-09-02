@@ -9,7 +9,7 @@ export interface ITask {
   stageId: number;
 
   notes: string;
-  dueDate: Date;
+  startDate: Date;
   purchaseOrderLinks: string[];
   planLinks: string[];
   order: number;

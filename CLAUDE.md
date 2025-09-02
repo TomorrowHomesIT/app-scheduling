@@ -94,7 +94,7 @@ npm run format
 - `status`: ETaskStatus enum value
 - `stageId`: Reference to task stage
 - `notes`: Optional notes
-- `dueDate`: Task due date
+- `startDate`: Task due date
 - `purchaseOrderLinks`: Array of PO document links
 - `planLinks`: Array of plan document links
 
@@ -107,7 +107,6 @@ npm run format
 ### ISupplier
 - `id`: Unique identifier
 - `name`: Supplier name
-- `color`: Optional hex color for badge display
 
 ## Recent Changes
 

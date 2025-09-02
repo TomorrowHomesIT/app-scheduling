@@ -2,10 +2,11 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ETaskProgress, ETaskStatus } from "@/models/task.model";
+import { ETaskProgress, type ETaskStatus } from "@/models/task.model";
 import type { ITask, ISupplier } from "@/models";
 import { DatePickerTrigger } from "@/components/modals/date-picker/date-picker-modal";
 import { NotesTrigger } from "@/components/modals/notes/notes-modal";
+import { StatusTrigger } from "@/components/modals/send-email/send-email-modal";
 import useAppStore from "@/store/store";
 
 interface TaskTableProps {
@@ -57,59 +58,26 @@ const getProgressColor = (progress: ETaskProgress) => {
   return colors[progress];
 };
 
-const getStatusBadge = (status: ETaskStatus) => {
-  if (status === ETaskStatus.None) return null;
-
-  const statusConfig = {
-    [ETaskStatus.Scheduled]: {
-      label: "Scheduled",
-      className: "bg-blue-100 text-blue-800 hover:bg-blue-200",
-    },
-    [ETaskStatus.ReScheduled]: {
-      label: "Re-scheduled",
-      className: "bg-orange-100 text-orange-800 hover:bg-orange-200",
-    },
-    [ETaskStatus.Cancelled]: {
-      label: "Cancelled",
-      className: "bg-red-100 text-red-800 hover:bg-red-200",
-    },
-    [ETaskStatus.None]: {
-      label: "",
-      className: "",
-    },
-  } as const;
-
-  const config = statusConfig[status];
-  return (
-    <Badge className={`cursor-pointer ${config.className}`}>
-      <span className={`w-2 h-2 rounded-full ${getStatusColor(status)}`} />
-      {config.label}
-    </Badge>
-  );
-};
-
-const getStatusColor = (status: ETaskStatus) => {
-  const colors = {
-    [ETaskStatus.None]: "bg-transparent",
-    [ETaskStatus.Scheduled]: "bg-blue-500",
-    [ETaskStatus.ReScheduled]: "bg-orange-500",
-    [ETaskStatus.Cancelled]: "bg-red-500",
-  };
-  return colors[status];
-};
-
-
 export function TaskTable({ tasks, suppliers }: TaskTableProps) {
   const { updateTask } = useAppStore();
 
   const handleDateChange = async (taskId: number, date: Date | undefined) => {
     if (date) {
-      await updateTask(taskId, { dueDate: date });
+      await updateTask(taskId, { startDate: date });
     }
   };
 
   const handleNotesChange = async (taskId: number, notes: string | undefined) => {
     await updateTask(taskId, { notes });
+  };
+
+  const handleStatusChange = async (taskId: number, status: ETaskStatus) => {
+    // Update the task status in the store
+    await updateTask(taskId, { status });
+
+    // TODO: API call to trigger status-specific action
+    // This is where you'll add the actual API request later
+    // Example: await api.updateTaskStatus(taskId, status);
   };
 
   return (
@@ -119,11 +87,11 @@ export function TaskTable({ tasks, suppliers }: TaskTableProps) {
           <TableHead className="w-8"></TableHead>
           <TableHead>Name</TableHead>
           <TableHead>Supplier</TableHead>
-          <TableHead>Due date</TableHead>
+          <TableHead>Start date</TableHead>
           <TableHead>Notes</TableHead>
           <TableHead>PO</TableHead>
           <TableHead>Plans</TableHead>
-          <TableHead>Status</TableHead>
+          <TableHead>Email Template</TableHead>
           <TableHead>Progress</TableHead>
         </TableRow>
       </TableHeader>
@@ -138,24 +106,16 @@ export function TaskTable({ tasks, suppliers }: TaskTableProps) {
               <TableCell className="font-medium">{task.name}</TableCell>
               <TableCell>
                 {supplier ? (
-                  <Badge variant="custom" color={supplier.color}>
-                    {supplier.name}
-                  </Badge>
+                  <Badge variant="custom">{supplier.name}</Badge>
                 ) : (
                   <span className="text-sm text-muted-foreground">-</span>
                 )}
               </TableCell>
               <TableCell className="p-0">
-                <DatePickerTrigger
-                  value={task.dueDate}
-                  onChange={(date) => handleDateChange(task.id, date)}
-                />
+                <DatePickerTrigger value={task.startDate} onChange={(date) => handleDateChange(task.id, date)} />
               </TableCell>
               <TableCell className="p-0 max-w-24">
-                <NotesTrigger
-                  value={task.notes}
-                  onChange={(notes) => handleNotesChange(task.id, notes)}
-                />
+                <NotesTrigger value={task.notes} onChange={(notes) => handleNotesChange(task.id, notes)} />
               </TableCell>
               <TableCell>
                 <div className="flex gap-1">
@@ -183,7 +143,9 @@ export function TaskTable({ tasks, suppliers }: TaskTableProps) {
                   )}
                 </div>
               </TableCell>
-              <TableCell>{getStatusBadge(task.status)}</TableCell>
+              <TableCell className="p-0">
+                <StatusTrigger value={task.status} onChange={(status) => handleStatusChange(task.id, status)} />
+              </TableCell>
               <TableCell>{getProgressBadge(task.progress)}</TableCell>
             </TableRow>
           );

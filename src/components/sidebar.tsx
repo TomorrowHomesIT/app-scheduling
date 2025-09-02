@@ -3,13 +3,14 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown, ChevronRight, Search, Plus, Folder, ListChecks } from "lucide-react";
+import { ChevronDown, ChevronRight, Search, Folder, ListChecks } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import useJobStore from "@/store/job-store";
 import useOwnersStore from "@/store/owners-store";
+import { LogoutButton } from "./auth/logout-button";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -125,10 +126,7 @@ export function Sidebar() {
       </div>
 
       <div className="border-t p-4">
-        <Button variant="ghost" className="w-full justify-start" size="sm">
-          <Plus className="mr-2 h-4 w-4" />
-          Create Job
-        </Button>
+        <LogoutButton />
       </div>
     </div>
   );

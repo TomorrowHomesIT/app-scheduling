@@ -42,7 +42,7 @@ const baseStageTasks: ITask[] = [
     name: "Wall Frame Pre Call Up",
     supplierId: 1,
     costCenterId: "CC001",
-    progress: ETaskProgress.Completed,
+    progress: ETaskProgress.None,
     status: ETaskStatus.None,
     stageId: 1,
     notes: "this is a really long note to test the notes modal",
@@ -57,7 +57,7 @@ const baseStageTasks: ITask[] = [
     name: "Truss Pre Call up",
     supplierId: 2,
     costCenterId: "CC002",
-    progress: ETaskProgress.Completed,
+    progress: ETaskProgress.None,
     status: ETaskStatus.Scheduled,
     stageId: 1,
     notes: "",
@@ -452,13 +452,11 @@ export const jobs: IJob[] = [
     tasks: [
       ...baseStageTasks.slice(0, 15).map((task) => ({
         ...task,
-        id: task.id + 200,
-        progress: ETaskProgress.Confirmed,
+        id: task.id + 200
       })),
       ...frameStageTasks.slice(0, 2).map((task) => ({
         ...task,
-        id: task.id + 1100,
-        progress: ETaskProgress.NotRequired,
+        id: task.id + 1100
       })),
     ],
   },

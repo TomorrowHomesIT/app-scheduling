@@ -181,3 +181,30 @@ When making changes:
 4. Maintain consistent styling with Tailwind CSS
 5. Run linting and type checking before committing
 6. Update this documentation for significant changes
+
+Progress Modal System
+
+  1. Shared Configuration (/models/task.const.ts):
+    - Added CTaskProgressConfig with consistent styling for all progress states
+    - Includes className for badges and progressColor for the progress indicator bar
+  2. Reusable Progress Badge (/components/ui/progress-badge.tsx):
+    - Uses the shared configuration for consistent styling
+    - Can be used as both a static badge and clickable button
+    - Matches the pattern of the status badge
+  3. Progress Selection Modal (/components/modals/progress/progress-modal.tsx):
+    - Modal interface similar to the status modal
+    - Shows all progress options as larger buttons for easy selection
+    - Includes ProgressTrigger component for easy integration
+  4. Task Table Integration:
+    - Removed old getProgressBadge function and uses the new shared config
+    - Added handleProgressChange function that only updates the task (no extra API call needed)
+    - Integrated ProgressTrigger to replace the old static progress display
+
+  The system now provides:
+  - Consistent Styling: All progress badges use the same configuration
+  - Modal Selection: Click any progress badge to open a selection modal
+  - Store Integration: Updates are handled through the existing updateTask function
+  - Reusable Components: Both badge and modal can be used throughout the app
+
+  The progress modal follows the same pattern as the status modal but only updates the task
+  directly without needing additional API requests, as requested.

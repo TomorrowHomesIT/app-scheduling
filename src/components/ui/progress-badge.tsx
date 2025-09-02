@@ -2,18 +2,18 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { ETaskStatus } from "@/models/task.model";
+import type { ETaskProgress } from "@/models/task.model";
+import { CTaskProgressConfig } from "@/models/task.const";
 import { cn } from "@/lib/utils";
-import { CTaskStatusConfig } from "@/models/task.const";
 
-interface StatusBadgeProps {
-  status: ETaskStatus;
+interface ProgressBadgeProps {
+  progress: ETaskProgress;
   onClick?: () => void;
   className?: string;
 }
 
-export function StatusBadge({ status, onClick, className }: StatusBadgeProps) {
-  const config = CTaskStatusConfig[status];
+export function ProgressBadge({ progress, onClick, className }: ProgressBadgeProps) {
+  const config = CTaskProgressConfig[progress];
 
   const BadgeContent = () => <span>{config.label}</span>;
 
@@ -24,7 +24,7 @@ export function StatusBadge({ status, onClick, className }: StatusBadgeProps) {
         className={cn("h-auto p-0 hover:bg-gray-200 cursor-pointer w-full justify-start", className)}
         onClick={onClick}
       >
-        <Badge className={cn("gap-1.5 justify-start", config.className)}>
+        <Badge className={config.className}>
           <BadgeContent />
         </Badge>
       </Button>
@@ -32,7 +32,7 @@ export function StatusBadge({ status, onClick, className }: StatusBadgeProps) {
   }
 
   return (
-    <Badge className={cn("gap-1.5", config.className, className)}>
+    <Badge className={cn(config.className, className)}>
       <BadgeContent />
     </Badge>
   );

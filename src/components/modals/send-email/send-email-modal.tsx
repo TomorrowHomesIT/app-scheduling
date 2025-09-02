@@ -9,17 +9,14 @@ import { cn } from "@/lib/utils";
 import { StatusBadge } from "@/components/ui/status-badge";
 
 interface SendEmailModalProps {
-  value: ETaskStatus;
   onChange: (status: ETaskStatus) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function SendEmailModal({ value, onChange, open, onOpenChange }: SendEmailModalProps) {
-  const [selectedStatus, setSelectedStatus] = useState<ETaskStatus>(value);
+export function SendEmailModal({ onChange, open, onOpenChange }: SendEmailModalProps) {
 
   const handleStatusSelect = (status: ETaskStatus) => {
-    setSelectedStatus(status);
     onChange(status);
     onOpenChange(false);
   };
@@ -69,7 +66,7 @@ export function StatusTrigger({ value, onChange, className }: StatusTriggerProps
   return (
     <>
       <StatusBadge status={value} onClick={() => setOpen(true)} className={className} />
-      <SendEmailModal value={value} onChange={onChange} open={open} onOpenChange={setOpen} />
+      <SendEmailModal onChange={onChange} open={open} onOpenChange={setOpen} />
     </>
   );
 }

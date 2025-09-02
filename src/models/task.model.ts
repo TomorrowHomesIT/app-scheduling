@@ -16,6 +16,7 @@ export interface ITask {
 }
 
 export enum ETaskProgress {
+  None = 0,
   ToCall = 1,
   Called = 2,
   Confirmed = 3,

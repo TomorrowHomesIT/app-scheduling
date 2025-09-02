@@ -4,5 +4,5 @@ export interface ITask {
   costCenter: number;
   docTags: string[];
   order: number;
-  stageId?: number;
+  taskStageId?: number;
 }

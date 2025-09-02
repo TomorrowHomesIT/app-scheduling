@@ -7,7 +7,7 @@ export interface IOwner {
 }
 
 export interface IOwnerJob {
+  id: number;
   ownerId: number;
   name: string;
-  jobId: number;
 }

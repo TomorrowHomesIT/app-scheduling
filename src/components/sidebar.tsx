@@ -29,7 +29,7 @@ export function Sidebar() {
     if (currentJob) {
       // Find which owner contains this job
       for (const owner of owners) {
-        if (owner.jobs?.some((job) => job.jobId === currentJob.id)) {
+        if (owner.jobs?.some((job) => job.id === currentJob.id)) {
           setExpandedOwners((prev) => new Set(prev).add(owner.id));
           break;
         }
@@ -108,11 +108,11 @@ export function Sidebar() {
               <CollapsibleContent className="ml-4">
                 {owner.jobs?.map((job) => (
                   <Link
-                    key={job.jobId}
-                    href={`/jobs/${job.jobId}`}
+                    key={job.id}
+                    href={`/jobs/${job.id}`}
                     className={cn(
                       "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground",
-                      pathname === `/jobs/${job.jobId}` && "bg-accent font-bold",
+                      pathname === `/jobs/${job.id}` && "bg-accent font-bold",
                     )}
                   >
                     <ListChecks className="h-4 w-4 flex-shrink-0" style={{ color: owner.color || "#6b7280" }} />

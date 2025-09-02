@@ -1,30 +1,37 @@
 import { create } from "zustand";
 import type { IOwner } from "@/models/owner.model";
-import { owners as mockOwners } from "../lib/mock-data";
 
 interface OwnersStore {
   owners: IOwner[];
   isLoaded: boolean;
+  isLoading: boolean;
   loadOwners: () => Promise<void>;
 }
-
-const simulateApiDelay = () => new Promise((resolve) => setTimeout(resolve, 300));
-
-// Mock API functions
-const fetchOwnersFromApi = async (): Promise<IOwner[]> => {
-  await simulateApiDelay();
-  return mockOwners;
-};
 
 const useOwnersStore = create<OwnersStore>((set, get) => ({
   owners: [],
   isLoaded: false,
+  isLoading: false,
 
   loadOwners: async () => {
-    if (get().isLoaded) return; // Don't load if already loaded
+    if (get().isLoaded || get().isLoading) return; // Don't load if already loaded or loading
 
-    const owners = await fetchOwnersFromApi();
-    set({ owners });
+    set({ isLoading: true });
+
+    try {
+      const response = await fetch("/api/owners");
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch owners");
+      }
+
+      const owners: IOwner[] = await response.json();
+      set({ owners, isLoaded: true, isLoading: false });
+    } catch {
+      // TODO error
+    } finally {
+      set({ isLoading: false });
+    }
   },
 }));
 

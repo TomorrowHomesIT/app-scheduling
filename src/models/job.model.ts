@@ -9,10 +9,11 @@ export interface IJobTask {
   jobId: number;
   name: string;
   supplierId: number;
-  costCenterId: string;
+  costCenter: number;
   progress: EJobTaskProgress;
   status: EJobTaskStatus;
   stageId: number;
+  docTags: string[] | null;
 
   notes: string;
   startDate: Date;
@@ -22,24 +23,37 @@ export interface IJobTask {
 }
 
 export enum EJobTaskProgress {
-  None = 0,
-  ToCall = 1,
-  Called = 2,
-  Confirmed = 3,
-  Started = 4,
-  Completed = 5,
-  NotRequired = 6,
+  None = "none",
+  ToCall = "to_call",
+  Called = "called",
+  Confirmed = "confirmed",
+  Started = "started",
+  Completed = "completed",
+  NotRequired = "not_required",
 }
 
 export enum EJobTaskStatus {
-  None = 0,
-  Scheduled = 1,
-  ReScheduled = 2,
-  Cancelled = 3,
+  None = "none",
+  Scheduled = "scheduled",
+  ReScheduled = "re_scheduled",
+  Cancelled = "cancelled",
 }
 
 export interface IJobTaskStage {
   id: number;
   name: string;
   order: number;
+}
+
+export interface ICreateJobRequest {
+  name: string;
+  ownerId: number;
+  tasks: {
+    taskId: number;
+    name: string;
+    taskStageId: number;
+    docTags: string[];
+    order: number;
+    costCenter: number;
+  }[];
 }

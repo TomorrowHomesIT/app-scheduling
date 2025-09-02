@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import type { ISupplier } from "@/models/supplier.model";
-import { suppliers as mockSuppliers } from "../lib/mock-data";
 
 interface SupplierStore {
   suppliers: ISupplier[];
@@ -9,13 +8,14 @@ interface SupplierStore {
   getSupplierById: (id: number) => ISupplier | undefined;
 }
 
-// Simulate API delay
-const simulateApiDelay = () => new Promise((resolve) => setTimeout(resolve, 200));
+const fetchSuppliers = async (): Promise<ISupplier[]> => {
+  const response = await fetch("/api/suppliers");
 
-// Mock API function
-const fetchSuppliersFromApi = async (): Promise<ISupplier[]> => {
-  await simulateApiDelay();
-  return mockSuppliers;
+  if (!response.ok) {
+    throw new Error(`Failed to fetch suppliers: ${response.statusText}`);
+  }
+
+  return response.json();
 };
 
 const useSupplierStore = create<SupplierStore>((set, get) => ({
@@ -25,8 +25,13 @@ const useSupplierStore = create<SupplierStore>((set, get) => ({
   loadSuppliers: async () => {
     if (get().isLoaded) return; // Don't load if already loaded
 
-    const suppliers = await fetchSuppliersFromApi();
-    set({ suppliers, isLoaded: true });
+    try {
+      const suppliers = await fetchSuppliers();
+      set({ suppliers, isLoaded: true });
+    } catch (error) {
+      console.error("Error loading suppliers:", error);
+      // TODO might want to set an error state here
+    }
   },
 
   getSupplierById: (id: number) => {

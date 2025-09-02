@@ -2,12 +2,12 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { ETaskProgress } from "@/models/task.model";
+import type { EJobTaskProgress } from "@/models/job.model";
 import { CTaskProgressConfig } from "@/models/task.const";
 import { cn } from "@/lib/utils";
 
 interface ProgressBadgeProps {
-  progress: ETaskProgress;
+  progress: EJobTaskProgress;
   onClick?: () => void;
   className?: string;
 }

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { IJob } from "@/models/job.model";
-import type { ITask } from "@/models/task.model";
+import type { IJobTask } from "@/models/job.model";
 import { jobs as mockJobs } from "../lib/mock-data";
 
 interface JobStore {
@@ -9,7 +9,7 @@ interface JobStore {
 
   loadJob: (id: number) => Promise<void>;
   setCurrentJob: (job: IJob | null) => void;
-  updateTask: (taskId: number, updates: Partial<ITask>) => Promise<void>;
+  updateTask: (taskId: number, updates: Partial<IJobTask>) => Promise<void>;
 }
 
 // Simulate API delay
@@ -21,7 +21,7 @@ const fetchJobByIdFromApi = async (id: number): Promise<IJob | null> => {
 };
 
 // Mock API function for updating a task
-const updateTaskApi = async (taskId: number, updates: Partial<ITask>): Promise<ITask | null> => {
+const updateTaskApi = async (taskId: number, updates: Partial<IJobTask>): Promise<IJobTask | null> => {
   await simulateApiDelay();
   // In real implementation, this would make a PATCH request to /tasks/{taskId}
   // For now, we'll just return the updated task from mock data
@@ -59,7 +59,7 @@ const useJobStore = create<JobStore>((set, get) => ({
     set({ currentJob: job });
   },
 
-  updateTask: async (taskId: number, updates: Partial<ITask>) => {
+  updateTask: async (taskId: number, updates: Partial<IJobTask>) => {
     // Optimistically update the UI
     set((state) => {
       // Find which job contains this task

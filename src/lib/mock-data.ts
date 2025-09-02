@@ -1,8 +1,8 @@
 import type { IOwner } from "@/models/owner.model";
 import type { IJob } from "@/models/job.model";
-import type { ITask, ITaskStage } from "@/models/task.model";
+import type { IJobTask, IJobTaskStage } from "@/models/job.model";
 import type { ISupplier } from "@/models/supplier.model";
-import { ETaskProgress, ETaskStatus } from "@/models/task.model";
+import { EJobTaskProgress, EJobTaskStatus } from "@/models/job.model";
 
 export const suppliers: ISupplier[] = [
   { id: 1, name: "Wall Frame Co." },
@@ -30,20 +30,20 @@ export const suppliers: ISupplier[] = [
   { id: 23, name: "Basin Install" },
 ];
 
-export const taskStages: ITaskStage[] = [
+export const taskStages: IJobTaskStage[] = [
   { id: 1, name: "Base Stage", order: 1 },
   { id: 2, name: "Frame Stage", order: 2 },
 ];
 
-const baseStageTasks: ITask[] = [
+const baseStageTasks: IJobTask[] = [
   {
     id: 1,
     jobId: 1,
     name: "Wall Frame Pre Call Up",
     supplierId: 1,
     costCenterId: "CC001",
-    progress: ETaskProgress.None,
-    status: ETaskStatus.None,
+    progress: EJobTaskProgress.None,
+    status: EJobTaskStatus.None,
     stageId: 1,
     notes: "this is a really long note to test the notes modal",
     startDate: new Date("2024-01-15"),
@@ -57,8 +57,8 @@ const baseStageTasks: ITask[] = [
     name: "Truss Pre Call up",
     supplierId: 2,
     costCenterId: "CC002",
-    progress: ETaskProgress.None,
-    status: ETaskStatus.Scheduled,
+    progress: EJobTaskProgress.None,
+    status: EJobTaskStatus.Scheduled,
     stageId: 1,
     notes: "",
     startDate: new Date("2024-01-16"),
@@ -72,8 +72,8 @@ const baseStageTasks: ITask[] = [
     name: "Window Pre Call Up",
     supplierId: 3,
     costCenterId: "CC003",
-    progress: ETaskProgress.Completed,
-    status: ETaskStatus.Scheduled,
+    progress: EJobTaskProgress.Completed,
+    status: EJobTaskStatus.Scheduled,
     stageId: 1,
     notes: "",
     startDate: new Date("2024-01-17"),
@@ -87,8 +87,8 @@ const baseStageTasks: ITask[] = [
     name: "Wall Mixer Call Up",
     supplierId: 4,
     costCenterId: "CC004",
-    progress: ETaskProgress.Completed,
-    status: ETaskStatus.Scheduled,
+    progress: EJobTaskProgress.Completed,
+    status: EJobTaskStatus.Scheduled,
     stageId: 1,
     notes: "",
     startDate: new Date("2024-01-18"),
@@ -102,8 +102,8 @@ const baseStageTasks: ITask[] = [
     name: "Early Brick Call Up",
     supplierId: 5,
     costCenterId: "CC005",
-    progress: ETaskProgress.Completed,
-    status: ETaskStatus.Scheduled,
+    progress: EJobTaskProgress.Completed,
+    status: EJobTaskStatus.Scheduled,
     stageId: 1,
     notes: "if required",
     startDate: new Date("2024-01-19"),
@@ -117,8 +117,8 @@ const baseStageTasks: ITask[] = [
     name: "External Door Hardware",
     supplierId: 6,
     costCenterId: "CC006",
-    progress: ETaskProgress.Completed,
-    status: ETaskStatus.Scheduled,
+    progress: EJobTaskProgress.Completed,
+    status: EJobTaskStatus.Scheduled,
     stageId: 1,
     notes: "1d",
     startDate: new Date("2024-01-20"),
@@ -132,8 +132,8 @@ const baseStageTasks: ITask[] = [
     name: "Site Capo/Bin",
     supplierId: 7,
     costCenterId: "CC007",
-    progress: ETaskProgress.Completed,
-    status: ETaskStatus.Scheduled,
+    progress: EJobTaskProgress.Completed,
+    status: EJobTaskStatus.Scheduled,
     stageId: 1,
     notes: "1d",
     startDate: new Date("2024-01-21"),
@@ -147,8 +147,8 @@ const baseStageTasks: ITask[] = [
     name: "Temp Fencing",
     supplierId: 8,
     costCenterId: "CC008",
-    progress: ETaskProgress.Completed,
-    status: ETaskStatus.Scheduled,
+    progress: EJobTaskProgress.Completed,
+    status: EJobTaskStatus.Scheduled,
     stageId: 1,
     notes: "1d",
     startDate: new Date("2024-01-22"),
@@ -162,8 +162,8 @@ const baseStageTasks: ITask[] = [
     name: "Water Tapping",
     supplierId: 9,
     costCenterId: "CC009",
-    progress: ETaskProgress.Completed,
-    status: ETaskStatus.Scheduled,
+    progress: EJobTaskProgress.Completed,
+    status: EJobTaskStatus.Scheduled,
     stageId: 1,
     notes: "if required",
     startDate: new Date("2024-01-23"),
@@ -177,8 +177,8 @@ const baseStageTasks: ITask[] = [
     name: "Site Sign Install",
     supplierId: 10,
     costCenterId: "CC010",
-    progress: ETaskProgress.Completed,
-    status: ETaskStatus.Scheduled,
+    progress: EJobTaskProgress.Completed,
+    status: EJobTaskStatus.Scheduled,
     stageId: 1,
     notes: "1d",
     startDate: new Date("2024-01-24"),
@@ -192,8 +192,8 @@ const baseStageTasks: ITask[] = [
     name: "Site Toilet",
     supplierId: 11,
     costCenterId: "CC011",
-    progress: ETaskProgress.Completed,
-    status: ETaskStatus.Scheduled,
+    progress: EJobTaskProgress.Completed,
+    status: EJobTaskStatus.Scheduled,
     stageId: 1,
     notes: "1d",
     startDate: new Date("2024-01-25"),
@@ -207,8 +207,8 @@ const baseStageTasks: ITask[] = [
     name: "Site Cut",
     supplierId: 12,
     costCenterId: "CC012",
-    progress: ETaskProgress.Completed,
-    status: ETaskStatus.Scheduled,
+    progress: EJobTaskProgress.Completed,
+    status: EJobTaskStatus.Scheduled,
     stageId: 1,
     notes: "2d",
     startDate: new Date("2024-01-26"),
@@ -222,8 +222,8 @@ const baseStageTasks: ITask[] = [
     name: "Set Out",
     supplierId: 13,
     costCenterId: "CC013",
-    progress: ETaskProgress.Completed,
-    status: ETaskStatus.Scheduled,
+    progress: EJobTaskProgress.Completed,
+    status: EJobTaskStatus.Scheduled,
     stageId: 1,
     notes: "1d",
     startDate: new Date("2024-01-27"),
@@ -237,8 +237,8 @@ const baseStageTasks: ITask[] = [
     name: "Bored Piers",
     supplierId: 14,
     costCenterId: "CC014",
-    progress: ETaskProgress.Completed,
-    status: ETaskStatus.Scheduled,
+    progress: EJobTaskProgress.Completed,
+    status: EJobTaskStatus.Scheduled,
     stageId: 1,
     notes: "if required",
     startDate: new Date("2024-01-28"),
@@ -252,8 +252,8 @@ const baseStageTasks: ITask[] = [
     name: "Underground Power",
     supplierId: 15,
     costCenterId: "CC015",
-    progress: ETaskProgress.Completed,
-    status: ETaskStatus.Scheduled,
+    progress: EJobTaskProgress.Completed,
+    status: EJobTaskStatus.Scheduled,
     stageId: 1,
     notes: "1d, next stage",
     startDate: new Date("2024-01-29"),
@@ -267,8 +267,8 @@ const baseStageTasks: ITask[] = [
     name: "Sewer/ Stormwater Drains / Camera Check",
     supplierId: 16,
     costCenterId: "CC016",
-    progress: ETaskProgress.Completed,
-    status: ETaskStatus.Scheduled,
+    progress: EJobTaskProgress.Completed,
+    status: EJobTaskStatus.Scheduled,
     stageId: 1,
     notes: "2d",
     startDate: new Date("2024-01-30"),
@@ -282,8 +282,8 @@ const baseStageTasks: ITask[] = [
     name: "Spoil Removal from Drains",
     supplierId: 17,
     costCenterId: "CC017",
-    progress: ETaskProgress.Completed,
-    status: ETaskStatus.Scheduled,
+    progress: EJobTaskProgress.Completed,
+    status: EJobTaskStatus.Scheduled,
     stageId: 1,
     notes: "1d",
     startDate: new Date("2024-01-31"),
@@ -297,8 +297,8 @@ const baseStageTasks: ITask[] = [
     name: "Termite Part A",
     supplierId: 18,
     costCenterId: "CC018",
-    progress: ETaskProgress.Completed,
-    status: ETaskStatus.Scheduled,
+    progress: EJobTaskProgress.Completed,
+    status: EJobTaskStatus.Scheduled,
     stageId: 1,
     notes: "1d",
     startDate: new Date("2024-02-01"),
@@ -312,8 +312,8 @@ const baseStageTasks: ITask[] = [
     name: "Spoil Removal from Piers",
     supplierId: 17,
     costCenterId: "CC019",
-    progress: ETaskProgress.Completed,
-    status: ETaskStatus.Scheduled,
+    progress: EJobTaskProgress.Completed,
+    status: EJobTaskStatus.Scheduled,
     stageId: 1,
     notes: "1d",
     startDate: new Date("2024-02-02"),
@@ -327,8 +327,8 @@ const baseStageTasks: ITask[] = [
     name: "Retaining Walls",
     supplierId: 19,
     costCenterId: "CC020",
-    progress: ETaskProgress.Completed,
-    status: ETaskStatus.Scheduled,
+    progress: EJobTaskProgress.Completed,
+    status: EJobTaskStatus.Scheduled,
     stageId: 1,
     notes: "if required",
     startDate: new Date("2024-02-03"),
@@ -342,8 +342,8 @@ const baseStageTasks: ITask[] = [
     name: "Steel Inspection",
     supplierId: 20,
     costCenterId: "CC021",
-    progress: ETaskProgress.Completed,
-    status: ETaskStatus.Scheduled,
+    progress: EJobTaskProgress.Completed,
+    status: EJobTaskStatus.Scheduled,
     stageId: 1,
     notes: "1d",
     startDate: new Date("2024-02-04"),
@@ -357,8 +357,8 @@ const baseStageTasks: ITask[] = [
     name: "Slab Boxing/Base/Pour",
     supplierId: 21,
     costCenterId: "CC022",
-    progress: ETaskProgress.Completed,
-    status: ETaskStatus.Scheduled,
+    progress: EJobTaskProgress.Completed,
+    status: EJobTaskStatus.Scheduled,
     stageId: 1,
     notes: "1d",
     startDate: new Date("2024-02-05"),
@@ -372,8 +372,8 @@ const baseStageTasks: ITask[] = [
     name: "Slab Backfill / Clean",
     supplierId: 22,
     costCenterId: "CC023",
-    progress: ETaskProgress.Completed,
-    status: ETaskStatus.Scheduled,
+    progress: EJobTaskProgress.Completed,
+    status: EJobTaskStatus.Scheduled,
     stageId: 1,
     notes: "1d",
     startDate: new Date("2024-02-06"),
@@ -387,8 +387,8 @@ const baseStageTasks: ITask[] = [
     name: "Basin Install",
     supplierId: 23,
     costCenterId: "CC024",
-    progress: ETaskProgress.Completed,
-    status: ETaskStatus.Scheduled,
+    progress: EJobTaskProgress.Completed,
+    status: EJobTaskStatus.Scheduled,
     stageId: 1,
     notes: "",
     startDate: new Date("2024-02-07"),
@@ -398,15 +398,15 @@ const baseStageTasks: ITask[] = [
   },
 ];
 
-const frameStageTasks: ITask[] = [
+const frameStageTasks: IJobTask[] = [
   {
     id: 25,
     jobId: 1,
     name: "Slab Claim - Slab QA",
     supplierId: 21,
     costCenterId: "CC025",
-    progress: ETaskProgress.Completed,
-    status: ETaskStatus.Scheduled,
+    progress: EJobTaskProgress.Completed,
+    status: EJobTaskStatus.Scheduled,
     stageId: 2,
     notes: "1d",
     startDate: new Date("2024-02-08"),
@@ -420,8 +420,8 @@ const frameStageTasks: ITask[] = [
     name: "Termite Part B",
     supplierId: 18,
     costCenterId: "CC026",
-    progress: ETaskProgress.Completed,
-    status: ETaskStatus.Scheduled,
+    progress: EJobTaskProgress.Completed,
+    status: EJobTaskStatus.Scheduled,
     stageId: 2,
     notes: "if required",
     startDate: new Date("2024-02-09"),
@@ -443,7 +443,7 @@ export const jobs: IJob[] = [
     tasks: baseStageTasks.slice(0, 10).map((task) => ({
       ...task,
       id: task.id + 100,
-      progress: ETaskProgress.Called,
+      progress: EJobTaskProgress.Called,
     })),
   },
   {
@@ -466,7 +466,7 @@ export const jobs: IJob[] = [
     tasks: baseStageTasks.slice(5, 20).map((task) => ({
       ...task,
       id: task.id + 300,
-      progress: ETaskProgress.Started,
+      progress: EJobTaskProgress.Started,
     })),
   },
   {
@@ -475,7 +475,7 @@ export const jobs: IJob[] = [
     tasks: baseStageTasks.slice(10, 25).map((task) => ({
       ...task,
       id: task.id + 400,
-      progress: ETaskProgress.ToCall,
+      progress: EJobTaskProgress.ToCall,
     })),
   },
   {
@@ -484,7 +484,7 @@ export const jobs: IJob[] = [
     tasks: frameStageTasks.map((task) => ({
       ...task,
       id: task.id + 500,
-      progress: ETaskProgress.Called,
+      progress: EJobTaskProgress.Called,
     })),
   },
   {
@@ -493,7 +493,7 @@ export const jobs: IJob[] = [
     tasks: baseStageTasks.slice(0, 8).map((task) => ({
       ...task,
       id: task.id + 600,
-      progress: ETaskProgress.Completed,
+      progress: EJobTaskProgress.Completed,
     })),
   },
   {
@@ -502,7 +502,7 @@ export const jobs: IJob[] = [
     tasks: baseStageTasks.slice(14, 18).map((task) => ({
       ...task,
       id: task.id + 700,
-      progress: ETaskProgress.Started,
+      progress: EJobTaskProgress.Started,
     })),
   },
   {
@@ -511,7 +511,7 @@ export const jobs: IJob[] = [
     tasks: baseStageTasks.slice(8, 12).map((task) => ({
       ...task,
       id: task.id + 800,
-      progress: ETaskProgress.Confirmed,
+      progress: EJobTaskProgress.Confirmed,
     })),
   },
   {
@@ -520,7 +520,7 @@ export const jobs: IJob[] = [
     tasks: baseStageTasks.slice(3, 7).map((task) => ({
       ...task,
       id: task.id + 900,
-      progress: ETaskProgress.Called,
+      progress: EJobTaskProgress.Called,
     })),
   },
   {
@@ -529,7 +529,7 @@ export const jobs: IJob[] = [
     tasks: baseStageTasks.slice(19, 24).map((task) => ({
       ...task,
       id: task.id + 1000,
-      progress: ETaskProgress.ToCall,
+      progress: EJobTaskProgress.ToCall,
     })),
   },
   {
@@ -539,7 +539,7 @@ export const jobs: IJob[] = [
       ...baseStageTasks.slice(20, 24).map((task) => ({
         ...task,
         id: task.id + 1100,
-        progress: ETaskProgress.NotRequired,
+        progress: EJobTaskProgress.NotRequired,
       })),
     ],
   },
@@ -549,7 +549,7 @@ export const jobs: IJob[] = [
     tasks: baseStageTasks.slice(22, 24).map((task) => ({
       ...task,
       id: task.id + 1200,
-      progress: ETaskProgress.Completed,
+      progress: EJobTaskProgress.Completed,
     })),
   },
   {
@@ -558,7 +558,7 @@ export const jobs: IJob[] = [
     tasks: baseStageTasks.slice(0, 3).map((task) => ({
       ...task,
       id: task.id + 1300,
-      progress: ETaskProgress.Started,
+      progress: EJobTaskProgress.Started,
     })),
   },
 ];

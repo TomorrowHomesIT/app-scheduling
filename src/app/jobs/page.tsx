@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { jobs } from "@/lib/mock-data";
-import { ETaskProgress } from "@/models/task.model";
+import { EJobTaskProgress } from "@/models/job.model";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
@@ -30,7 +30,7 @@ export default function JobsPage() {
           </TableHeader>
           <TableBody>
             {jobs.map((job) => {
-              const completedTasks = job.tasks.filter((task) => task.progress === ETaskProgress.Completed).length;
+              const completedTasks = job.tasks.filter((task) => task.progress === EJobTaskProgress.Completed).length;
               const progressPercentage = Math.round((completedTasks / job.tasks.length) * 100);
 
               return (

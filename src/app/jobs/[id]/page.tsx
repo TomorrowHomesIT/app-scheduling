@@ -4,7 +4,7 @@ import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { taskStages } from "@/lib/mock-data";
-import { ETaskProgress } from "@/models/task.model";
+import { EJobTaskProgress } from "@/models/job.model";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { TaskTable } from "@/app/jobs/[id]/task-table";
@@ -53,7 +53,7 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
   }));
 
   const totalTasks = currentJob.tasks.length;
-  const completedTasks = currentJob.tasks.filter((task) => task.progress === ETaskProgress.Completed).length;
+  const completedTasks = currentJob.tasks.filter((task) => task.progress === EJobTaskProgress.Completed).length;
 
   return (
     <div className="flex flex-col h-full">
@@ -78,7 +78,7 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
       <div className="flex-1 overflow-auto p-4">
         <Accordion type="multiple" defaultValue={taskStages.map((s) => s.id.toString())}>
           {tasksByStage.map((stage) => {
-            const stageCompleted = stage.tasks.filter((t) => t.progress === ETaskProgress.Completed).length;
+            const stageCompleted = stage.tasks.filter((t) => t.progress === EJobTaskProgress.Completed).length;
             const stageTotal = stage.tasks.length;
 
             return (

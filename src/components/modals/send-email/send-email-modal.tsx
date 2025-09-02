@@ -2,25 +2,25 @@
 
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ETaskStatus } from "@/models/task.model";
+import { EJobTaskStatus } from "@/models/job.model";
 import { CTaskStatusConfig } from "@/models/task.const";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { StatusBadge } from "@/components/ui/status-badge";
 
 interface SendEmailModalProps {
-  onChange: (status: ETaskStatus) => void;
+  onChange: (status: EJobTaskStatus) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 export function SendEmailModal({ onChange, open, onOpenChange }: SendEmailModalProps) {
-  const handleStatusSelect = (status: ETaskStatus) => {
+  const handleStatusSelect = (status: EJobTaskStatus) => {
     onChange(status);
     onOpenChange(false);
   };
 
-  const statusOptions = [ETaskStatus.Scheduled, ETaskStatus.ReScheduled, ETaskStatus.Cancelled];
+  const statusOptions = [EJobTaskStatus.Scheduled, EJobTaskStatus.ReScheduled, EJobTaskStatus.Cancelled];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -54,8 +54,8 @@ export function SendEmailModal({ onChange, open, onOpenChange }: SendEmailModalP
 }
 
 interface StatusTriggerProps {
-  value: ETaskStatus;
-  onChange: (status: ETaskStatus) => void;
+  value: EJobTaskStatus;
+  onChange: (status: EJobTaskStatus) => void;
   className?: string;
 }
 

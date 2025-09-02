@@ -3,35 +3,35 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ProgressBadge } from "@/components/ui/progress-badge";
-import { ETaskProgress } from "@/models/task.model";
+import { EJobTaskProgress } from "@/models/job.model";
 import { CTaskProgressConfig } from "@/models/task.const";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
 
 interface ProgressModalProps {
-  value: ETaskProgress;
-  onChange: (progress: ETaskProgress) => void;
+  value: EJobTaskProgress;
+  onChange: (progress: EJobTaskProgress) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 export function ProgressModal({ value, onChange, open, onOpenChange }: ProgressModalProps) {
-  const [selectedProgress, setSelectedProgress] = useState<ETaskProgress>(value);
+  const [selectedProgress, setSelectedProgress] = useState<EJobTaskProgress>(value);
 
-  const handleProgressSelect = (progress: ETaskProgress) => {
+  const handleProgressSelect = (progress: EJobTaskProgress) => {
     setSelectedProgress(progress);
     onChange(progress);
     onOpenChange(false);
   };
 
   const progressOptions = [
-    ETaskProgress.ToCall,
-    ETaskProgress.Called,
-    ETaskProgress.Confirmed,
-    ETaskProgress.Started,
-    ETaskProgress.Completed,
-    ETaskProgress.NotRequired,
+    EJobTaskProgress.ToCall,
+    EJobTaskProgress.Called,
+    EJobTaskProgress.Confirmed,
+    EJobTaskProgress.Started,
+    EJobTaskProgress.Completed,
+    EJobTaskProgress.NotRequired,
   ];
 
   return (
@@ -66,8 +66,8 @@ export function ProgressModal({ value, onChange, open, onOpenChange }: ProgressM
 }
 
 interface ProgressTriggerProps {
-  value: ETaskProgress;
-  onChange: (progress: ETaskProgress) => void;
+  value: EJobTaskProgress;
+  onChange: (progress: EJobTaskProgress) => void;
   className?: string;
 }
 

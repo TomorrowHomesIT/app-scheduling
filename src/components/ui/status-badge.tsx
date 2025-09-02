@@ -2,12 +2,12 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { ETaskStatus } from "@/models/task.model";
+import type { EJobTaskStatus } from "@/models/job.model";
 import { cn } from "@/lib/utils";
 import { CTaskStatusConfig } from "@/models/task.const";
 
 interface StatusBadgeProps {
-  status: ETaskStatus;
+  status: EJobTaskStatus;
   onClick?: () => void;
   className?: string;
 }

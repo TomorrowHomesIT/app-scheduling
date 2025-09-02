@@ -3,8 +3,8 @@
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useEffect } from "react";
-import type { ETaskProgress, ETaskStatus } from "@/models/task.model";
-import type { ITask } from "@/models";
+import type { EJobTaskProgress, EJobTaskStatus } from "@/models/job.model";
+import type { IJobTask } from "@/models";
 import { DatePickerTrigger } from "@/components/modals/date-picker/date-picker-modal";
 import { NotesTrigger } from "@/components/modals/notes/notes-modal";
 import { StatusTrigger } from "@/components/modals/send-email/send-email-modal";
@@ -15,7 +15,7 @@ import useAppStore from "@/store/job-store";
 import useSupplierStore from "@/store/supplier-store";
 
 interface TaskTableProps {
-  tasks: ITask[];
+  tasks: IJobTask[];
 }
 
 export function TaskTable({ tasks }: TaskTableProps) {
@@ -31,16 +31,16 @@ export function TaskTable({ tasks }: TaskTableProps) {
     await updateTask(taskId, { notes });
   };
 
-  const handleStatusChange = async (taskId: number, status: ETaskStatus) => {
+  const handleStatusChange = async (taskId: number, status: EJobTaskStatus) => {
     // Update the task status in the store
     await updateTask(taskId, { status });
 
     // TODO: API call to trigger status-specific action
     // This is where you'll add the actual API request later
-    // Example: await api.updateTaskStatus(taskId, status);
+    // Example: await api.updatEJobTaskStatus(taskId, status);
   };
 
-  const handleProgressChange = async (taskId: number, progress: ETaskProgress) => {
+  const handleProgressChange = async (taskId: number, progress: EJobTaskProgress) => {
     await updateTask(taskId, { progress });
   };
 

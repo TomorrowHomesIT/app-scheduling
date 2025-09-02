@@ -5,6 +5,8 @@ A Next.js-based scheduling application for managing construction jobs, tasks, an
 
 ## Tech Stack
 - **Framework**: Next.js 15 (App Router)
+- **Data**: Supabase Postgress
+- **Authentication**: Supabase auth
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
 - **UI Components**: shadcn/ui
@@ -33,7 +35,6 @@ src/
 │   ├── sidebar.tsx     # Navigation sidebar with owners/jobs
 │   └── dashboard-layout.tsx
 └── lib/
-    ├── mock-data.ts    # Mock data for development
     └── utils.ts        # Utility functions
 
 ```
@@ -42,7 +43,7 @@ src/
 
 ### 1. Hierarchical Navigation
 - Owners contain multiple jobs
-- Jobs contain tasks organized by stages
+- Jobs contain Job tasks organized by stages
 - Sidebar with search functionality that filters jobs while maintaining owner structure
 - Auto-expands owner when navigating directly to a job
 
@@ -77,9 +78,6 @@ npm run build
 # Run linting
 npm run lint
 
-# Run type checking
-npm run typecheck
-
 # Format code with Biome
 npm run format
 ```
@@ -110,41 +108,11 @@ npm run format
 
 ## Recent Changes
 
-### Latest Updates
-- Implemented sidebar search that filters jobs while maintaining owner structure
-- Added color props to Owner and Supplier models
-- Added owner/checklist icons with color support in sidebar
-- Removed checkboxes from task tables
-- Reorganized table columns: Name, Supplier, Start date, Notes, PO, Plans, Email Template, Progress
-- Added PDF badges for document attachments
-- Browser title updates to show current job name
-
-## Notes for Future Development
-
-1. **Mock Data**: Currently using mock data from `src/lib/mock-data.ts`. This should be replaced with actual API calls or database connections.
-
-2. **Authentication**: No authentication system is currently implemented.
-
-3. **State Management**: Currently using React's built-in state. Consider implementing a state management solution (Redux, Zustand, etc.) as the app grows.
-
-4. **File Uploads**: PDF attachment functionality currently only displays badges. Actual file upload/download needs to be implemented.
-
-5. **Email Templates**: Email template feature is displayed but not yet functional.
-
 ## Environment Setup
 
-No environment variables are currently required. When adding backend integration, create a `.env.local` file with necessary configuration.
+No environment variables are currently required. When adding backend integration, create a `.env` file with necessary configuration.
 
-## Browser Compatibility
 
-Tested and optimized for modern browsers:
-- Chrome/Edge (latest)
-- Firefox (latest)
-- Safari (latest)
-
-## Known Issues
-
-- None currently documented
 
 ## Code Style Guidelines
 
@@ -156,6 +124,10 @@ Tested and optimized for modern browsers:
   - ✅ Correct: `import { ReactNode, ComponentProps, FC } from "react"`
   - ❌ Incorrect: `import * as React from "react"` then using `React.ReactNode`
   - ❌ Incorrect: `React.ComponentProps`, `React.FC`, etc.
+- Preffer direct type imports when only types are imported
+  - ✅ Correct: `import type { ComponentProps } from "react"`
+  - ❌ Incorrect: `import { type ComponentProps } from "react"`
+  - ❌ Incorrect: `import { ComponentProps } from "react"`
 - Use specific imports for better tree-shaking and cleaner code
 - Group imports logically: React first, then external libraries, then local imports
 
@@ -181,30 +153,3 @@ When making changes:
 4. Maintain consistent styling with Tailwind CSS
 5. Run linting and type checking before committing
 6. Update this documentation for significant changes
-
-Progress Modal System
-
-  1. Shared Configuration (/models/task.const.ts):
-    - Added CTaskProgressConfig with consistent styling for all progress states
-    - Includes className for badges and progressColor for the progress indicator bar
-  2. Reusable Progress Badge (/components/ui/progress-badge.tsx):
-    - Uses the shared configuration for consistent styling
-    - Can be used as both a static badge and clickable button
-    - Matches the pattern of the status badge
-  3. Progress Selection Modal (/components/modals/progress/progress-modal.tsx):
-    - Modal interface similar to the status modal
-    - Shows all progress options as larger buttons for easy selection
-    - Includes ProgressTrigger component for easy integration
-  4. Task Table Integration:
-    - Removed old getProgressBadge function and uses the new shared config
-    - Added handleProgressChange function that only updates the task (no extra API call needed)
-    - Integrated ProgressTrigger to replace the old static progress display
-
-  The system now provides:
-  - Consistent Styling: All progress badges use the same configuration
-  - Modal Selection: Click any progress badge to open a selection modal
-  - Store Integration: Updates are handled through the existing updateTask function
-  - Reusable Components: Both badge and modal can be used throughout the app
-
-  The progress modal follows the same pattern as the status modal but only updates the task
-  directly without needing additional API requests, as requested.

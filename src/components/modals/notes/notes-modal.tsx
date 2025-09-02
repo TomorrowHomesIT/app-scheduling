@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
@@ -41,7 +41,8 @@ export function NotesModal({ value, onChange, open, onOpenChange }: NotesModalPr
     <Dialog open={open} onOpenChange={handleCancel}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Edit Notes</DialogTitle>
+          <DialogTitle>Notes</DialogTitle>
+          <DialogDescription>Add a note for this task</DialogDescription>
         </DialogHeader>
         <div className="py-4">
           <Textarea
@@ -57,12 +58,9 @@ export function NotesModal({ value, onChange, open, onOpenChange }: NotesModalPr
               Remove
             </Button>
           )}
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleCancel}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave}>Save</Button>
-          </div>
+          <Button onClick={handleSave} disabled={!notes}>
+            Save note
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

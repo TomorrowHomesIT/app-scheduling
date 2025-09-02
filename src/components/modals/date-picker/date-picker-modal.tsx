@@ -4,7 +4,7 @@ import { useState } from "react";
 import { format, addDays } from "date-fns";
 import { CalendarPlusIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Calendar } from "../../ui/calendar";
 
 interface DatePickerModalProps {
@@ -28,19 +28,24 @@ export function DatePickerModal({ value, onChange, open, onOpenChange }: DatePic
   today.setHours(0, 0, 0, 0);
   const tomorrow = addDays(today, 1);
 
+  const disabled = (date: Date) => {
+    return date < today;
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[360px]">
+      <DialogContent className="">
         <DialogHeader>
-          <DialogTitle>Select Due Date</DialogTitle>
+          <DialogTitle>Start date</DialogTitle>
+          <DialogDescription>Select a start date for the task</DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
-          <div className="flex gap-2">
-            <Button variant="outline" className="flex-1" onClick={() => handleSelect(today)}>
+        <div className="flex space-y-4">
+          <div className="flex flex-col gap-4 mt-2 border-r pr-6">
+            <Button variant="outline" onClick={() => handleSelect(today)}>
               Today
               <span className="ml-auto text-xs text-muted-foreground">{format(today, "MMM d")}</span>
             </Button>
-            <Button variant="outline" className="flex-1" onClick={() => handleSelect(tomorrow)}>
+            <Button variant="outline" onClick={() => handleSelect(tomorrow)}>
               Tomorrow
               <span className="ml-auto text-xs text-muted-foreground">{format(tomorrow, "MMM d")}</span>
             </Button>
@@ -51,7 +56,8 @@ export function DatePickerModal({ value, onChange, open, onOpenChange }: DatePic
             onMonthChange={setMonth}
             selected={date}
             onSelect={handleSelect}
-            className="bg-transparent p-0 w-full"
+            disabled={disabled}
+            className="bg-transparent w-full py-0 pr-0"
           />
         </div>
       </DialogContent>

@@ -66,7 +66,7 @@ export function Sidebar() {
     .filter((owner): owner is NonNullable<typeof owner> => owner !== null);
 
   return (
-    <div className="flex h-full w-64 flex-col border-r bg-background">
+    <div className="flex h-full w-58 flex-col border-r bg-background">
       <div className="p-4 border-b">
         <h2 className="text-lg font-semibold">BASD - Scheduling</h2>
       </div>
@@ -105,7 +105,7 @@ export function Sidebar() {
                   <span className="text-xs text-muted-foreground">{owner.jobs?.length || 0}</span>
                 </Button>
               </CollapsibleTrigger>
-              <CollapsibleContent className="ml-4">
+              <CollapsibleContent className="ml-2">
                 {owner.jobs?.map((job) => (
                   <Link
                     key={job.id}

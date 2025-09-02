@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ProgressBadge } from "@/components/ui/progress-badge";
 import { EJobTaskProgress } from "@/models/job.model";
 import { CTaskProgressConfig } from "@/models/job.const";
@@ -38,7 +38,8 @@ export function ProgressModal({ value, onChange, open, onOpenChange }: ProgressM
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[320px]">
         <DialogHeader>
-          <DialogTitle>Select Progress</DialogTitle>
+          <DialogTitle>Set Progress</DialogTitle>
+          <DialogDescription>Select a progress to set for the task</DialogDescription>
         </DialogHeader>
         <div className="py-4 space-y-2">
           {progressOptions.map((progress) => {
@@ -47,15 +48,12 @@ export function ProgressModal({ value, onChange, open, onOpenChange }: ProgressM
               <Button
                 key={progress}
                 variant="outline"
-                className={cn(
-                  "w-full h-12 px-4 relative",
-                  config.className,
-                  "hover:scale-[1.02] transition-transform duration-150",
-                )}
+                className={cn("w-full h-12 px-4 relative", "hover:scale-[1.02] transition-transform duration-150")}
                 onClick={() => handleProgressSelect(progress)}
               >
-                {selectedProgress === progress && <Check className="absolute left-4 h-5 w-5" />}
+                <div className={cn("absolute left-4 h-3 w-3 rounded-full", config.progressColor)} />
                 <span className="font-medium">{config.label}</span>
+                {selectedProgress === progress && <Check className="absolute right-4 h-5 w-5" />}
               </Button>
             );
           })}

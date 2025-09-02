@@ -3,7 +3,7 @@ import { EJobTaskStatus, EJobTaskProgress } from "./job.model";
 export const CTaskStatusConfig = {
   [EJobTaskStatus.None]: {
     label: "-",
-    className: "bg-transparent text-gray-500 hover:bg-gray-200",
+    className: "bg-transparent text-gray-500 hover:bg-gray-200 justify-start",
   },
   [EJobTaskStatus.Scheduled]: {
     label: "Schedule",
@@ -22,7 +22,7 @@ export const CTaskStatusConfig = {
 export const CTaskProgressConfig = {
   [EJobTaskProgress.None]: {
     label: "-",
-    className: "bg-transparent text-gray-500 hover:bg-gray-200",
+    className: "bg-transparent text-gray-500 hover:bg-gray-200 justify-start",
     progressColor: "bg-transparent",
   },
   [EJobTaskProgress.ToCall]: {

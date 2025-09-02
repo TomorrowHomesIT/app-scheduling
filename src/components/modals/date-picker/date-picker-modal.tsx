@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { format, addDays } from "date-fns";
-import { Calendar as CalendarIcon } from "lucide-react";
+import { CalendarPlusIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Calendar } from "../../ui/calendar";
@@ -72,11 +72,11 @@ export function DatePickerTrigger({ value, onChange, className }: DatePickerTrig
     <>
       <Button
         variant="ghost"
-        className={className || "h-auto p-1 hover:bg-accent font-normal justify-start"}
+        className={className || "h-auto py-2 w-full hover:bg-accent font-normal justify-start"}
         onClick={() => setOpen(true)}
       >
-        <CalendarIcon className="h-3 w-3 text-muted-foreground mr-1" />
-        <span className="text-sm">{value ? format(value, "MMM d") : "Set date"}</span>
+        {!value && <CalendarPlusIcon className="h-3 w-3 text-muted-foreground" />}
+        <span className="text-sm">{value ? format(value, "MMM d") : ""}</span>
       </Button>
       <DatePickerModal value={value ?? undefined} onChange={onChange} open={open} onOpenChange={setOpen} />
     </>

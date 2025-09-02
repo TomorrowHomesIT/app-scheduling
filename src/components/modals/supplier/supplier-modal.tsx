@@ -97,9 +97,15 @@ export function SupplierTrigger({ value, onChange, className }: SupplierTriggerP
 
   return (
     <>
-      <Button variant="ghost" className={cn("h-auto p-0", className)} onClick={() => setOpen(true)}>
+      <Button
+        variant="ghost"
+        className={cn("p-0 w-full min-w-full justify-start", className)}
+        onClick={() => setOpen(true)}
+      >
         {supplier ? (
-          <Badge variant="secondary">{supplier.name}</Badge>
+          <Badge variant="secondary" className="inline-block max-w-full truncate" title={supplier.name}>
+            {supplier.name}
+          </Badge>
         ) : (
           <span className="text-sm text-muted-foreground">-</span>
         )}

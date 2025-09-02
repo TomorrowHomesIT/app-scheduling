@@ -24,7 +24,7 @@ export function ProgressBadge({ progress, onClick, className }: ProgressBadgePro
         className={cn("h-auto p-0 hover:bg-gray-200 w-full justify-start", className)}
         onClick={onClick}
       >
-        <Badge className={config.className}>
+        <Badge className={cn("w-full", config.className)}>
           <BadgeContent />
         </Badge>
       </Button>

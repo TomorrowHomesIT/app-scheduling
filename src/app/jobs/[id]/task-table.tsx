@@ -50,38 +50,40 @@ export function TaskTable({ tasks }: TaskTableProps) {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="w-8"></TableHead>
-          <TableHead>Name</TableHead>
-          <TableHead>Supplier</TableHead>
-          <TableHead>Start date</TableHead>
-          <TableHead>Notes</TableHead>
-          <TableHead>PO</TableHead>
-          <TableHead>Plans</TableHead>
-          <TableHead>Email Template</TableHead>
-          <TableHead>Progress</TableHead>
+          <TableHead className="w-4"></TableHead>
+          <TableHead className="w-64 text-gray-600 text-xs">Name</TableHead>
+          <TableHead className="w-32 text-gray-600 text-xs">Supplier</TableHead>
+          <TableHead className="min-w-32 max-w-40 text-gray-600 text-xs">Start date</TableHead>
+          <TableHead className="min-w-32 max-w-40 text-gray-600 text-xs">Notes</TableHead>
+          <TableHead className="min-w-24 max-w-32 text-gray-600 text-xs">PO</TableHead>
+          <TableHead className="min-w-24 max-w-32 text-gray-600 text-xs">Plans</TableHead>
+          <TableHead className="in-w-32 max-w-40 text-gray-600 text-xs">Email Template</TableHead>
+          <TableHead className="min-w-32 max-w-40 text-gray-600 text-xs">Progress</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {tasks.map((task) => {
           return (
             <TableRow key={task.id}>
-              <TableCell>
+              <TableCell className="w-4">
                 <div className={`w-1 h-8 rounded ${CTaskProgressConfig[task.progress].progressColor}`} />
               </TableCell>
-              <TableCell className="font-medium">{task.name}</TableCell>
-              <TableCell className="p-0">
+              <TableCell className="w-64 font-medium truncate" title={task.name}>
+                {task.name}
+              </TableCell>
+              <TableCell className="w-32 p-0">
                 <SupplierTrigger
                   value={task.supplierId}
                   onChange={(supplierId) => handleSupplierChange(task.id, supplierId)}
                 />
               </TableCell>
-              <TableCell className="p-0">
+              <TableCell className="min-w-32 max-w-40 p-0">
                 <DatePickerTrigger value={task.startDate} onChange={(date) => handleDateChange(task.id, date)} />
               </TableCell>
-              <TableCell className="p-0 max-w-24">
+              <TableCell className="min-w-32 max-w-40 p-0">
                 <NotesTrigger value={task.notes} onChange={(notes) => handleNotesChange(task.id, notes)} />
               </TableCell>
-              <TableCell>
+              <TableCell className="min-w-24 max-w-32">
                 <div className="flex gap-1">
                   {task.purchaseOrderLinks && task.purchaseOrderLinks.length > 0 ? (
                     task.purchaseOrderLinks.map((link) => (
@@ -94,7 +96,7 @@ export function TaskTable({ tasks }: TaskTableProps) {
                   )}
                 </div>
               </TableCell>
-              <TableCell>
+              <TableCell className="min-w-24 max-w-32">
                 <div className="flex gap-1">
                   {task.planLinks && task.planLinks.length > 0 ? (
                     task.planLinks.map((link) => (
@@ -107,14 +109,11 @@ export function TaskTable({ tasks }: TaskTableProps) {
                   )}
                 </div>
               </TableCell>
-              <TableCell className="p-0">
+              <TableCell className="min-w-32 max-w-40">
                 <StatusTrigger value={task.status} onChange={(status) => handleStatusChange(task.id, status)} />
               </TableCell>
-              <TableCell className="p-0">
-                <ProgressTrigger
-                  value={task.progress}
-                  onChange={(progress) => handleProgressChange(task.id, progress)}
-                />
+              <TableCell className="min-w-32 max-w-40">
+                <ProgressTrigger value={task.progress} onChange={(p) => handleProgressChange(task.id, p)} />
               </TableCell>
             </TableRow>
           );

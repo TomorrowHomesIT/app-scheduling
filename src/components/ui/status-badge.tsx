@@ -24,7 +24,7 @@ export function StatusBadge({ status, onClick, className }: StatusBadgeProps) {
         className={cn("h-auto p-0 hover:bg-gray-200 w-full justify-start", className)}
         onClick={onClick}
       >
-        <Badge className={cn("gap-1.5 justify-start", config.className)}>
+        <Badge className={cn("gap-1.5 w-full", config.className)}>
           <BadgeContent />
         </Badge>
       </Button>

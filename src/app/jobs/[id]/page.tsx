@@ -3,7 +3,6 @@
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { taskStages } from "@/lib/mock-data";
 import { EJobTaskProgress } from "@/models/job.model";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,7 @@ import { TaskTable } from "@/app/jobs/[id]/task-table";
 import { ChevronLeft } from "lucide-react";
 import useJobStore from "@/store/job-store";
 import useSupplierStore from "@/store/supplier-store";
+import useTaskStore from "@/store/task-store";
 
 interface JobDetailPageProps {
   params: Promise<{ id: string }>;
@@ -18,39 +18,43 @@ interface JobDetailPageProps {
 
 export default function JobDetailPage({ params }: JobDetailPageProps) {
   const { id } = use(params);
+  const { taskStages, loadTaskStages } = useTaskStore();
   const { currentJob, loadJob } = useJobStore();
   const { loadSuppliers } = useSupplierStore();
 
   // Load suppliers when component mounts
   useEffect(() => {
     loadSuppliers();
-  }, [loadSuppliers]);
+    loadTaskStages();
+  }, [loadSuppliers, loadTaskStages]);
   const [error, setError] = useState<boolean>(false);
 
-  // Load job on mount
   useEffect(() => {
-    try {
-      loadJob(parseInt(id, 10));
-    } catch (error) {
-      setError(true);
-      console.error(error);
+    if (!currentJob || currentJob.id !== parseInt(id, 10)) {
+      try {
+        loadJob(parseInt(id, 10));
+      } catch (error) {
+        setError(true);
+        console.error(error);
+      }
     }
 
     if (currentJob) document.title = currentJob.name;
   }, [id, loadJob, currentJob]);
 
-  if (error) {
+  if (error || Number.isNaN(Number(id))) {
     return notFound();
-  }
-
-  if (!currentJob || currentJob.id !== Number(id)) {
+  } else if (!currentJob || currentJob.id !== Number(id)) {
     return <div className="flex items-center justify-center h-full">Loading...</div>;
   }
 
   const tasksByStage = taskStages.map((stage) => ({
     ...stage,
-    tasks: currentJob.tasks.filter((task) => task.stageId === stage.id),
+    tasks: currentJob.tasks.filter((task) => task.taskStageId === stage.id),
   }));
+
+  console.log(taskStages);
+  console.log(currentJob);
 
   const totalTasks = currentJob.tasks.length;
   const completedTasks = currentJob.tasks.filter((task) => task.progress === EJobTaskProgress.Completed).length;
@@ -77,7 +81,7 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
 
       <div className="flex-1 overflow-auto p-4">
         <Accordion type="multiple" defaultValue={taskStages.map((s) => s.id.toString())}>
-          {tasksByStage.map((stage) => {
+          {tasksByStage.map((stage, index) => {
             const stageCompleted = stage.tasks.filter((t) => t.progress === EJobTaskProgress.Completed).length;
             const stageTotal = stage.tasks.length;
 
@@ -87,7 +91,7 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
                   <div className="flex items-center justify-between w-full pr-4">
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-base">
-                        {stage.order}. {stage.name}
+                        {index + 1}. {stage.name}
                       </span>
                       <span className="text-sm text-muted-foreground">{stageTotal} tasks</span>
                     </div>

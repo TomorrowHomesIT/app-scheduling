@@ -60,7 +60,7 @@ export function DatePickerModal({ value, onChange, open, onOpenChange }: DatePic
 }
 
 interface DatePickerTriggerProps {
-  value?: Date;
+  value?: Date | null;
   onChange: (date: Date | undefined) => void;
   className?: string;
 }
@@ -78,7 +78,7 @@ export function DatePickerTrigger({ value, onChange, className }: DatePickerTrig
         <CalendarIcon className="h-3 w-3 text-muted-foreground mr-1" />
         <span className="text-sm">{value ? format(value, "MMM d") : "Set date"}</span>
       </Button>
-      <DatePickerModal value={value} onChange={onChange} open={open} onOpenChange={setOpen} />
+      <DatePickerModal value={value ?? undefined} onChange={onChange} open={open} onOpenChange={setOpen} />
     </>
   );
 }

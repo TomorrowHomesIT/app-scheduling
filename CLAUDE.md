@@ -92,7 +92,7 @@ npm run format
 - `supplierId`: Reference to supplier
 - `progress`: ETaskProgress enum value
 - `status`: ETaskStatus enum value
-- `stageId`: Reference to task stage
+- `taskStageId`: Reference to task stage
 - `notes`: Optional notes
 - `startDate`: Task due date
 - `purchaseOrderLinks`: Array of PO document links

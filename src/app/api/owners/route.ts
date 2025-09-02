@@ -1,16 +1,39 @@
 import { createClient } from "@/lib/supabase/server";
 import { toCamelCase } from "@/lib/api/casing";
-import type { ISupplier } from "@/models/supplier.model";
+import type { IOwner, IOwnerJob } from "@/models/owner.model";
 
 export async function GET() {
   const supabase = await createClient();
 
-  const { data, error } = await supabase.from("suppliers").select("id, name, email").order("name");
+  // Fetch owners from cf_owners table
+  const { data: ownersData, error: ownersError } = await supabase
+    .from("cf_owners")
+    .select("id, name, color, user_id")
+    .order("name");
 
-  if (!data || error) {
-    return Response.json({ error }, { status: 500 });
+  if (!ownersData || ownersError) {
+    return Response.json({ error: ownersError }, { status: 500 });
   }
 
-  const suppliers: ISupplier[] = toCamelCase(data);
-  return Response.json(suppliers, { status: 200 });
+  // Fetch jobs from ck_jobs table
+  const { data: jobsData, error: jobsError } = await supabase
+    .from("cf_jobs")
+    .select("id, name, owner_id")
+    .order("name");
+
+  if (jobsError) {
+    return Response.json({ error: jobsError }, { status: 500 });
+  }
+
+  // Convert to camelCase
+  const owners: IOwner[] = toCamelCase(ownersData);
+  const jobs: IOwnerJob[] = toCamelCase(jobsData || []);
+
+  // Build the owner structure with jobs
+  const ownersWithJobs = owners.map((owner) => ({
+    ...owner,
+    jobs: jobs.filter((job) => job.ownerId === owner.id),
+  }));
+
+  return Response.json(ownersWithJobs, { status: 200 });
 }

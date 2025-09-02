@@ -25,18 +25,18 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
 import useOwnersStore from "@/store/owners-store";
-import useTaskTemplateStore from "@/store/task-template-store";
+import useTaskTemplateStore from "@/store/task-store";
 import type { ITask } from "@/models/task.model";
 import type { ICreateJobRequest } from "@/models/job.model";
 
 interface TaskWithStage extends ITask {
-  stageId: number;
+  taskStageId: number;
   stageName: string;
 }
 
 function SortableTaskRow({ task }: { task: TaskWithStage }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: `${task.stageId}-${task.id}`,
+    id: `${task.taskStageId}-${task.id}`,
   });
 
   const style = {
@@ -66,7 +66,7 @@ export default function CreateJobPage() {
   const [isSaving, setIsSaving] = useState(false);
 
   const { owners } = useOwnersStore();
-  const { tasks, stages, isLoading, loadTasksAndStages } = useTaskTemplateStore();
+  const { tasks, taskStages, isLoading, loadTasksAndStages } = useTaskTemplateStore();
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -81,16 +81,16 @@ export default function CreateJobPage() {
 
   useEffect(() => {
     // When tasks and stages are loaded, organize them
-    if (tasks.length > 0 && stages.length > 0) {
+    if (tasks.length > 0 && taskStages.length > 0) {
       const tasksWithStage: TaskWithStage[] = [];
 
-      stages.forEach((stage) => {
+      taskStages.forEach((stage) => {
         const stageTasks = tasks
           .filter((task) => task.taskStageId === stage.id)
           .sort((a, b) => a.order - b.order)
           .map((task) => ({
             ...task,
-            stageId: stage.id,
+            taskStageId: stage.id,
             stageName: stage.name,
           }));
         tasksWithStage.push(...stageTasks);
@@ -98,15 +98,15 @@ export default function CreateJobPage() {
 
       setOrderedTasks(tasksWithStage);
     }
-  }, [tasks, stages]);
+  }, [tasks, taskStages]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
     if (active.id !== over?.id) {
       setOrderedTasks((items) => {
-        const oldIndex = items.findIndex((item) => `${item.stageId}-${item.id}` === active.id);
-        const newIndex = items.findIndex((item) => `${item.stageId}-${item.id}` === over?.id);
+        const oldIndex = items.findIndex((item) => `${item.taskStageId}-${item.id}` === active.id);
+        const newIndex = items.findIndex((item) => `${item.taskStageId}-${item.id}` === over?.id);
 
         return arrayMove(items, oldIndex, newIndex);
       });
@@ -125,7 +125,7 @@ export default function CreateJobPage() {
       const jobTasks = orderedTasks.map((task, index) => ({
         taskId: task.id,
         name: task.name,
-        taskStageId: task.stageId,
+        taskStageId: task.taskStageId,
         docTags: task.docTags || [],
         order: index + 1,
         costCenter: task.costCenter,
@@ -162,9 +162,9 @@ export default function CreateJobPage() {
   };
 
   // Group tasks by stage for display
-  const tasksByStage = stages.map((stage) => ({
+  const tasksByStage = taskStages.map((stage) => ({
     stage,
-    tasks: orderedTasks.filter((task) => task.stageId === stage.id),
+    tasks: orderedTasks.filter((task) => task.taskStageId === stage.id),
   }));
 
   return (
@@ -182,10 +182,10 @@ export default function CreateJobPage() {
         <div className="max-w-6xl mx-auto space-y-6">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="folder">Folder</Label>
+              <Label htmlFor="folder">Owner</Label>
               <Select value={selectedOwnerId} onValueChange={setSelectedOwnerId}>
                 <SelectTrigger id="folder">
-                  <SelectValue placeholder="Select a folder" />
+                  <SelectValue placeholder="Select a owner" />
                 </SelectTrigger>
                 <SelectContent>
                   {owners.map((owner) => (
@@ -229,11 +229,11 @@ export default function CreateJobPage() {
                           </TableHeader>
                           <TableBody>
                             <SortableContext
-                              items={stageTasks.map((t) => `${t.stageId}-${t.id}`)}
+                              items={stageTasks.map((t) => `${t.taskStageId}-${t.id}`)}
                               strategy={verticalListSortingStrategy}
                             >
                               {stageTasks.map((task) => (
-                                <SortableTaskRow key={`${task.stageId}-${task.id}`} task={task} />
+                                <SortableTaskRow key={`${task.taskStageId}-${task.id}`} task={task} />
                               ))}
                             </SortableContext>
                           </TableBody>

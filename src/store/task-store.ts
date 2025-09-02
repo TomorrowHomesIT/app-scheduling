@@ -2,31 +2,29 @@ import { create } from "zustand";
 import type { ITask } from "@/models/task.model";
 import type { IJobTaskStage } from "@/models/job.model";
 
-interface TaskTemplateStore {
+interface TaskStore {
   tasks: ITask[];
-  stages: IJobTaskStage[];
+  taskStages: IJobTaskStage[];
   isLoading: boolean;
-  
+
+  loadTaskStages: () => Promise<void>;
   loadTasksAndStages: () => Promise<void>;
 }
 
-const useTaskTemplateStore = create<TaskTemplateStore>((set, get) => ({
+const useTaskStore = create<TaskStore>((set, get) => ({
   tasks: [],
-  stages: [],
+  taskStages: [],
   isLoading: false,
 
   loadTasksAndStages: async () => {
     // Don't fetch if already loaded or currently loading
-    if (get().tasks.length > 0 && get().stages.length > 0 || get().isLoading) return;
+    if ((get().tasks.length > 0 && get().taskStages.length > 0) || get().isLoading) return;
 
     set({ isLoading: true });
 
     try {
       // Fetch both tasks and stages in parallel
-      const [tasksRes, stagesRes] = await Promise.all([
-        fetch("/api/tasks"),
-        fetch("/api/task-stages"),
-      ]);
+      const [tasksRes, stagesRes] = await Promise.all([fetch("/api/tasks"), fetch("/api/task-stages")]);
 
       if (!tasksRes.ok || !stagesRes.ok) {
         throw new Error("Failed to fetch task templates");
@@ -40,7 +38,7 @@ const useTaskTemplateStore = create<TaskTemplateStore>((set, get) => ({
 
       set({
         tasks: tasksData,
-        stages: sortedStages,
+        taskStages: sortedStages,
         isLoading: false,
       });
     } catch {
@@ -49,6 +47,25 @@ const useTaskTemplateStore = create<TaskTemplateStore>((set, get) => ({
       set({ isLoading: false });
     }
   },
+
+  loadTaskStages: async () => {
+    if (get().taskStages.length > 0 || get().isLoading) return;
+    set({ isLoading: true });
+
+    try {
+      const stagesRes = await fetch("/api/task-stages");
+      if (!stagesRes.ok) {
+        throw new Error("Failed to fetch task stages");
+      }
+
+      const stagesData: IJobTaskStage[] = await stagesRes.json();
+      set({ taskStages: stagesData, isLoading: false });
+    } catch {
+      // TODO error
+    } finally {
+      set({ isLoading: false });
+    }
+  },
 }));
 
-export default useTaskTemplateStore;
+export default useTaskStore;

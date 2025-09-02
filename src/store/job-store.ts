@@ -1,57 +1,86 @@
 import { create } from "zustand";
 import type { IJob } from "@/models/job.model";
 import type { IJobTask } from "@/models/job.model";
-import { jobs as mockJobs } from "../lib/mock-data";
 
 interface JobStore {
   jobs: IJob[];
   currentJob: IJob | null;
+  isLoading: boolean;
 
   loadJob: (id: number) => Promise<void>;
   setCurrentJob: (job: IJob | null) => void;
   updateTask: (taskId: number, updates: Partial<IJobTask>) => Promise<void>;
 }
 
-// Simulate API delay
-const simulateApiDelay = () => new Promise((resolve) => setTimeout(resolve, 300));
-
 const fetchJobByIdFromApi = async (id: number): Promise<IJob | null> => {
-  await simulateApiDelay();
-  return mockJobs.find((job) => job.id === id) || null;
+  try {
+    const response = await fetch(`/api/jobs/${id}`);
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        return null;
+      }
+      throw new Error("Failed to fetch job");
+    }
+
+    const job: IJob = await response.json();
+    return job;
+  } catch (error) {
+    console.error("Error fetching job:", error);
+    throw error;
+  }
 };
 
-// Mock API function for updating a task
 const updateTaskApi = async (taskId: number, updates: Partial<IJobTask>): Promise<IJobTask | null> => {
-  await simulateApiDelay();
-  // In real implementation, this would make a PATCH request to /tasks/{taskId}
-  // For now, we'll just return the updated task from mock data
-  for (const job of mockJobs) {
-    const task = job.tasks?.find((t) => t.id === taskId);
-    if (task) {
-      Object.assign(task, updates);
-      return task;
+  try {
+    const response = await fetch(`/api/tasks/${taskId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(updates),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to update task");
     }
+
+    const updatedTask: IJobTask = await response.json();
+    return updatedTask;
+  } catch (error) {
+    console.error("Error updating task:", error);
+    throw error;
   }
-  return null;
 };
 
 const useJobStore = create<JobStore>((set, get) => ({
   jobs: [],
   currentJob: null,
+  isLoading: false,
 
   loadJob: async (id: number) => {
-    const job = await fetchJobByIdFromApi(id);
-    if (job) {
-      set((state) => {
-        // Update or add job to jobs array
-        const jobIndex = state.jobs.findIndex((j) => j.id === id);
-        const updatedJobs = jobIndex !== -1 ? state.jobs.map((j) => (j.id === id ? job : j)) : [...state.jobs, job];
+    if (get().isLoading) return;
+    set({ isLoading: true });
 
-        return {
-          jobs: updatedJobs,
-          currentJob: job,
-        };
-      });
+    try {
+      const job = await fetchJobByIdFromApi(id);
+      if (job) {
+        set((state) => {
+          // Update or add job to jobs array
+          const jobIndex = state.jobs.findIndex((j) => j.id === id);
+          const updatedJobs = jobIndex !== -1 ? state.jobs.map((j) => (j.id === id ? job : j)) : [...state.jobs, job];
+
+          return {
+            jobs: updatedJobs,
+            currentJob: job,
+            isLoading: false,
+          };
+        });
+      }
+    } catch {
+      // TODO error
+    } finally {
+      set({ isLoading: false });
     }
   },
 
@@ -60,6 +89,10 @@ const useJobStore = create<JobStore>((set, get) => ({
   },
 
   updateTask: async (taskId: number, updates: Partial<IJobTask>) => {
+    // Store the current state in case we need to rollback
+    // TODO we probably need to just store the request if there is no internet
+    const previousState = get();
+
     // Optimistically update the UI
     set((state) => {
       // Find which job contains this task
@@ -94,8 +127,18 @@ const useJobStore = create<JobStore>((set, get) => ({
       };
     });
 
-    // Make API call to persist the change
-    await updateTaskApi(taskId, updates);
+    try {
+      // Make API call to persist the change
+      await updateTaskApi(taskId, updates);
+    } catch (error) {
+      // Rollback on error
+      console.error("Failed to update task, rolling back:", error);
+      set({
+        jobs: previousState.jobs,
+        currentJob: previousState.currentJob,
+      });
+      throw error;
+    }
   },
 }));
 

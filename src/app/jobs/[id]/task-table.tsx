@@ -2,7 +2,6 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useEffect } from "react";
 import type { EJobTaskProgress, EJobTaskStatus } from "@/models/job.model";
 import type { IJobTask } from "@/models";
 import { DatePickerTrigger } from "@/components/modals/date-picker/date-picker-modal";
@@ -12,7 +11,6 @@ import { ProgressTrigger } from "@/components/modals/progress/progress-modal";
 import { SupplierTrigger } from "@/components/modals/supplier/supplier-modal";
 import { CTaskProgressConfig } from "@/models/job.const";
 import useAppStore from "@/store/job-store";
-import useSupplierStore from "@/store/supplier-store";
 
 interface TaskTableProps {
   tasks: IJobTask[];

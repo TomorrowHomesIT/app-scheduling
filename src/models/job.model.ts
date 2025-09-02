@@ -12,11 +12,11 @@ export interface IJobTask {
   costCenter: number;
   progress: EJobTaskProgress;
   status: EJobTaskStatus;
-  stageId: number;
+  taskStageId: number;
   docTags: string[] | null;
 
   notes: string;
-  startDate: Date;
+  startDate: Date | null;
   purchaseOrderLinks: string[];
   planLinks: string[];
   order: number;

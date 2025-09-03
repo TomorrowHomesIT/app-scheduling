@@ -73,7 +73,7 @@ export function Sidebar() {
         <h2 className="text-lg font-semibold">Scheduling</h2>
       </div>
 
-      <div className="px-4 py-2">
+      <div className="p-4">
         <div className="relative">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
@@ -100,7 +100,7 @@ export function Sidebar() {
                     )}
                     <Folder
                       className="absolute h-4 w-4 transition-opacity group-hover:opacity-0"
-                      style={{ color: owner.color || "#6b7280" }}
+                      style={{ color: owner.color || "#0A120A" }}
                     />
                   </span>
                   <span className="flex-1 text-left">{owner.name}</span>
@@ -117,7 +117,7 @@ export function Sidebar() {
                       pathname === `/jobs/${job.id}` && "bg-accent font-bold",
                     )}
                   >
-                    <ListChecks className="h-4 w-4 flex-shrink-0" style={{ color: owner.color || "#6b7280" }} />
+                    <ListChecks className="h-4 w-4 flex-shrink-0" style={{ color: owner.color || "#0A120A" }} />
                     <span className="truncate">{job.name}</span>
                   </Link>
                 ))}

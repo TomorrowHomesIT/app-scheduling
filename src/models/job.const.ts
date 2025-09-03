@@ -56,7 +56,7 @@ export const CTaskProgressConfig = {
   },
   [EJobTaskProgress.NotRequired]: {
     label: "Not Required",
-    className: "bg-gray-300 text-gray-900 hover:bg-gray-400",
-    progressColor: "bg-gray-400",
+    className: "bg-orange-300 text-orange-900 hover:bg-orange-400",
+    progressColor: "bg-orange-500",
   },
 } as const;

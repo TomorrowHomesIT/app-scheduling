@@ -20,13 +20,11 @@ export function TaskTable({ tasks }: TaskTableProps) {
   const { updateTask } = useAppStore();
 
   const handleDateChange = async (taskId: number, date: Date | undefined) => {
-    if (date) {
-      await updateTask(taskId, { startDate: date });
-    }
+    await updateTask(taskId, { startDate: date ?? null });
   };
 
   const handleNotesChange = async (taskId: number, notes: string | undefined) => {
-    await updateTask(taskId, { notes });
+    await updateTask(taskId, { notes: notes ?? null });
   };
 
   const handleStatusChange = async (taskId: number, status: EJobTaskStatus) => {
@@ -43,7 +41,7 @@ export function TaskTable({ tasks }: TaskTableProps) {
   };
 
   const handleSupplierChange = async (taskId: number, supplierId: number | undefined) => {
-    await updateTask(taskId, { supplierId });
+    await updateTask(taskId, { supplierId: supplierId ?? null });
   };
 
   const handlePOLinksChange = async (taskId: number, links: IJobTaskUrl[]) => {

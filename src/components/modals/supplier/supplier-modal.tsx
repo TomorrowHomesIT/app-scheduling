@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Check, Search } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +19,16 @@ interface SupplierModalProps {
 
 export function SupplierModal({ value, onChange, open, onOpenChange }: SupplierModalProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSupplierId, setSelectedSupplierId] = useState<number | undefined>(value);
   const { suppliers } = useSupplierStore();
+
+  // Reset selected supplier when modal opens
+  useEffect(() => {
+    if (open) {
+      setSelectedSupplierId(value);
+      setSearchQuery("");
+    }
+  }, [open, value]);
 
   // Filter suppliers based on search query
   const filteredSuppliers = useMemo(() => {
@@ -28,19 +37,30 @@ export function SupplierModal({ value, onChange, open, onOpenChange }: SupplierM
     return suppliers.filter((supplier) => supplier.name.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [suppliers, searchQuery]);
 
-  const handleSupplierSelect = (supplier: ISupplier) => {
-    onChange(supplier.id);
-    onOpenChange(false);
-    setSearchQuery(""); // Reset search when closing
+  const handleSupplierSelect = (supplierId: number) => {
+    setSelectedSupplierId(supplierId);
   };
 
-  const handleClose = () => {
+  const handleSave = () => {
+    onChange(selectedSupplierId);
     onOpenChange(false);
-    setSearchQuery(""); // Reset search when closing
+    setSearchQuery("");
+  };
+
+  const handleRemove = () => {
+    onChange(undefined);
+    onOpenChange(false);
+    setSearchQuery("");
+  };
+
+  const handleCancel = () => {
+    setSelectedSupplierId(value);
+    onOpenChange(false);
+    setSearchQuery("");
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog open={open} onOpenChange={handleCancel}>
       <DialogContent className="sm:max-w-[400px] max-h-[600px] min-h-[600px] flex flex-col">
         <DialogHeader>
           <DialogTitle>Select Supplier</DialogTitle>
@@ -69,15 +89,26 @@ export function SupplierModal({ value, onChange, open, onOpenChange }: SupplierM
                   key={supplier.id}
                   variant="outline"
                   className="w-full justify-between h-12 px-4"
-                  onClick={() => handleSupplierSelect(supplier)}
+                  onClick={() => handleSupplierSelect(supplier.id)}
                 >
                   {supplier.name}
-                  {value === supplier.id && <Check className="h-4 w-4" />}
+                  {selectedSupplierId === supplier.id && <Check className="h-4 w-4" />}
                 </Button>
               ))
             )}
           </div>
         </div>
+
+        <DialogFooter className="flex items-end gap-2">
+          {value && (
+            <Button variant="destructive" className="mr-auto" onClick={handleRemove}>
+              Remove
+            </Button>
+          )}
+          <Button onClick={handleSave} disabled={!selectedSupplierId}>
+            Save
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

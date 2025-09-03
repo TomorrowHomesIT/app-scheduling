@@ -36,18 +36,18 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const updateData: any = {};
 
     // Use 'in' operator to check if property exists, pass values directly (including null)
-    if ('name' in updates) updateData.name = updates.name;
-    if ('supplierId' in updates) updateData.supplier_id = updates.supplierId;
-    if ('costCenter' in updates) updateData.cost_center = updates.costCenter;
-    if ('progress' in updates) updateData.progress = updates.progress;
-    if ('status' in updates) updateData.status = updates.status;
-    if ('stageId' in updates) updateData.task_stage_id = updates.stageId;
-    if ('docTags' in updates) updateData.doc_tags = updates.docTags;
-    if ('notes' in updates) updateData.notes = updates.notes;
-    if ('startDate' in updates) updateData.start_date = updates.startDate;
-    if ('purchaseOrderLinks' in updates) updateData.purchase_order_links = updates.purchaseOrderLinks;
-    if ('planLinks' in updates) updateData.plan_links = updates.planLinks;
-    if ('order' in updates) updateData.order = updates.order;
+    if ("name" in updates) updateData.name = updates.name;
+    if ("supplierId" in updates) updateData.supplier_id = updates.supplierId;
+    if ("costCenter" in updates) updateData.cost_center = updates.costCenter;
+    if ("progress" in updates) updateData.progress = updates.progress;
+    if ("status" in updates) updateData.status = updates.status;
+    if ("stageId" in updates) updateData.task_stage_id = updates.stageId;
+    if ("docTags" in updates) updateData.doc_tags = updates.docTags;
+    if ("notes" in updates) updateData.notes = updates.notes;
+    if ("startDate" in updates) updateData.start_date = updates.startDate;
+    if ("purchaseOrderLinks" in updates) updateData.purchase_order_links = updates.purchaseOrderLinks;
+    if ("planLinks" in updates) updateData.plan_links = updates.planLinks;
+    if ("order" in updates) updateData.order = updates.order;
 
     // Update task in cf_job_tasks table
     const { data, error } = await supabase.from("cf_job_tasks").update(updateData).eq("id", taskId).select().single();

@@ -118,14 +118,10 @@ const useJobStore = create<JobStore>((set, get) => ({
     // Optimistically update the UI
     set((state) => {
       // Update job in jobs array
-      const updatedJobs = state.jobs.map((job) => 
-        job.id === jobId ? { ...job, ...updates } : job
-      );
+      const updatedJobs = state.jobs.map((job) => (job.id === jobId ? { ...job, ...updates } : job));
 
       // Update currentJob if it's the same job
-      const updatedCurrentJob = state.currentJob?.id === jobId 
-        ? { ...state.currentJob, ...updates }
-        : state.currentJob;
+      const updatedCurrentJob = state.currentJob?.id === jobId ? { ...state.currentJob, ...updates } : state.currentJob;
 
       return {
         jobs: updatedJobs,

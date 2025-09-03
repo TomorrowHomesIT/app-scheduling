@@ -54,15 +54,15 @@
   /* Custom green theme colors */
   --primary: #0a120a; /* Dark green background */
   --primary-foreground: #e5ffbc; /* Light green text */
-  --secondary: #F2F2F2; /* Off-grey */
+  --secondary: #f2f2f2; /* Off-grey */
   --secondary-foreground: #0a120a; /* Dark green text */
-  --muted: #F2F2F2; /* Off-grey */
+  --muted: #f2f2f2; /* Off-grey */
   --muted-foreground: #0a120a80; /* Dark green 50% opacity for muted text */
-  --accent: #F2F2F2; /* Off-grey */
+  --accent: #f2f2f2; /* Off-grey */
   --accent-foreground: #0a120a; /* Dark green text */
   --destructive: oklch(0.577 0.245 27.325);
-  --border: #E8E8E8; /* Light grey border */
-  --input: #E8E8E8; /* Light grey for inputs */
+  --border: #e8e8e8; /* Light grey border */
+  --input: #e8e8e8; /* Light grey for inputs */
   --ring: #0a120a33; /* Dark green with opacity for focus ring */
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
@@ -73,9 +73,9 @@
   --sidebar-foreground: #0a120a; /* Dark green text */
   --sidebar-primary: #0a120a; /* Dark green for primary sidebar */
   --sidebar-primary-foreground: #e5ffbc; /* Light green text */
-  --sidebar-accent: #F2F2F2; /* Off-grey */
+  --sidebar-accent: #f2f2f2; /* Off-grey */
   --sidebar-accent-foreground: #0a120a; /* Dark green text */
-  --sidebar-border: #E8E8E8; /* Slightly darker than F2F2F2 for borders */
+  --sidebar-border: #e8e8e8; /* Slightly darker than F2F2F2 for borders */
   --sidebar-ring: oklch(0.704 0.04 256.788);
 }
 
@@ -89,11 +89,11 @@
   /* Custom green theme colors for dark mode */
   --primary: #e5ffbc; /* Light green for primary in dark mode */
   --primary-foreground: #0a120a; /* Dark green text on light green */
-  --secondary: #1A1A1A; /* Dark grey for dark mode */
+  --secondary: #1a1a1a; /* Dark grey for dark mode */
   --secondary-foreground: #e5ffbc; /* Light green text */
-  --muted: #1A1A1A; /* Dark grey for dark mode */
+  --muted: #1a1a1a; /* Dark grey for dark mode */
   --muted-foreground: #e5ffbcb3; /* Light green 70% opacity for muted */
-  --accent: #1A1A1A; /* Dark grey for dark mode */
+  --accent: #1a1a1a; /* Dark grey for dark mode */
   --accent-foreground: #e5ffbc; /* Light green text */
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
@@ -108,9 +108,9 @@
   --sidebar-foreground: #e5ffbc; /* Light green text */
   --sidebar-primary: #e5ffbc; /* Light green for primary */
   --sidebar-primary-foreground: #0a120a; /* Dark green text */
-  --sidebar-accent: #1A1A1A; /* Dark grey for accent */
+  --sidebar-accent: #1a1a1a; /* Dark grey for accent */
   --sidebar-accent-foreground: #e5ffbc; /* Light green text */
-  --sidebar-border: #2A2A2A; /* Slightly lighter grey for borders */
+  --sidebar-border: #2a2a2a; /* Slightly lighter grey for borders */
   --sidebar-ring: #e5ffbc33; /* Light green with opacity */
 }
 

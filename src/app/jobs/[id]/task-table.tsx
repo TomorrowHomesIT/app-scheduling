@@ -57,7 +57,7 @@ export function TaskTable({ tasks }: TaskTableProps) {
     // Convert docTags to null if empty array for consistency
     const processedUpdates = {
       ...updates,
-      docTags: updates.docTags && updates.docTags.length === 0 ? null : updates.docTags
+      docTags: updates.docTags && updates.docTags.length === 0 ? null : updates.docTags,
     };
     await updateTask(taskId, processedUpdates);
   };

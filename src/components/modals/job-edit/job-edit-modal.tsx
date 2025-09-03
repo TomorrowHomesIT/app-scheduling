@@ -17,7 +17,7 @@ interface JobEditModalProps {
 export function JobEditModal({ job, onSave, open, onOpenChange }: JobEditModalProps) {
   const [localJob, setLocalJob] = useState<IUpdateJobRequest>({
     name: job.name,
-    location: job.location || ""
+    location: job.location || "",
   });
   const [isSaving, setIsSaving] = useState(false);
 
@@ -25,7 +25,7 @@ export function JobEditModal({ job, onSave, open, onOpenChange }: JobEditModalPr
     if (open) {
       setLocalJob({
         name: job.name,
-        location: job.location || ""
+        location: job.location || "",
       });
     }
   }, [open, job]);
@@ -45,7 +45,7 @@ export function JobEditModal({ job, onSave, open, onOpenChange }: JobEditModalPr
   const handleCancel = () => {
     setLocalJob({
       name: job.name,
-      location: job.location || ""
+      location: job.location || "",
     });
     onOpenChange(false);
   };
@@ -65,7 +65,7 @@ export function JobEditModal({ job, onSave, open, onOpenChange }: JobEditModalPr
               id="job-name"
               autoFocus={true}
               value={localJob.name}
-              onChange={(e) => setLocalJob(prev => ({ ...prev, name: e.target.value }))}
+              onChange={(e) => setLocalJob((prev) => ({ ...prev, name: e.target.value }))}
               placeholder="Enter job name"
             />
           </div>
@@ -76,7 +76,7 @@ export function JobEditModal({ job, onSave, open, onOpenChange }: JobEditModalPr
             <Input
               id="job-location"
               value={localJob.location}
-              onChange={(e) => setLocalJob(prev => ({ ...prev, location: e.target.value }))}
+              onChange={(e) => setLocalJob((prev) => ({ ...prev, location: e.target.value }))}
               placeholder="Enter job location"
             />
           </div>
@@ -86,10 +86,7 @@ export function JobEditModal({ job, onSave, open, onOpenChange }: JobEditModalPr
           <Button variant="outline" onClick={handleCancel}>
             Cancel
           </Button>
-          <Button 
-            onClick={handleSave} 
-            disabled={isSaving || !localJob.name.trim()}
-          >
+          <Button onClick={handleSave} disabled={isSaving || !localJob.name.trim()}>
             {isSaving ? "Saving..." : "Save"}
           </Button>
         </DialogFooter>

@@ -29,6 +29,7 @@ interface SpinnerProps extends ComponentProps<"div">, VariantProps<typeof spinne
 
 function Spinner({ className, variant, size, ...props }: SpinnerProps) {
   return (
+    // biome-ignore lint/a11y/useSemanticElements: this is legit
     <div role="status" aria-label="Loading" className={cn(spinnerVariants({ variant, size }), className)} {...props} />
   );
 }

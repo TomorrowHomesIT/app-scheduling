@@ -48,9 +48,11 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
   if (error || Number.isNaN(Number(id))) {
     return notFound();
   } else if (!currentJob || currentJob.id !== Number(id)) {
-    return <div className="flex items-center justify-center h-full">
-      <Spinner variant="default" size="xl" />
-    </div>;
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Spinner variant="default" size="xl" />
+      </div>
+    );
   }
 
   const tasksByStage = taskStages.map((stage) => ({

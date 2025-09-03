@@ -1,11 +1,13 @@
 import { create } from "zustand";
 import type { IOwner } from "@/models/owner.model";
+import { toast } from "@/store/toast-store";
 
 interface OwnersStore {
   owners: IOwner[];
   isLoaded: boolean;
   isLoading: boolean;
   loadOwners: () => Promise<void>;
+  setJobName: (jobId: number, name: string) => void;
 }
 
 const useOwnersStore = create<OwnersStore>((set, get) => ({
@@ -28,10 +30,19 @@ const useOwnersStore = create<OwnersStore>((set, get) => ({
       const owners: IOwner[] = await response.json();
       set({ owners, isLoaded: true, isLoading: false });
     } catch {
-      // TODO error
+      toast.error("Failed to fetch owners");
     } finally {
       set({ isLoading: false });
     }
+  },
+
+  setJobName: (jobId: number, name: string) => {
+    set((state) => ({
+      owners: state.owners.map((owner) => ({
+        ...owner,
+        jobs: owner.jobs?.map((job) => (job.id === jobId ? { ...job, name } : job)),
+      })),
+    }));
   },
 }));
 

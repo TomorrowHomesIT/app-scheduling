@@ -3,6 +3,7 @@ import type { IJob, IUpdateJobRequest } from "@/models/job.model";
 import type { IJobTask } from "@/models/job.model";
 import { toast } from "@/store/toast-store";
 import { getApiErrorMessage } from "@/lib/api/error";
+import useOwnersStore from "@/store/owners-store";
 
 interface JobStore {
   jobs: IJob[];
@@ -114,33 +115,27 @@ const useJobStore = create<JobStore>((set, get) => ({
     // Store the current state in case we need to rollback
     const previousState = get();
 
-    // Optimistically update the UI
-    set((state) => {
-      // Update job in jobs array
-      const updatedJobs = state.jobs.map((job) => (job.id === jobId ? { ...job, ...updates } : job));
+    await toast.while(updateJobApi(jobId, updates), {
+      loading: "Updating job...",
+      success: "Job updated",
+      error: () => {
+        set({ jobs: previousState.jobs, currentJob: previousState.currentJob });
+        return "Failed to update job";
+      },
+    });
 
-      // Update currentJob if it's the same job
+    if (updates.name) {
+      useOwnersStore.getState().setJobName(jobId, updates.name);
+    }
+
+    set((state) => {
+      const updatedJobs = state.jobs.map((job) => (job.id === jobId ? { ...job, ...updates } : job));
       const updatedCurrentJob = state.currentJob?.id === jobId ? { ...state.currentJob, ...updates } : state.currentJob;
 
       return {
         jobs: updatedJobs,
         currentJob: updatedCurrentJob,
       };
-    });
-
-    // Show toast notification for the update
-    await toast.while(updateJobApi(jobId, updates), {
-      loading: "Updating job...",
-      success: "Job updated",
-      error: (error) => {
-        // Rollback on error
-        console.error("Failed to update job, rolling back:", error);
-        set({
-          jobs: previousState.jobs,
-          currentJob: previousState.currentJob,
-        });
-        return "Failed to update job";
-      },
     });
   },
 

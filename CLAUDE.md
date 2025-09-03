@@ -8,7 +8,7 @@ A Next.js-based scheduling application for managing construction jobs, tasks, an
 - **Data**: Supabase Postgress
 - **Authentication**: Supabase auth
 - **Language**: TypeScript
-- **Styling**: Tailwind CSS
+- **Styling**: Tailwind CSS (single light theme only - no dark mode)
 - **UI Components**: shadcn/ui
 - **Code Quality**: Biome (linting & formatting)
 
@@ -107,6 +107,11 @@ npm run format
 - `name`: Supplier name
 
 ## Recent Changes
+
+### Theme Simplification
+- Removed dark theme support to maintain a single consistent light theme
+- App now uses only the light green and off-grey color scheme
+- No theme switching functionality
 
 ## Environment Setup
 

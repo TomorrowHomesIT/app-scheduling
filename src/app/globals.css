@@ -1,8 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -77,41 +75,6 @@
   --sidebar-accent-foreground: #0a120a; /* Dark green text */
   --sidebar-border: #e8e8e8; /* Slightly darker than F2F2F2 for borders */
   --sidebar-ring: oklch(0.704 0.04 256.788);
-}
-
-.dark {
-  --background: #0a120a; /* Dark green background for dark mode */
-  --foreground: #e5ffbc; /* Light green text for dark mode */
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: #e5ffbc; /* Light green text */
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: #e5ffbc; /* Light green text */
-  /* Custom green theme colors for dark mode */
-  --primary: #e5ffbc; /* Light green for primary in dark mode */
-  --primary-foreground: #0a120a; /* Dark green text on light green */
-  --secondary: #1a1a1a; /* Dark grey for dark mode */
-  --secondary-foreground: #e5ffbc; /* Light green text */
-  --muted: #1a1a1a; /* Dark grey for dark mode */
-  --muted-foreground: #e5ffbcb3; /* Light green 70% opacity for muted */
-  --accent: #1a1a1a; /* Dark grey for dark mode */
-  --accent-foreground: #e5ffbc; /* Light green text */
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: #161616; /* Very dark grey for sidebar background */
-  --sidebar-foreground: #e5ffbc; /* Light green text */
-  --sidebar-primary: #e5ffbc; /* Light green for primary */
-  --sidebar-primary-foreground: #0a120a; /* Dark green text */
-  --sidebar-accent: #1a1a1a; /* Dark grey for accent */
-  --sidebar-accent-foreground: #e5ffbc; /* Light green text */
-  --sidebar-border: #2a2a2a; /* Slightly lighter grey for borders */
-  --sidebar-ring: #e5ffbc33; /* Light green with opacity */
 }
 
 @layer base {

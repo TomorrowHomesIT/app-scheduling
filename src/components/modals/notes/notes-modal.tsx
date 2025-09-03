@@ -87,7 +87,7 @@ export function NotesTrigger({ value, onChange, className }: NotesTriggerProps) 
     <>
       <Button
         variant="ghost"
-        className={cn("h-auto px-2 py-1 hover:bg-accent font-normal justify-start text-left w-full", className)}
+        className={cn("px-2 py-1 hover:bg-accent font-normal justify-start text-left w-full", className)}
         onClick={() => setOpen(true)}
       >
         {value ? (

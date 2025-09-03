@@ -192,7 +192,7 @@ export function TaskDetailsTrigger({ task, onSave, children, className }: TaskDe
       <Button
         variant="ghost"
         onClick={() => setOpen(true)}
-        className={cn("text-left hover:underline p-0 w-full justify-start", className)}
+        className={cn("text-left p-0 w-full justify-start", className)}
         type="button"
       >
         {children}

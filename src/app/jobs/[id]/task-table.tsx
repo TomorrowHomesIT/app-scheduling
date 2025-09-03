@@ -1,14 +1,14 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import type { EJobTaskProgress, EJobTaskStatus } from "@/models/job.model";
+import type { EJobTaskProgress, EJobTaskStatus, IJobTaskUrl } from "@/models/job.model";
 import type { IJobTask } from "@/models";
 import { DatePickerTrigger } from "@/components/modals/date-picker/date-picker-modal";
 import { NotesTrigger } from "@/components/modals/notes/notes-modal";
 import { StatusTrigger } from "@/components/modals/send-email/send-email-modal";
 import { ProgressTrigger } from "@/components/modals/progress/progress-modal";
 import { SupplierTrigger } from "@/components/modals/supplier/supplier-modal";
+import { FileLinkModalTrigger } from "@/components/modals/file-link/file-link-modal";
 import { CTaskProgressConfig } from "@/models/job.const";
 import useAppStore from "@/store/job-store";
 
@@ -44,6 +44,14 @@ export function TaskTable({ tasks }: TaskTableProps) {
 
   const handleSupplierChange = async (taskId: number, supplierId: number | undefined) => {
     await updateTask(taskId, { supplierId });
+  };
+
+  const handlePOLinksChange = async (taskId: number, links: IJobTaskUrl[]) => {
+    await updateTask(taskId, { purchaseOrderLinks: links });
+  };
+
+  const handlePlanLinksChange = async (taskId: number, links: IJobTaskUrl[]) => {
+    await updateTask(taskId, { planLinks: links });
   };
 
   return (
@@ -84,30 +92,18 @@ export function TaskTable({ tasks }: TaskTableProps) {
                 <NotesTrigger value={task.notes} onChange={(notes) => handleNotesChange(task.id, notes)} />
               </TableCell>
               <TableCell className="min-w-24 max-w-32">
-                <div className="flex gap-1">
-                  {task.purchaseOrderLinks && task.purchaseOrderLinks.length > 0 ? (
-                    task.purchaseOrderLinks.map((link) => (
-                      <Badge key={link} variant="outline" className="text-xs">
-                        PDF
-                      </Badge>
-                    ))
-                  ) : (
-                    <span className="text-sm text-muted-foreground">-</span>
-                  )}
-                </div>
+                <FileLinkModalTrigger
+                  links={task.purchaseOrderLinks || []}
+                  onSave={(links) => handlePOLinksChange(task.id, links)}
+                  title="Purchase Order Links"
+                />
               </TableCell>
               <TableCell className="min-w-24 max-w-32">
-                <div className="flex gap-1">
-                  {task.planLinks && task.planLinks.length > 0 ? (
-                    task.planLinks.map((link) => (
-                      <Badge key={link} variant="outline" className="text-xs">
-                        PDF
-                      </Badge>
-                    ))
-                  ) : (
-                    <span className="text-sm text-muted-foreground">-</span>
-                  )}
-                </div>
+                <FileLinkModalTrigger
+                  links={task.planLinks || []}
+                  onSave={(links) => handlePlanLinksChange(task.id, links)}
+                  title="Plan Links"
+                />
               </TableCell>
               <TableCell className="min-w-32 max-w-40">
                 <StatusTrigger value={task.status} onChange={(status) => handleStatusChange(task.id, status)} />

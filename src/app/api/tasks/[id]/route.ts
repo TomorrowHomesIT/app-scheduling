@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { toCamelCase } from "@/lib/api/casing";
+import { validateJobTaskUrls } from "@/lib/api/validation";
 import type { IJobTask } from "@/models/job.model";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -13,6 +14,22 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   try {
     const updates = await request.json();
+
+    // Validate purchaseOrderLinks if provided
+    if (updates.purchaseOrderLinks !== undefined) {
+      const poValidationError = validateJobTaskUrls(updates.purchaseOrderLinks);
+      if (poValidationError) {
+        return Response.json({ error: `Invalid purchase order links: ${poValidationError}` }, { status: 400 });
+      }
+    }
+
+    // Validate planLinks if provided
+    if (updates.planLinks !== undefined) {
+      const planValidationError = validateJobTaskUrls(updates.planLinks);
+      if (planValidationError) {
+        return Response.json({ error: `Invalid plan links: ${planValidationError}` }, { status: 400 });
+      }
+    }
 
     // Prepare the update object for snake_case columns
     // biome-ignore lint/suspicious/noExplicitAny: its a snake case database object

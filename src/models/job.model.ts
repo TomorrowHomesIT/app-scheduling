@@ -4,6 +4,12 @@ export interface IJob {
   tasks: IJobTask[];
 }
 
+export interface IJobTaskUrl {
+  name: string;
+  url?: string;
+  googleDriveId?: string;
+}
+
 export interface IJobTask {
   id: number;
   jobId: number;
@@ -17,8 +23,8 @@ export interface IJobTask {
 
   notes: string;
   startDate: Date | null;
-  purchaseOrderLinks: string[];
-  planLinks: string[];
+  purchaseOrderLinks: IJobTaskUrl[];
+  planLinks: IJobTaskUrl[];
   order: number;
 }
 

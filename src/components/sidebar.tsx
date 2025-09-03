@@ -11,6 +11,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import useJobStore from "@/store/job-store";
 import useOwnersStore from "@/store/owners-store";
 import { LogoutButton } from "./auth/logout-button";
+import Image from "next/image";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -66,9 +67,10 @@ export function Sidebar() {
     .filter((owner): owner is NonNullable<typeof owner> => owner !== null);
 
   return (
-    <div className="flex h-full w-58 flex-col border-r bg-background">
-      <div className="p-4 border-b">
-        <h2 className="text-lg font-semibold">BASD - Scheduling</h2>
+    <div className="flex h-full w-58 flex-col border-r">
+      <div className="p-4 border-b flex items-center gap-2 bg-primary-foreground">
+        <Image src="/logos/dark-green.svg" alt="BASD - Scheduling" width={24} height={24} />
+        <h2 className="text-lg font-semibold">Scheduling</h2>
       </div>
 
       <div className="px-4 py-2">

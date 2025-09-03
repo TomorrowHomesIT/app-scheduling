@@ -15,7 +15,7 @@ export function LogoutButton() {
   };
 
   return (
-    <Button onClick={logout} className="w-full justify-between" variant="outline">
+    <Button onClick={logout} className="w-full justify-between" variant="destructive">
       Logout
       <LogOut className="h-4 w-4" />
     </Button>

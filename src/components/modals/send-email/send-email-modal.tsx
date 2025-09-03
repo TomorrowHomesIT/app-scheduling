@@ -35,14 +35,11 @@ export function SendEmailModal({ onChange, open, onOpenChange }: SendEmailModalP
             return (
               <Button
                 key={status}
-                variant="ghost"
+                variant="outline"
                 onClick={() => handleStatusSelect(status)}
-                className={cn(
-                  "w-full h-12 px-4",
-                  config.className,
-                  "hover:scale-[1.02] transition-transform duration-150",
-                )}
+                className={cn("w-full h-12 px-4 relative", "hover:scale-[1.02] transition-transform duration-150")}
               >
+                <div className={cn("absolute left-4 h-3 w-3 rounded-full", config.statusColor)} />
                 <span className="font-medium">{config.label}</span>
               </Button>
             );

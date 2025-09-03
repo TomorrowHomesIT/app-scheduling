@@ -68,8 +68,10 @@ export function Sidebar() {
 
   return (
     <div className="flex h-full w-58 flex-col border-r">
-      <div className="p-4 border-b flex items-center gap-2 bg-primary-foreground">
-        <Image src="/logos/dark-green.svg" alt="BASD - Scheduling" width={24} height={24} />
+      <div className="p-4 border-b flex items-center gap-2">
+        <div className="flex items-center justify-center p-2 rounded-sm bg-primary">
+          <Image src="/logos/light-green.svg" alt="BASD - Scheduling" width={16} height={16} />
+        </div>
         <h2 className="text-lg font-semibold">Scheduling</h2>
       </div>
 

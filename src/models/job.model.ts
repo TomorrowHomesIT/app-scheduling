@@ -15,7 +15,7 @@ export interface IJobTask {
   jobId: number;
   name: string;
   supplierId: number;
-  costCenter: number;
+  costCenter: number | null;
   progress: EJobTaskProgress;
   status: EJobTaskStatus;
   taskStageId: number;

@@ -9,6 +9,7 @@ import { StatusTrigger } from "@/components/modals/send-email/send-email-modal";
 import { ProgressTrigger } from "@/components/modals/progress/progress-modal";
 import { SupplierTrigger } from "@/components/modals/supplier/supplier-modal";
 import { FileLinkModalTrigger } from "@/components/modals/file-link/file-link-modal";
+import { TaskDetailsTrigger } from "@/components/modals/task-details/task-details-modal";
 import { CTaskProgressConfig } from "@/models/job.const";
 import useAppStore from "@/store/job-store";
 
@@ -52,6 +53,15 @@ export function TaskTable({ tasks }: TaskTableProps) {
     await updateTask(taskId, { planLinks: links });
   };
 
+  const handleTaskDetailsChange = async (taskId: number, updates: Partial<IJobTask>) => {
+    // Convert docTags to null if empty array for consistency
+    const processedUpdates = {
+      ...updates,
+      docTags: updates.docTags && updates.docTags.length === 0 ? null : updates.docTags
+    };
+    await updateTask(taskId, processedUpdates);
+  };
+
   return (
     <Table>
       <TableHeader>
@@ -75,7 +85,9 @@ export function TaskTable({ tasks }: TaskTableProps) {
                 <div className={`w-1 h-8 rounded ${CTaskProgressConfig[task.progress].progressColor}`} />
               </TableCell>
               <TableCell className="w-64 font-medium truncate" title={task.name}>
-                {task.name}
+                <TaskDetailsTrigger task={task} onSave={handleTaskDetailsChange}>
+                  {task.name}
+                </TaskDetailsTrigger>
               </TableCell>
               <TableCell className="w-32 p-0">
                 <SupplierTrigger

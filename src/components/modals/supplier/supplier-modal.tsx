@@ -6,7 +6,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { ISupplier } from "@/models/supplier.model";
 import useSupplierStore from "@/store/supplier-store";
 import { cn } from "@/lib/utils";
 

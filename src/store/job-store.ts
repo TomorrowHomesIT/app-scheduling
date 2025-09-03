@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { IJob, IUpdateJobRequest } from "@/models/job.model";
 import type { IJobTask } from "@/models/job.model";
+import { toast } from "@/store/toast-store";
 
 interface JobStore {
   jobs: IJob[];
@@ -129,17 +130,20 @@ const useJobStore = create<JobStore>((set, get) => ({
       };
     });
 
-    try {
-      await updateJobApi(jobId, updates);
-    } catch (error) {
-      // Rollback on error
-      console.error("Failed to update job, rolling back:", error);
-      set({
-        jobs: previousState.jobs,
-        currentJob: previousState.currentJob,
-      });
-      throw error;
-    }
+    // Show toast notification for the update
+    await toast.while(updateJobApi(jobId, updates), {
+      loading: "Updating job...",
+      success: "Job updated",
+      error: (error) => {
+        // Rollback on error
+        console.error("Failed to update job, rolling back:", error);
+        set({
+          jobs: previousState.jobs,
+          currentJob: previousState.currentJob,
+        });
+        return "Failed to update job";
+      },
+    });
   },
 
   updateTask: async (taskId: number, updates: Partial<IJobTask>) => {
@@ -181,18 +185,33 @@ const useJobStore = create<JobStore>((set, get) => ({
       };
     });
 
-    try {
-      // Make API call to persist the change
-      await updateTaskApi(taskId, updates);
-    } catch (error) {
-      // Rollback on error
-      console.error("Failed to update task, rolling back:", error);
-      set({
-        jobs: previousState.jobs,
-        currentJob: previousState.currentJob,
-      });
-      throw error;
-    }
+    // Determine what's being updated for specific toast messages
+    const getUpdateMessage = () => {
+      if (updates.supplierId !== undefined) return "supplier";
+      if (updates.progress !== undefined) return "progress";
+      if (updates.startDate !== undefined) return "start date";
+      if (updates.notes !== undefined) return "notes";
+      if (updates.purchaseOrderLinks !== undefined) return "purchase orders";
+      if (updates.planLinks !== undefined) return "plan links";
+
+      return "task";
+    };
+
+    const updateType = getUpdateMessage();
+
+    await toast.while(updateTaskApi(taskId, updates), {
+      loading: `Saving ${updateType}...`,
+      success: `Updated ${updateType}`,
+      error: (error) => {
+        // Rollback on error
+        console.error("Failed to update task, rolling back:", error);
+        set({
+          jobs: previousState.jobs,
+          currentJob: previousState.currentJob,
+        });
+        return `Failed to update ${updateType}`;
+      },
+    });
   },
 }));
 

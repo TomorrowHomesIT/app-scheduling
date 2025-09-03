@@ -2,14 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { Check, Search } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,17 +37,7 @@ export function SupplierModal({ value, onChange, open, onOpenChange }: SupplierM
   }, [suppliers, searchQuery]);
 
   const handleSupplierSelect = (supplierId: number) => {
-    setSelectedSupplierId(supplierId);
-  };
-
-  const handleSave = () => {
-    onChange(selectedSupplierId);
-    onOpenChange(false);
-    setSearchQuery("");
-  };
-
-  const handleRemove = () => {
-    onChange(undefined);
+    onChange(supplierId);
     onOpenChange(false);
     setSearchQuery("");
   };
@@ -104,17 +87,6 @@ export function SupplierModal({ value, onChange, open, onOpenChange }: SupplierM
             )}
           </div>
         </div>
-
-        <DialogFooter className="flex items-end gap-2">
-          {value && (
-            <Button variant="destructive" className="mr-auto" onClick={handleRemove}>
-              Remove
-            </Button>
-          )}
-          <Button onClick={handleSave} disabled={!selectedSupplierId}>
-            Save
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

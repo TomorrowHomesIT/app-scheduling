@@ -92,7 +92,7 @@ npm run format
 - `status`: ETaskStatus enum value
 - `taskStageId`: Reference to task stage
 - `notes`: Optional notes
-- `startDate`: Task due date
+- `startDate`: Task start date
 - `purchaseOrderLinks`: Array of PO document links
 - `planLinks`: Array of plan document links
 

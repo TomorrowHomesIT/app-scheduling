@@ -169,15 +169,15 @@ export default function CreateJobPage() {
     tasks: orderedTasks.filter((task) => task.taskStageId === stage.id),
   }));
 
-  const isTest = true;
-  if (isTest) {
-    return (
-      <div className="flex flex-col h-full bg-background justify-center items-center">
-        <Image src="/logos/dark-green.svg" alt="Logo" width={100} height={100} />
-        <div className="">Select a job from the sidebar</div>
-      </div>
-    );
-  }
+  // const isTest = true;
+  // if (isTest) {
+  //   return (
+  //     <div className="flex flex-col h-full bg-background justify-center items-center">
+  //       <Image src="/logos/dark-green.svg" alt="Logo" width={100} height={100} />
+  //       <div className="">Select a job from the sidebar</div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="flex flex-col h-full">

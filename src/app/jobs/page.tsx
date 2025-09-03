@@ -173,9 +173,7 @@ export default function CreateJobPage() {
   if (isTest) {
     return (
       <div className="flex flex-col h-full bg-background justify-center items-center">
-        <div className="flex items-center justify-center p-3 mb-4 rounded-md bg-primary">
-          <Image src="/logos/light-green.svg" alt="Scheduling" width={48} height={48} />
-        </div>
+        <Image src="/logos/dark-green.svg" alt="Logo" width={100} height={100} />
         <div className="">Select a job from the sidebar</div>
       </div>
     );

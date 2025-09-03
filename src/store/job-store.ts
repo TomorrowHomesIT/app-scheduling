@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { IJob, IUpdateJobRequest } from "@/models/job.model";
 import type { IJobTask } from "@/models/job.model";
 import { toast } from "@/store/toast-store";
+import { getApiErrorMessage } from "@/lib/api/error";
 
 interface JobStore {
   jobs: IJob[];
@@ -19,10 +20,7 @@ const fetchJobByIdFromApi = async (id: number): Promise<IJob | null> => {
     const response = await fetch(`/api/jobs/${id}`);
 
     if (!response.ok) {
-      if (response.status === 404) {
-        return null;
-      }
-      throw new Error("Failed to fetch job");
+      throw new Error(await getApiErrorMessage(response, "Failed to fetch job"));
     }
 
     const job: IJob = await response.json();
@@ -44,7 +42,7 @@ const updateTaskApi = async (taskId: number, updates: Partial<IJobTask>): Promis
     });
 
     if (!response.ok) {
-      throw new Error("Failed to update task");
+      throw new Error(await getApiErrorMessage(response, "Failed to update task"));
     }
 
     const updatedTask: IJobTask = await response.json();
@@ -66,7 +64,7 @@ const updateJobApi = async (jobId: number, updates: IUpdateJobRequest): Promise<
     });
 
     if (!response.ok) {
-      throw new Error("Failed to update job");
+      throw new Error(await getApiErrorMessage(response, "Failed to update job"));
     }
 
     const updatedJob: boolean = await response.json();
@@ -199,19 +197,22 @@ const useJobStore = create<JobStore>((set, get) => ({
 
     const updateType = getUpdateMessage();
 
-    await toast.while(updateTaskApi(taskId, updates), {
-      loading: `Saving ${updateType}...`,
-      success: `Updated ${updateType}`,
-      error: (error) => {
-        // Rollback on error
-        console.error("Failed to update task, rolling back:", error);
-        set({
-          jobs: previousState.jobs,
-          currentJob: previousState.currentJob,
-        });
-        return `Failed to update ${updateType}`;
-      },
-    });
+    try {
+      await toast.while(updateTaskApi(taskId, updates), {
+        loading: `Saving ${updateType}...`,
+        success: `Updated ${updateType}`,
+        error: (error) => {
+          // Rollback on error
+          set({
+            jobs: previousState.jobs,
+            currentJob: previousState.currentJob,
+          });
+          return `${error}`;
+        },
+      });
+    } catch {
+      // handled internally
+    }
   },
 }));
 

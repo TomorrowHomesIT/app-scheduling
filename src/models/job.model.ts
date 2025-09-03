@@ -42,7 +42,7 @@ export enum EJobTaskProgress {
 export enum EJobTaskStatus {
   None = "none",
   Scheduled = "scheduled",
-  ReScheduled = "re_scheduled",
+  ReScheduled = "rescheduled",
   Cancelled = "cancelled",
 }
 

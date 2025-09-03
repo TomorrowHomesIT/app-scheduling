@@ -3,14 +3,16 @@
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { EJobTaskProgress } from "@/models/job.model";
+import { EJobTaskProgress, type IUpdateJobRequest } from "@/models/job.model";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { TaskTable } from "@/app/jobs/[id]/task-table";
-import { ChevronLeft } from "lucide-react";
+import { JobEditModal } from "@/components/modals/job-edit/job-edit-modal";
+import { ChevronLeft, Settings } from "lucide-react";
 import useJobStore from "@/store/job-store";
 import useSupplierStore from "@/store/supplier-store";
 import useTaskStore from "@/store/task-store";
+import { Spinner } from "@/components/ui/spinner";
 
 interface JobDetailPageProps {
   params: Promise<{ id: string }>;
@@ -19,8 +21,9 @@ interface JobDetailPageProps {
 export default function JobDetailPage({ params }: JobDetailPageProps) {
   const { id } = use(params);
   const { taskStages, loadTaskStages } = useTaskStore();
-  const { currentJob, loadJob } = useJobStore();
+  const { currentJob, loadJob, updateJob } = useJobStore();
   const { loadSuppliers } = useSupplierStore();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Load suppliers when component mounts
   useEffect(() => {
@@ -45,7 +48,9 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
   if (error || Number.isNaN(Number(id))) {
     return notFound();
   } else if (!currentJob || currentJob.id !== Number(id)) {
-    return <div className="flex items-center justify-center h-full">Loading...</div>;
+    return <div className="flex items-center justify-center h-full">
+      <Spinner variant="default" size="xl" />
+    </div>;
   }
 
   const tasksByStage = taskStages.map((stage) => ({
@@ -55,6 +60,10 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
 
   const totalTasks = currentJob.tasks.length;
   const completedTasks = currentJob.tasks.filter((task) => task.progress === EJobTaskProgress.Completed).length;
+
+  const handleUpdateJob = async (jobId: number, updates: IUpdateJobRequest) => {
+    await updateJob(jobId, updates);
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -67,12 +76,19 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
               </Button>
             </Link>
             <div>
-              <h1 className="text-2xl font-semibold">{currentJob.name}</h1>
-              <p className="text-sm text-muted-foreground">
-                {completedTasks} of {totalTasks} tasks completed
-              </p>
+              <div className="flex items-end gap-2">
+                <h1 className="text-2xl font-semibold">{currentJob.name}</h1>
+                <span className="text-sm text-muted-foreground mb-1">
+                  {completedTasks} / {totalTasks}
+                </span>
+              </div>
+              <p className="text-sm text-muted-foreground">{currentJob.location}</p>
             </div>
           </div>
+          <Button variant="outline" size="sm" onClick={() => setIsEditModalOpen(true)}>
+            <Settings className="h-4 w-4" />
+            Edit Job
+          </Button>
         </div>
       </div>
 
@@ -107,6 +123,13 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
           })}
         </Accordion>
       </div>
+
+      <JobEditModal
+        job={currentJob}
+        onSave={handleUpdateJob}
+        open={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+      />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 export interface IJob {
   id: number;
   name: string;
+  location: string;
   tasks: IJobTask[];
 }
 
@@ -53,6 +54,7 @@ export interface IJobTaskStage {
 
 export interface ICreateJobRequest {
   name: string;
+  location: string;
   ownerId: number;
   tasks: {
     taskId: number;
@@ -62,4 +64,9 @@ export interface ICreateJobRequest {
     order: number;
     costCenter: number;
   }[];
+}
+
+export interface IUpdateJobRequest {
+  name: string;
+  location: string;
 }

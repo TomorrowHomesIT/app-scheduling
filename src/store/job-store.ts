@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { IJob } from "@/models/job.model";
+import type { IJob, IUpdateJobRequest } from "@/models/job.model";
 import type { IJobTask } from "@/models/job.model";
 
 interface JobStore {
@@ -9,6 +9,7 @@ interface JobStore {
 
   loadJob: (id: number) => Promise<void>;
   setCurrentJob: (job: IJob | null) => void;
+  updateJob: (jobId: number, updates: IUpdateJobRequest) => Promise<void>;
   updateTask: (taskId: number, updates: Partial<IJobTask>) => Promise<void>;
 }
 
@@ -53,6 +54,28 @@ const updateTaskApi = async (taskId: number, updates: Partial<IJobTask>): Promis
   }
 };
 
+const updateJobApi = async (jobId: number, updates: IUpdateJobRequest): Promise<boolean | null> => {
+  try {
+    const response = await fetch(`/api/jobs/${jobId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(updates),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to update job");
+    }
+
+    const updatedJob: boolean = await response.json();
+    return updatedJob;
+  } catch (error) {
+    console.error("Error updating job:", error);
+    throw error;
+  }
+};
+
 const useJobStore = create<JobStore>((set, get) => ({
   jobs: [],
   currentJob: null,
@@ -86,6 +109,41 @@ const useJobStore = create<JobStore>((set, get) => ({
 
   setCurrentJob: (job: IJob | null) => {
     set({ currentJob: job });
+  },
+
+  updateJob: async (jobId: number, updates: IUpdateJobRequest) => {
+    // Store the current state in case we need to rollback
+    const previousState = get();
+
+    // Optimistically update the UI
+    set((state) => {
+      // Update job in jobs array
+      const updatedJobs = state.jobs.map((job) => 
+        job.id === jobId ? { ...job, ...updates } : job
+      );
+
+      // Update currentJob if it's the same job
+      const updatedCurrentJob = state.currentJob?.id === jobId 
+        ? { ...state.currentJob, ...updates }
+        : state.currentJob;
+
+      return {
+        jobs: updatedJobs,
+        currentJob: updatedCurrentJob,
+      };
+    });
+
+    try {
+      await updateJobApi(jobId, updates);
+    } catch (error) {
+      // Rollback on error
+      console.error("Failed to update job, rolling back:", error);
+      set({
+        jobs: previousState.jobs,
+        currentJob: previousState.currentJob,
+      });
+      throw error;
+    }
   },
 
   updateTask: async (taskId: number, updates: Partial<IJobTask>) => {

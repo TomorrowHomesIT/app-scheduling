@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { toCamelCase } from "@/lib/api/casing";
-import type { IJob, IJobTask } from "@/models/job.model";
+import type { IJob, IJobTask, IUpdateJobRequest } from "@/models/job.model";
 
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
   const supabase = await createClient();
@@ -15,7 +15,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
     // Fetch job from cf_jobs table
     const { data: jobData, error: jobError } = await supabase
       .from("cf_jobs")
-      .select("id, name, owner_id")
+      .select("id, name, location, owner_id")
       .eq("id", jobId)
       .single();
 
@@ -67,6 +67,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
     const completeJob: IJob = {
       id: job.id,
       name: job.name,
+      location: job.location || "",
       tasks: mappedTasks,
     };
 
@@ -75,4 +76,37 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
     console.error("Error in GET /api/jobs/[id]:", error);
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
+}
+
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const supabase = await createClient();
+  const { id } = await params;
+  const jobId = parseInt(id, 10);
+
+  if (Number.isNaN(jobId)) {
+    return Response.json({ error: "Invalid job ID" }, { status: 400 });
+  }
+
+  const updates: IUpdateJobRequest = await request.json();
+  if (!updates.name || !updates.name.trim()) {
+    return Response.json({ error: "Job name is required" }, { status: 400 });
+  }
+
+  // Update job in cf_jobs table
+  const { data: jobData, error: jobError } = await supabase
+    .from("cf_jobs")
+    .update({
+      name: updates.name.trim(),
+      location: updates.location?.trim() || null,
+    })
+    .eq("id", jobId)
+    .select("id, name, location, owner_id")
+    .single();
+
+  if (jobError || !jobData) {
+    console.error("Error updating job:", jobError);
+    return Response.json({ error: "Failed to update job" }, { status: 500 });
+  }
+
+  return Response.json(true, { status: 200 });
 }

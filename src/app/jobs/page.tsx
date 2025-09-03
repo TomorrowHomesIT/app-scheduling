@@ -28,6 +28,7 @@ import useOwnersStore from "@/store/owners-store";
 import useTaskTemplateStore from "@/store/task-store";
 import type { ITask } from "@/models/task.model";
 import type { ICreateJobRequest } from "@/models/job.model";
+import Image from "next/image";
 
 interface TaskWithStage extends ITask {
   taskStageId: number;
@@ -166,6 +167,16 @@ export default function CreateJobPage() {
     stage,
     tasks: orderedTasks.filter((task) => task.taskStageId === stage.id),
   }));
+
+  const isTest = true;
+  if (isTest) {
+    return (
+      <div className="flex flex-col h-full bg-background justify-center items-center">
+        <Image src="/logos/dark-green.svg" alt="Logo" width={100} height={100} />
+        <div className="">Select a job from the sidebar</div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full">

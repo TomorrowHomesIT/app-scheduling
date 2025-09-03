@@ -9,6 +9,7 @@ import { Trash2, ExternalLink, AlertCircle, Paperclip } from "lucide-react";
 import type { IJobTaskUrl } from "@/models/job.model";
 import { isValidUrl, getGoogleDriveWebViewLink, extractGoogleDriveId, isValidGoogleDriveId, cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { ModalTriggerButton } from "@/components/ui/buttons/modal-trigger-button";
 
 interface FileLinkModalProps {
   links: IJobTaskUrl[];
@@ -31,15 +32,17 @@ export function FileLinkModal({ links, onSave, title, open, onOpenChange }: File
   // Check if there are any changes by comparing current links with original
   const hasChanges = () => {
     if (localLinks.length !== links.length) return true;
-    
+
     // Deep comparison of links
     return localLinks.some((localLink, index) => {
       const originalLink = links[index];
       if (!originalLink) return true;
-      
-      return localLink.name !== originalLink.name ||
-             localLink.url !== originalLink.url ||
-             localLink.googleDriveId !== originalLink.googleDriveId;
+
+      return (
+        localLink.name !== originalLink.name ||
+        localLink.url !== originalLink.url ||
+        localLink.googleDriveId !== originalLink.googleDriveId
+      );
     });
   };
 
@@ -230,20 +233,12 @@ export function FileLinkModalTrigger({
 
   return (
     <>
-      <Button
-        variant="ghost"
-        className={cn("p-0 hover:bg-accent font-normal justify-start text-left w-full")}
-        onClick={() => setOpen(true)}
-      >
-        {count > 0 ? (
-          <Badge variant="secondary" className="gap-1 p-1 h-auto justify-start">
-            <Paperclip className="h-3 w-3" />
-            <span className="text-xs">{count}</span>
-          </Badge>
-        ) : (
-          <span className="text-sm text-muted-foreground flex items-center gap-1">-</span>
-        )}
-      </Button>
+      <ModalTriggerButton hasValue={count > 0} setOpen={setOpen}>
+        <Badge variant="secondary" className="gap-1 p-1 h-auto justify-start">
+          <Paperclip className="h-3 w-3" />
+          <span className="text-xs">{count}</span>
+        </Badge>
+      </ModalTriggerButton>
       <FileLinkModal open={open} links={links} onSave={onSave} title={title} onOpenChange={setOpen} />
     </>
   );

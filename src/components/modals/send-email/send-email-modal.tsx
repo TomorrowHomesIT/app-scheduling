@@ -6,7 +6,7 @@ import { EJobTaskStatus } from "@/models/job.model";
 import { CTaskStatusConfig } from "@/models/job.const";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { StatusBadge } from "@/components/ui/status-badge";
+import { EmailStatusButton } from "@/components/modals/send-email/email-status-button";
 
 interface SendEmailModalProps {
   onChange: (status: EJobTaskStatus) => void;
@@ -50,18 +50,18 @@ export function SendEmailModal({ onChange, open, onOpenChange }: SendEmailModalP
   );
 }
 
-interface StatusTriggerProps {
+interface EmailStatusTriggerProps {
   value: EJobTaskStatus;
   onChange: (status: EJobTaskStatus) => void;
   className?: string;
 }
 
-export function StatusTrigger({ value, onChange, className }: StatusTriggerProps) {
+export function EmailStatusTrigger({ value, onChange, className }: EmailStatusTriggerProps) {
   const [open, setOpen] = useState(false);
 
   return (
     <>
-      <StatusBadge status={value} onClick={() => setOpen(true)} className={className} />
+      <EmailStatusButton status={value} onClick={() => setOpen(true)} className={className} />
       <SendEmailModal onChange={onChange} open={open} onOpenChange={setOpen} />
     </>
   );

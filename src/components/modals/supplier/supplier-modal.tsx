@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import useSupplierStore from "@/store/supplier-store";
-import { cn } from "@/lib/utils";
+import { ModalTriggerButton } from "@/components/ui/buttons/modal-trigger-button";
 
 interface SupplierModalProps {
   value?: number; // supplier ID
@@ -106,19 +106,11 @@ export function SupplierTrigger({ value, onChange, className }: SupplierTriggerP
 
   return (
     <>
-      <Button
-        variant="ghost"
-        className={cn("px-2 py-1 hover:bg-accent font-normal justify-start text-left w-full", className)}
-        onClick={() => setOpen(true)}
-      >
-        {supplier ? (
-          <Badge variant="secondary" className="inline-block max-w-full truncate" title={supplier.name}>
-            {supplier.name}
-          </Badge>
-        ) : (
-          <span className="text-sm text-muted-foreground flex items-center gap-1">-</span>
-        )}
-      </Button>
+      <ModalTriggerButton hasValue={!!value} className={className} setOpen={setOpen}>
+        <Badge variant="secondary" className="inline-block max-w-full truncate" title={supplier?.name}>
+          {supplier?.name}
+        </Badge>
+      </ModalTriggerButton>
       <SupplierModal value={value} onChange={onChange} open={open} onOpenChange={setOpen} />
     </>
   );

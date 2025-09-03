@@ -5,7 +5,7 @@ import type { EJobTaskProgress, EJobTaskStatus, IJobTaskUrl } from "@/models/job
 import type { IJobTask } from "@/models";
 import { DatePickerTrigger } from "@/components/modals/date-picker/date-picker-modal";
 import { NotesTrigger } from "@/components/modals/notes/notes-modal";
-import { StatusTrigger } from "@/components/modals/send-email/send-email-modal";
+import { EmailStatusTrigger } from "@/components/modals/send-email/send-email-modal";
 import { ProgressTrigger } from "@/components/modals/progress/progress-modal";
 import { SupplierTrigger } from "@/components/modals/supplier/supplier-modal";
 import { FileLinkModalTrigger } from "@/components/modals/file-link/file-link-modal";
@@ -101,14 +101,14 @@ export function TaskTable({ tasks }: TaskTableProps) {
               <TableCell className="min-w-32 max-w-40 p-0">
                 <NotesTrigger value={task.notes ?? undefined} onChange={(notes) => handleNotesChange(task.id, notes)} />
               </TableCell>
-              <TableCell className="min-w-24 max-w-32">
+              <TableCell className="min-w-24 max-w-32 p-0">
                 <FileLinkModalTrigger
                   links={task.purchaseOrderLinks || []}
                   onSave={(links) => handlePOLinksChange(task.id, links)}
                   title="Purchase Order Links"
                 />
               </TableCell>
-              <TableCell className="min-w-24 max-w-32">
+              <TableCell className="min-w-24 max-w-32 p-0">
                 <FileLinkModalTrigger
                   links={task.planLinks || []}
                   onSave={(links) => handlePlanLinksChange(task.id, links)}
@@ -116,7 +116,7 @@ export function TaskTable({ tasks }: TaskTableProps) {
                 />
               </TableCell>
               <TableCell className="min-w-32 max-w-40">
-                <StatusTrigger value={task.status} onChange={(status) => handleStatusChange(task.id, status)} />
+                <EmailStatusTrigger value={task.status} onChange={(status) => handleStatusChange(task.id, status)} />
               </TableCell>
               <TableCell className="min-w-32 max-w-40">
                 <ProgressTrigger value={task.progress} onChange={(p) => handleProgressChange(task.id, p)} />

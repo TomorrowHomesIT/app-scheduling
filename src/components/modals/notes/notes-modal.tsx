@@ -11,7 +11,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
+import { ModalTriggerButton } from "@/components/ui/buttons/modal-trigger-button";
 
 interface NotesModalProps {
   value?: string;
@@ -85,17 +85,9 @@ export function NotesTrigger({ value, onChange, className }: NotesTriggerProps) 
 
   return (
     <>
-      <Button
-        variant="ghost"
-        className={cn("px-2 py-1 hover:bg-accent font-normal justify-start text-left w-full", className)}
-        onClick={() => setOpen(true)}
-      >
-        {value ? (
-          <span className="text-sm text-ellipsis overflow-hidden">{value}</span>
-        ) : (
-          <span className="text-sm text-muted-foreground flex items-center gap-1">-</span>
-        )}
-      </Button>
+      <ModalTriggerButton hasValue={!!value} className={className} setOpen={setOpen}>
+        <span className="text-sm text-ellipsis overflow-hidden">{value}</span>
+      </ModalTriggerButton>
       <NotesModal value={value} onChange={onChange} open={open} onOpenChange={setOpen} />
     </>
   );

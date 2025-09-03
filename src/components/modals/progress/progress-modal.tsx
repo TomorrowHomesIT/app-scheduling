@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ProgressBadge } from "@/components/ui/progress-badge";
+import { ProgressBadgeButton } from "@/components/modals/progress/progress-badge-button";
 import { EJobTaskProgress } from "@/models/job.model";
 import { CTaskProgressConfig } from "@/models/job.const";
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,7 @@ export function ProgressModal({ value, onChange, open, onOpenChange }: ProgressM
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[320px]">
+      <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
           <DialogTitle>Set Progress</DialogTitle>
           <DialogDescription>Select a progress to set for the task</DialogDescription>
@@ -74,7 +74,7 @@ export function ProgressTrigger({ value, onChange, className }: ProgressTriggerP
 
   return (
     <>
-      <ProgressBadge progress={value} onClick={() => setOpen(true)} className={className} />
+      <ProgressBadgeButton progress={value} onClick={() => setOpen(true)} className={className} />
       <ProgressModal value={value} onChange={onChange} open={open} onOpenChange={setOpen} />
     </>
   );

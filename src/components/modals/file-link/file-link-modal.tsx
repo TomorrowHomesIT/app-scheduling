@@ -28,6 +28,21 @@ export function FileLinkModal({ links, onSave, title, open, onOpenChange }: File
     setLocalLinks(links);
   }, [links]);
 
+  // Check if there are any changes by comparing current links with original
+  const hasChanges = () => {
+    if (localLinks.length !== links.length) return true;
+    
+    // Deep comparison of links
+    return localLinks.some((localLink, index) => {
+      const originalLink = links[index];
+      if (!originalLink) return true;
+      
+      return localLink.name !== originalLink.name ||
+             localLink.url !== originalLink.url ||
+             localLink.googleDriveId !== originalLink.googleDriveId;
+    });
+  };
+
   const handleAddLink = () => {
     if (!newUrl.trim()) {
       setUrlError("URL or Google Drive ID is required");
@@ -105,17 +120,7 @@ export function FileLinkModal({ links, onSave, title, open, onOpenChange }: File
         </DialogHeader>
 
         <div className="space-y-2">
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <Label htmlFor="name">Display name</Label>
-              <Input
-                id="name"
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                onKeyDown={handleKeyPress}
-                placeholder="e.g. SOL"
-              />
-            </div>
+          <div className="flex flex-col gap-2">
             <div>
               <Label htmlFor="url">Google Drive Link</Label>
               <Input
@@ -136,15 +141,27 @@ export function FileLinkModal({ links, onSave, title, open, onOpenChange }: File
                 </div>
               )}
             </div>
+            <div className="grid grid-cols-[1fr_auto] gap-2 items-end">
+              <div className="w-full">
+                <Label htmlFor="name">Display name</Label>
+                <Input
+                  id="name"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                  placeholder="e.g. SOL"
+                />
+              </div>
+              <Button
+                onClick={handleAddLink}
+                disabled={!newName.trim() || !newUrl.trim()}
+                variant="default"
+                className="w-full"
+              >
+                Add Link
+              </Button>
+            </div>
           </div>
-          <Button
-            onClick={handleAddLink}
-            disabled={!newName.trim() || !newUrl.trim()}
-            variant="default"
-            className="w-full"
-          >
-            Add Link
-          </Button>
         </div>
 
         <div className="space-y-2 py-2 overflow-y-auto">
@@ -190,7 +207,9 @@ export function FileLinkModal({ links, onSave, title, open, onOpenChange }: File
           <Button variant="outline" onClick={handleCancel}>
             Cancel
           </Button>
-          <Button onClick={handleSave}>Save Changes</Button>
+          <Button onClick={handleSave} disabled={!hasChanges()}>
+            Save Changes
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -217,7 +236,7 @@ export function FileLinkModalTrigger({
         onClick={() => setOpen(true)}
       >
         {count > 0 ? (
-          <Badge variant="secondary" className="gap-1 p-1 h-auto justify-start" >
+          <Badge variant="secondary" className="gap-1 p-1 h-auto justify-start">
             <Paperclip className="h-3 w-3" />
             <span className="text-xs">{count}</span>
           </Badge>

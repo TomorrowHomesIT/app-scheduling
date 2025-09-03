@@ -68,7 +68,7 @@ export function TaskTable({ tasks }: TaskTableProps) {
         <TableRow>
           <TableHead className="w-4"></TableHead>
           <TableHead className="w-64 text-gray-600 text-xs">Name</TableHead>
-          <TableHead className="w-48 text-gray-600 text-xs">Supplier</TableHead>
+          <TableHead className="w-36 text-gray-600 text-xs">Supplier</TableHead>
           <TableHead className="w-20 text-gray-600 text-xs">Start date</TableHead>
           <TableHead className="min-w-32 max-w-40 text-gray-600 text-xs">Notes</TableHead>
           <TableHead className="min-w-24 max-w-32 text-gray-600 text-xs">PO</TableHead>
@@ -89,7 +89,7 @@ export function TaskTable({ tasks }: TaskTableProps) {
                   {task.name}
                 </TaskDetailsTrigger>
               </TableCell>
-              <TableCell className="w-48 p-0">
+              <TableCell className="w-36 p-0">
                 <SupplierTrigger
                   value={task.supplierId ?? undefined}
                   onChange={(supplierId) => handleSupplierChange(task.id, supplierId)}

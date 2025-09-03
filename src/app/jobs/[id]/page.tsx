@@ -43,7 +43,7 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
       }
     }
 
-    if (currentJob) document.title = `BASD - ${currentJob.name}`;
+    if (currentJob) document.title = currentJob.name;
   }, [id, loadJob, currentJob]);
 
   if (error || Number.isNaN(Number(id))) {

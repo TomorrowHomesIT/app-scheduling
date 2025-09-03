@@ -1,4 +1,4 @@
-export const getApiErrorMessage = async (e: any, fallback = "An unknown error occurred") => {
+export const getApiErrorMessage = async (e: unknown, fallback = "An unknown error occurred") => {
   if (e instanceof Response) {
     const body = await e.json();
 

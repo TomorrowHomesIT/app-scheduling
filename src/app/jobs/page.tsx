@@ -28,7 +28,6 @@ import useOwnersStore from "@/store/owners-store";
 import useTaskTemplateStore from "@/store/task-store";
 import type { ITask } from "@/models/task.model";
 import type { ICreateJobRequest } from "@/models/job.model";
-import Image from "next/image";
 
 interface TaskWithStage extends ITask {
   taskStageId: number;

@@ -5,10 +5,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LinkBadge } from "@/components/ui/link-badge";
-import { Trash2, ExternalLink, AlertCircle } from "lucide-react";
+import { Trash2, ExternalLink, AlertCircle, Paperclip } from "lucide-react";
 import type { IJobTaskUrl } from "@/models/job.model";
 import { isValidUrl, getGoogleDriveWebViewLink, extractGoogleDriveId, isValidGoogleDriveId, cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 interface FileLinkModalProps {
   links: IJobTaskUrl[];
@@ -207,10 +207,24 @@ export function FileLinkModalTrigger({
   title: string;
 }) {
   const [open, setOpen] = useState(false);
+  const count = links.length;
 
   return (
     <>
-      <LinkBadge links={links} onClick={() => setOpen(true)} />
+      <Button
+        variant="ghost"
+        className={cn("p-0 hover:bg-accent font-normal justify-start text-left w-full")}
+        onClick={() => setOpen(true)}
+      >
+        {count > 0 ? (
+          <Badge variant="secondary" className="gap-1 p-1 h-auto justify-start" >
+            <Paperclip className="h-3 w-3" />
+            <span className="text-xs">{count}</span>
+          </Badge>
+        ) : (
+          <span className="text-sm text-muted-foreground flex items-center gap-1">-</span>
+        )}
+      </Button>
       <FileLinkModal open={open} links={links} onSave={onSave} title={title} onOpenChange={setOpen} />
     </>
   );

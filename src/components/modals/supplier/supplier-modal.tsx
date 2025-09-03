@@ -108,7 +108,7 @@ export function SupplierTrigger({ value, onChange, className }: SupplierTriggerP
     <>
       <Button
         variant="ghost"
-        className={cn("p-0 w-full min-w-full justify-start", className)}
+        className={cn("px-2 py-1 hover:bg-accent font-normal justify-start text-left w-full", className)}
         onClick={() => setOpen(true)}
       >
         {supplier ? (
@@ -116,7 +116,7 @@ export function SupplierTrigger({ value, onChange, className }: SupplierTriggerP
             {supplier.name}
           </Badge>
         ) : (
-          <span className="text-sm text-muted-foreground">-</span>
+          <span className="text-sm text-muted-foreground flex items-center gap-1">-</span>
         )}
       </Button>
       <SupplierModal value={value} onChange={onChange} open={open} onOpenChange={setOpen} />

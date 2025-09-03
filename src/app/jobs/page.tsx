@@ -134,6 +134,7 @@ export default function CreateJobPage() {
 
       const body: ICreateJobRequest = {
         name: jobName,
+        location: "", // TODO
         ownerId: parseInt(selectedOwnerId, 10),
         tasks: jobTasks,
       };

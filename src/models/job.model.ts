@@ -15,14 +15,14 @@ export interface IJobTask {
   id: number;
   jobId: number;
   name: string;
-  supplierId: number;
+  supplierId: number | null;
   costCenter: number | null;
   progress: EJobTaskProgress;
   status: EJobTaskStatus;
   taskStageId: number;
   docTags: string[] | null;
 
-  notes: string;
+  notes: string | null;
   startDate: Date | null;
   purchaseOrderLinks: IJobTaskUrl[];
   planLinks: IJobTaskUrl[];

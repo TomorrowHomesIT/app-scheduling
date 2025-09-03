@@ -91,7 +91,7 @@ export function TaskTable({ tasks }: TaskTableProps) {
               </TableCell>
               <TableCell className="w-32 p-0">
                 <SupplierTrigger
-                  value={task.supplierId}
+                  value={task.supplierId ?? undefined}
                   onChange={(supplierId) => handleSupplierChange(task.id, supplierId)}
                 />
               </TableCell>
@@ -99,7 +99,7 @@ export function TaskTable({ tasks }: TaskTableProps) {
                 <DatePickerTrigger value={task.startDate} onChange={(date) => handleDateChange(task.id, date)} />
               </TableCell>
               <TableCell className="min-w-32 max-w-40 p-0">
-                <NotesTrigger value={task.notes} onChange={(notes) => handleNotesChange(task.id, notes)} />
+                <NotesTrigger value={task.notes ?? undefined} onChange={(notes) => handleNotesChange(task.id, notes)} />
               </TableCell>
               <TableCell className="min-w-24 max-w-32">
                 <FileLinkModalTrigger

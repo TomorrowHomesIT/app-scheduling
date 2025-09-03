@@ -13,6 +13,7 @@ import useJobStore from "@/store/job-store";
 import useSupplierStore from "@/store/supplier-store";
 import useTaskStore from "@/store/task-store";
 import { Spinner } from "@/components/ui/spinner";
+import { Badge } from "@/components/ui/badge";
 
 interface JobDetailPageProps {
   params: Promise<{ id: string }>;
@@ -80,9 +81,9 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
             <div>
               <div className="flex items-end gap-2">
                 <h1 className="text-2xl font-semibold">{currentJob.name}</h1>
-                <span className="text-sm text-muted-foreground mb-1">
+                <Badge variant="outline" className="mb-1">
                   {completedTasks} / {totalTasks}
-                </span>
+                </Badge>
               </div>
               <p className="text-sm text-muted-foreground">{currentJob.location}</p>
             </div>

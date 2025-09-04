@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import useJobStore from "@/store/job-store";
+import useJobStore from "@/store/job/job-store";
 import useOwnersStore from "@/store/owners-store";
 import { LogoutButton } from "@/components/auth/logout-button";
 import Image from "next/image";

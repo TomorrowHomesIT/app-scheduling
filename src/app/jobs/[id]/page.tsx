@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { TaskTable } from "@/app/jobs/[id]/task-table";
 import { JobEditModal } from "@/components/modals/job-edit/job-edit-modal";
 import { ChevronLeft, Settings, Menu } from "lucide-react";
-import useJobStore from "@/store/job-store";
+import useJobStore from "@/store/job/job-store";
 import useSupplierStore from "@/store/supplier-store";
 import useTaskStore from "@/store/task-store";
 import { Spinner } from "@/components/ui/spinner";

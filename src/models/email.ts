@@ -10,7 +10,7 @@ export interface IScheduleEmailRequest {
   recipientName: string;
   recipientEmails: string[];
 
-  sentByEmail: string;
+  sentBy?: string;
   googleFileIds: string[];
   emailType: "schedule" | "reschedule" | "cancel";
 }

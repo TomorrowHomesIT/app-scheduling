@@ -8,7 +8,7 @@ import { CTaskStatusConfig } from "@/models/job.const";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { EmailStatusButton } from "@/components/modals/send-email/email-status-button";
-import useAppStore from "@/store/job-store";
+import useJobStore from "@/store/job/job-store";
 import useSupplierStore from "@/store/supplier-store";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Send } from "lucide-react";
@@ -16,13 +16,13 @@ import { EmailPreview } from "./email-preview";
 
 interface SendEmailModalProps {
   task: IJobTask;
-  onChange: (status: EJobTaskStatus) => void;
+  onSendEmail: (status: EJobTaskStatus) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function SendEmailModal({ task, onChange, open, onOpenChange }: SendEmailModalProps) {
-  const { currentJob } = useAppStore();
+export function SendEmailModal({ task, onSendEmail, open, onOpenChange }: SendEmailModalProps) {
+  const { currentJob } = useJobStore();
   const { getSupplierById } = useSupplierStore();
 
   const supplier = task.supplierId ? getSupplierById(task.supplierId) : undefined;
@@ -43,11 +43,11 @@ export function SendEmailModal({ task, onChange, open, onOpenChange }: SendEmail
 
   const canSendEmail = missingFields.length === 0;
 
-  const handleStatusSelect = (status: EJobTaskStatus) => {
+  const onSelectEmailTemplate = async (status: EJobTaskStatus) => {
     if (!canSendEmail) return;
 
-    onChange(status);
     onOpenChange(false);
+    onSendEmail(status);
   };
 
   const statusOptions = [EJobTaskStatus.Scheduled, EJobTaskStatus.ReScheduled, EJobTaskStatus.Cancelled];
@@ -57,7 +57,7 @@ export function SendEmailModal({ task, onChange, open, onOpenChange }: SendEmail
       <DialogContent className="sm:max-w-[700px]">
         <DialogHeader>
           <DialogTitle>Schedule</DialogTitle>
-          <DialogDescription>Select a template to sned a email to the supplier</DialogDescription>
+          <DialogDescription>Select a template to send an email to the supplier</DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col sm:flex-row gap-6 py-4">
@@ -98,7 +98,7 @@ export function SendEmailModal({ task, onChange, open, onOpenChange }: SendEmail
                   <Button
                     key={status}
                     variant="outline"
-                    onClick={() => handleStatusSelect(status)}
+                    onClick={() => onSelectEmailTemplate(status)}
                     disabled={!canSendEmail}
                     className={cn(
                       "w-full h-12 px-4 relative justify-start",
@@ -121,17 +121,17 @@ export function SendEmailModal({ task, onChange, open, onOpenChange }: SendEmail
 interface EmailStatusTriggerProps {
   task: IJobTask;
   value: EJobTaskStatus;
-  onChange: (status: EJobTaskStatus) => void;
+  onSendEmail: (status: EJobTaskStatus) => void;
   className?: string;
 }
 
-export function EmailStatusTrigger({ task, value, onChange, className }: EmailStatusTriggerProps) {
+export function EmailStatusTrigger({ task, value, onSendEmail, className }: EmailStatusTriggerProps) {
   const [open, setOpen] = useState(false);
 
   return (
     <>
       <EmailStatusButton status={value} onClick={() => setOpen(true)} className={className} />
-      <SendEmailModal task={task} onChange={onChange} open={open} onOpenChange={setOpen} />
+      <SendEmailModal task={task} onSendEmail={onSendEmail} open={open} onOpenChange={setOpen} />
     </>
   );
 }

@@ -9,7 +9,7 @@ import useSupplierStore from "@/store/supplier-store";
 
 interface JobTaskStore {
   updateTask: (taskId: number, updates: Partial<IJobTask>) => Promise<void>;
-  sendTaskEmail: (task: IJobTask, status: EJobTaskStatus) => Promise<void>;
+  sendTaskEmail: (taskId: number, status: EJobTaskStatus) => Promise<void>;
 }
 
 const updateTaskApi = async (taskId: number, updates: Partial<IJobTask>): Promise<IJobTask | null> => {
@@ -97,13 +97,14 @@ const useJobTaskStore = create<JobTaskStore>(() => ({
     }
   },
 
-  sendTaskEmail: async (task: IJobTask, status: EJobTaskStatus) => {
+  sendTaskEmail: async (taskId: number, status: EJobTaskStatus) => {
     const jobStore = useJobStore.getState();
     const supplierStore = useSupplierStore.getState();
     const { currentJob, updateJobTask } = jobStore;
+    const task = currentJob?.tasks.find((task) => task.id === taskId);
 
-    if (!currentJob) {
-      throw new Error("No current job selected");
+    if (!currentJob || !task) {
+      throw new Error("Task not found");
     }
 
     const supplier = task.supplierId ? supplierStore.getSupplierById(task.supplierId) : undefined;
@@ -156,9 +157,10 @@ const useJobTaskStore = create<JobTaskStore>(() => ({
       await toast.while(sendEmailApi(emailRequest), {
         loading: "Sending email...",
         success: "Email sent successfully",
-        error: (error) => {
+        error: (e) => {
           updateJobTask(currentJob.id, task.id, { status: previousStatus });
-          return `Failed to send email: ${getApiErrorMessage(error)}`;
+
+          return `Failed to send email: ${e instanceof Error ? e.message : "Unknown error"}`;
         },
       });
     } catch (error) {

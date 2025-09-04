@@ -11,14 +11,14 @@ import { SupplierTrigger } from "@/components/modals/supplier/supplier-modal";
 import { FileLinkModalTrigger } from "@/components/modals/file-link/file-link-modal";
 import { TaskDetailsTrigger } from "@/components/modals/task-details/task-details-modal";
 import { CTaskProgressConfig } from "@/models/job.const";
-import useAppStore from "@/store/job-store";
+import useJobTaskStore from "@/store/job/job-task-store";
 
 interface TaskTableProps {
   tasks: IJobTask[];
 }
 
 export function TaskTable({ tasks }: TaskTableProps) {
-  const { updateTask } = useAppStore();
+  const { updateTask, sendTaskEmail } = useJobTaskStore();
 
   const handleDateChange = async (taskId: number, date: Date | undefined) => {
     await updateTask(taskId, { startDate: date ?? null });
@@ -28,13 +28,9 @@ export function TaskTable({ tasks }: TaskTableProps) {
     await updateTask(taskId, { notes: notes ?? null });
   };
 
-  const handleStatusChange = async (taskId: number, status: EJobTaskStatus) => {
+  const handleEmailStatusChange = async (taskId: number, status: EJobTaskStatus) => {
     // Update the task status in the store
-    await updateTask(taskId, { status });
-
-    // TODO: API call to trigger status-specific action
-    // This is where you'll add the actual API request later
-    // Example: await api.updatEJobTaskStatus(taskId, status);
+    await sendTaskEmail(taskId, status);
   };
 
   const handleProgressChange = async (taskId: number, progress: EJobTaskProgress) => {
@@ -123,7 +119,7 @@ export function TaskTable({ tasks }: TaskTableProps) {
                   <EmailStatusTrigger
                     task={task}
                     value={task.status}
-                    onChange={(status) => handleStatusChange(task.id, status)}
+                    onSendEmail={(status) => handleEmailStatusChange(task.id, status)}
                   />
                 </TableCell>
                 <TableCell className="w-28 lg:w-32">

@@ -61,7 +61,7 @@ export function EmailPreview({ recipientName, task, location, attachmentCount = 
 
       <div className="pt-2 border-t">
         <p className="text-xs text-gray-500">
-          `${attachmentCount} document${attachmentCount > 1 ? "s" : ""} will be included`
+          {attachmentCount} document{attachmentCount > 1 ? "s" : ""} will be included
         </p>
       </div>
     </div>

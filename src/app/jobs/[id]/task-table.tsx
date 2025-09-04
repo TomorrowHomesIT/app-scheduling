@@ -71,10 +71,10 @@ export function TaskTable({ tasks }: TaskTableProps) {
             <TableHead className="w-32 lg:w-64 text-gray-600 text-xs">Name</TableHead>
             <TableHead className="w-28 lg:w-36 text-gray-600 text-xs">Supplier</TableHead>
             <TableHead className="w-20 text-gray-600 text-xs">Start date</TableHead>
-            <TableHead className="hidden md:table-cell w-32 lg:w-40 text-gray-600 text-xs">Notes</TableHead>
+            <TableHead className="w-32 lg:w-40 text-gray-600 text-xs">Notes</TableHead>
             <TableHead className="w-20 lg:w-24 text-gray-600 text-xs">PO</TableHead>
             <TableHead className="w-20 lg:w-24 text-gray-600 text-xs">Plans</TableHead>
-            <TableHead className="hidden lg:table-cell w-32 lg:w-40 text-gray-600 text-xs">Email Template</TableHead>
+            <TableHead className="w-32 lg:w-40 text-gray-600 text-xs">Email Template</TableHead>
             <TableHead className="w-28 lg:w-32 text-gray-600 text-xs">Progress</TableHead>
           </TableRow>
         </TableHeader>
@@ -99,7 +99,7 @@ export function TaskTable({ tasks }: TaskTableProps) {
                 <TableCell className="w-20 p-0">
                   <DatePickerTrigger value={task.startDate} onChange={(date) => handleDateChange(task.id, date)} />
                 </TableCell>
-                <TableCell className="hidden md:table-cell w-32 lg:w-40 p-0">
+                <TableCell className="w-32 lg:w-40 p-0">
                   <NotesTrigger
                     value={task.notes ?? undefined}
                     onChange={(notes) => handleNotesChange(task.id, notes)}
@@ -119,7 +119,7 @@ export function TaskTable({ tasks }: TaskTableProps) {
                     title="Plan Links"
                   />
                 </TableCell>
-                <TableCell className="hidden lg:table-cell w-32 lg:w-40">
+                <TableCell className="w-32 lg:w-40">
                   <EmailStatusTrigger value={task.status} onChange={(status) => handleStatusChange(task.id, status)} />
                 </TableCell>
                 <TableCell className="w-28 lg:w-32">

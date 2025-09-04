@@ -16,9 +16,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const serviceEmailUrl = process.env.EMAIL_SERVICE_URL;
+    const serviceEmailUrl = process.env.BASED_SERVICE_URL;
     if (!serviceEmailUrl) {
-      return errorHandler("EMAIL_SERVICE_URL not configured", "Failed to send email");
+      return errorHandler("BASED_SERVICE_URL not configured", "Failed to send email");
     }
 
     // Parse request body
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
       sentBy: user.email || user.id,
     };
 
-    const endpoint = `${serviceEmailUrl}/THGScheduling/Automation/TestPayload`;
+    const endpoint = `${serviceEmailUrl}/THGScheduling/Automation/SchedulingEmail`;
     try {
       const emailResponse = await fetch(endpoint, {
         method: "POST",

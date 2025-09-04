@@ -59,12 +59,12 @@ export function TaskTable({ tasks }: TaskTableProps) {
   };
 
   return (
-    <div className="overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0">
-      <Table className="min-w-[600px] lg:min-w-full">
+    <div className="overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0 relative">
+      <Table className="min-w-[900px] lg:min-w-full">
         <TableHeader>
           <TableRow>
-            <TableHead className="w-4"></TableHead>
-            <TableHead className="w-32 lg:w-64 text-gray-600 text-xs">Name</TableHead>
+            <TableHead className="sticky left-0 z-10 bg-white w-4"></TableHead>
+            <TableHead className="sticky left-4 z-10 bg-white w-32 lg:w-64 text-gray-600 text-xs after:absolute after:right-0 after:top-0 after:bottom-0 after:w-px after:bg-gray-200">Name</TableHead>
             <TableHead className="w-28 lg:w-36 text-gray-600 text-xs">Supplier</TableHead>
             <TableHead className="w-20 text-gray-600 text-xs">Start date</TableHead>
             <TableHead className="w-32 lg:w-40 text-gray-600 text-xs">Notes</TableHead>
@@ -78,10 +78,10 @@ export function TaskTable({ tasks }: TaskTableProps) {
           {tasks.map((task) => {
             return (
               <TableRow key={task.id}>
-                <TableCell className="w-4">
+                <TableCell className="sticky left-0 z-10 bg-white w-4">
                   <div className={`w-1 h-8 rounded ${CTaskProgressConfig[task.progress].progressColor}`} />
                 </TableCell>
-                <TableCell className="w-32 lg:w-64 font-medium truncate" title={task.name}>
+                <TableCell className="sticky left-4 z-10 bg-white w-32 lg:w-64 font-medium truncate after:absolute after:right-0 after:top-0 after:bottom-0 after:w-px after:bg-gray-200" title={task.name}>
                   <TaskDetailsTrigger task={task} onSave={handleTaskDetailsChange}>
                     <span className="block truncate max-w-[120px] lg:max-w-none">{task.name}</span>
                   </TaskDetailsTrigger>

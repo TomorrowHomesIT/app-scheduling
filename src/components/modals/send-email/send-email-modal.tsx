@@ -1,21 +1,51 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { EJobTaskStatus } from "@/models/job.model";
+import type { IJobTask } from "@/models";
 import { CTaskStatusConfig } from "@/models/job.const";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { EmailStatusButton } from "@/components/modals/send-email/email-status-button";
+import useAppStore from "@/store/job-store";
+import useSupplierStore from "@/store/supplier-store";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Send } from "lucide-react";
+import { EmailPreview } from "./email-preview";
 
 interface SendEmailModalProps {
+  task: IJobTask;
   onChange: (status: EJobTaskStatus) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function SendEmailModal({ onChange, open, onOpenChange }: SendEmailModalProps) {
+export function SendEmailModal({ task, onChange, open, onOpenChange }: SendEmailModalProps) {
+  const { currentJob } = useAppStore();
+  const { getSupplierById } = useSupplierStore();
+
+  const supplier = task.supplierId ? getSupplierById(task.supplierId) : undefined;
+  const attachmentCount = (task.purchaseOrderLinks?.length || 0) + (task.planLinks?.length || 0);
+
+  // Validate required fields for email
+  const missingFields = useMemo(() => {
+    const missing: string[] = [];
+
+    if (!currentJob?.location) missing.push("Job location");
+    if (!task.startDate) missing.push("Start date");
+    if (!supplier) missing.push("Supplier");
+    if (!task.purchaseOrderLinks?.length) missing.push("Purchase order");
+    if (!task.planLinks?.length) missing.push("Plan");
+
+    return missing;
+  }, [currentJob, task, supplier]);
+
+  const canSendEmail = missingFields.length === 0;
+
   const handleStatusSelect = (status: EJobTaskStatus) => {
+    if (!canSendEmail) return;
+
     onChange(status);
     onOpenChange(false);
   };
@@ -24,26 +54,64 @@ export function SendEmailModal({ onChange, open, onOpenChange }: SendEmailModalP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[400px]">
+      <DialogContent className="sm:max-w-[700px]">
         <DialogHeader>
-          <DialogTitle>Choose email template</DialogTitle>
-          <DialogDescription>Select an email template to send</DialogDescription>
+          <DialogTitle>Schedule</DialogTitle>
+          <DialogDescription>Select a template to sned a email to the supplier</DialogDescription>
         </DialogHeader>
-        <div className="py-4 space-y-3">
-          {statusOptions.map((status) => {
-            const config = CTaskStatusConfig[status];
-            return (
-              <Button
-                key={status}
-                variant="outline"
-                onClick={() => handleStatusSelect(status)}
-                className={cn("w-full h-12 px-4 relative", "hover:scale-[1.02] transition-transform duration-150")}
-              >
-                <div className={cn("absolute left-4 h-3 w-3 rounded-full", config.statusColor)} />
-                <span className="font-medium">{config.label}</span>
-              </Button>
-            );
-          })}
+
+        <div className="flex flex-col sm:flex-row gap-6 py-4">
+          <div className="flex-1 space-y-4">
+            <h3 className="font-semibold text-sm text-gray-700">Email</h3>
+            {/* Email Preview Section */}
+            {canSendEmail && (
+              <EmailPreview
+                recipientName={supplier?.name}
+                task={task}
+                location={currentJob?.location}
+                attachmentCount={attachmentCount}
+              />
+            )}
+            {!canSendEmail && (
+              <Alert variant="warning">
+                <AlertTitle>Cannot send email</AlertTitle>
+                <AlertDescription>
+                  The following required fields are missing:
+                  <ul className="mt-2 ml-4 list-disc text-sm">
+                    {missingFields.map((field) => (
+                      <li key={field}>{field}</li>
+                    ))}
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+
+          {/* Email Template Selection */}
+          <div className="flex-1 sm:max-w-[250px] space-y-4">
+            <h3 className="font-semibold text-sm text-gray-700">Choose Template</h3>
+
+            <div className="space-y-3">
+              {statusOptions.map((status) => {
+                const config = CTaskStatusConfig[status];
+                return (
+                  <Button
+                    key={status}
+                    variant="outline"
+                    onClick={() => handleStatusSelect(status)}
+                    disabled={!canSendEmail}
+                    className={cn(
+                      "w-full h-12 px-4 relative justify-start",
+                      !canSendEmail && "opacity-50 cursor-not-allowed",
+                    )}
+                  >
+                    <Send className={cn("absolute left-4 h-5 w-5", config.textColor)} />
+                    <span className="ml-8 font-medium">{config.label}</span>
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
@@ -51,18 +119,19 @@ export function SendEmailModal({ onChange, open, onOpenChange }: SendEmailModalP
 }
 
 interface EmailStatusTriggerProps {
+  task: IJobTask;
   value: EJobTaskStatus;
   onChange: (status: EJobTaskStatus) => void;
   className?: string;
 }
 
-export function EmailStatusTrigger({ value, onChange, className }: EmailStatusTriggerProps) {
+export function EmailStatusTrigger({ task, value, onChange, className }: EmailStatusTriggerProps) {
   const [open, setOpen] = useState(false);
 
   return (
     <>
       <EmailStatusButton status={value} onClick={() => setOpen(true)} className={className} />
-      <SendEmailModal onChange={onChange} open={open} onOpenChange={setOpen} />
+      <SendEmailModal task={task} onChange={onChange} open={open} onOpenChange={setOpen} />
     </>
   );
 }

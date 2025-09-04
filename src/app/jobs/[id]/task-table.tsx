@@ -74,7 +74,7 @@ export function TaskTable({ tasks }: TaskTableProps) {
             <TableHead className="w-32 lg:w-40 text-gray-600 text-xs">Notes</TableHead>
             <TableHead className="w-20 lg:w-24 text-gray-600 text-xs">PO</TableHead>
             <TableHead className="w-20 lg:w-24 text-gray-600 text-xs">Plans</TableHead>
-            <TableHead className="w-32 lg:w-40 text-gray-600 text-xs">Email Template</TableHead>
+            <TableHead className="w-32 lg:w-40 text-gray-600 text-xs">Email</TableHead>
             <TableHead className="w-28 lg:w-32 text-gray-600 text-xs">Progress</TableHead>
           </TableRow>
         </TableHeader>
@@ -120,7 +120,11 @@ export function TaskTable({ tasks }: TaskTableProps) {
                   />
                 </TableCell>
                 <TableCell className="w-32 lg:w-40">
-                  <EmailStatusTrigger value={task.status} onChange={(status) => handleStatusChange(task.id, status)} />
+                  <EmailStatusTrigger
+                    task={task}
+                    value={task.status}
+                    onChange={(status) => handleStatusChange(task.id, status)}
+                  />
                 </TableCell>
                 <TableCell className="w-28 lg:w-32">
                   <ProgressTrigger value={task.progress} onChange={(p) => handleProgressChange(task.id, p)} />

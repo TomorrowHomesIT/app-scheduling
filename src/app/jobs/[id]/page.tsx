@@ -8,7 +8,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Button } from "@/components/ui/button";
 import { TaskTable } from "@/app/jobs/[id]/task-table";
 import { JobEditModal } from "@/components/modals/job-edit/job-edit-modal";
-import { ChevronLeft, Settings, Menu } from "lucide-react";
+import { ChevronLeft, Settings, Menu, HardDrive } from "lucide-react";
 import useJobStore from "@/store/job/job-store";
 import useSupplierStore from "@/store/supplier-store";
 import useTaskStore from "@/store/task-store";
@@ -92,6 +92,17 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
           </div>
 
           <div className="flex items-center gap-2">
+            {currentJob.googleDriveDirId && (
+              <Link
+                href={`https://drive.google.com/drive/folders/${currentJob.googleDriveDirId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button variant="outline" size="icon">
+                  <HardDrive className="h-4 w-4" />
+                </Button>
+              </Link>
+            )}
             <Button variant="outline" size="default" className="flex" onClick={() => setIsEditModalOpen(true)}>
               <Settings className="h-4 w-4" />
               <span className="hidden lg:block">Edit Job</span>

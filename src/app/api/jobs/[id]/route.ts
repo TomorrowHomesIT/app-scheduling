@@ -15,7 +15,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
     // Fetch job from cf_jobs table
     const { data: jobData, error: jobError } = await supabase
       .from("cf_jobs")
-      .select("id, name, location, owner_id")
+      .select("id, name, location, owner_id, google_drive_dir_id")
       .eq("id", jobId)
       .single();
 
@@ -68,6 +68,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
       id: job.id,
       name: job.name,
       location: job.location || "",
+      googleDriveDirId: job.googleDriveDirId || null,
       tasks: mappedTasks,
     };
 

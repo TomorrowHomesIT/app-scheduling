@@ -64,7 +64,9 @@ export function TaskTable({ tasks }: TaskTableProps) {
         <TableHeader>
           <TableRow>
             <TableHead className="sticky left-0 z-10 bg-white w-4"></TableHead>
-            <TableHead className="sticky left-4 z-10 bg-white w-32 lg:w-64 text-gray-600 text-xs after:absolute after:right-0 after:top-0 after:bottom-0 after:w-px after:bg-gray-200">Name</TableHead>
+            <TableHead className="sticky left-4 z-10 bg-white w-32 lg:w-64 text-gray-600 text-xs after:absolute after:right-0 after:top-0 after:bottom-0 after:w-px after:bg-gray-200">
+              Name
+            </TableHead>
             <TableHead className="w-28 lg:w-36 text-gray-600 text-xs">Supplier</TableHead>
             <TableHead className="w-20 text-gray-600 text-xs">Start date</TableHead>
             <TableHead className="w-32 lg:w-40 text-gray-600 text-xs">Notes</TableHead>
@@ -81,7 +83,10 @@ export function TaskTable({ tasks }: TaskTableProps) {
                 <TableCell className="sticky left-0 z-10 bg-white w-4">
                   <div className={`w-1 h-8 rounded ${CTaskProgressConfig[task.progress].progressColor}`} />
                 </TableCell>
-                <TableCell className="sticky left-4 z-10 bg-white w-32 lg:w-64 font-medium truncate after:absolute after:right-0 after:top-0 after:bottom-0 after:w-px after:bg-gray-200" title={task.name}>
+                <TableCell
+                  className="sticky left-4 z-10 bg-white w-32 lg:w-64 font-medium truncate after:absolute after:right-0 after:top-0 after:bottom-0 after:w-px after:bg-gray-200"
+                  title={task.name}
+                >
                   <TaskDetailsTrigger task={task} onSave={handleTaskDetailsChange}>
                     <span className="block truncate max-w-[120px] lg:max-w-none">{task.name}</span>
                   </TaskDetailsTrigger>

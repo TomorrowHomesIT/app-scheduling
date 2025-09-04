@@ -2,6 +2,7 @@ export interface IJob {
   id: number;
   name: string;
   location: string;
+  googleDriveDirId: string | null;
   tasks: IJobTask[];
 }
 

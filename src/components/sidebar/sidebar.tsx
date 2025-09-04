@@ -12,7 +12,7 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 import useJobStore from "@/store/job/job-store";
 import useOwnersStore from "@/store/owners-store";
 import { LogoutButton } from "@/components/auth/logout-button";
-import Image from "next/image";
+import { Logo } from "../ui/logo";
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -74,12 +74,7 @@ function SidebarContent({ onJobSelect }: { onJobSelect?: () => void }) {
 
   return (
     <>
-      <div className="p-4 border-b flex items-center gap-2">
-        <div className="flex items-center justify-center p-2 rounded-sm bg-primary">
-          <Image src="/logos/light-green.svg" alt="Scheduling" width={16} height={16} />
-        </div>
-        <h2 className="text-lg font-semibold">Scheduling</h2>
-      </div>
+      <Logo className="border-b p-4" />
 
       <div className="p-4">
         <div className="relative">

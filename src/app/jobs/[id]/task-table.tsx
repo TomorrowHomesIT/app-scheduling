@@ -63,68 +63,73 @@ export function TaskTable({ tasks }: TaskTableProps) {
   };
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-4"></TableHead>
-          <TableHead className="w-64 text-gray-600 text-xs">Name</TableHead>
-          <TableHead className="w-36 text-gray-600 text-xs">Supplier</TableHead>
-          <TableHead className="w-20 text-gray-600 text-xs">Start date</TableHead>
-          <TableHead className="min-w-32 max-w-40 text-gray-600 text-xs">Notes</TableHead>
-          <TableHead className="min-w-24 max-w-32 text-gray-600 text-xs">PO</TableHead>
-          <TableHead className="min-w-24 max-w-32 text-gray-600 text-xs">Plans</TableHead>
-          <TableHead className="min-w-32 max-w-40 text-gray-600 text-xs">Email Template</TableHead>
-          <TableHead className="min-w-32 max-w-40 text-gray-600 text-xs">Progress</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {tasks.map((task) => {
-          return (
-            <TableRow key={task.id}>
-              <TableCell className="w-4">
-                <div className={`w-1 h-8 rounded ${CTaskProgressConfig[task.progress].progressColor}`} />
-              </TableCell>
-              <TableCell className="w-64 font-medium truncate" title={task.name}>
-                <TaskDetailsTrigger task={task} onSave={handleTaskDetailsChange}>
-                  {task.name}
-                </TaskDetailsTrigger>
-              </TableCell>
-              <TableCell className="w-36 p-0">
-                <SupplierTrigger
-                  value={task.supplierId ?? undefined}
-                  onChange={(supplierId) => handleSupplierChange(task.id, supplierId)}
-                />
-              </TableCell>
-              <TableCell className="w-20 p-0">
-                <DatePickerTrigger value={task.startDate} onChange={(date) => handleDateChange(task.id, date)} />
-              </TableCell>
-              <TableCell className="min-w-32 max-w-40 p-0">
-                <NotesTrigger value={task.notes ?? undefined} onChange={(notes) => handleNotesChange(task.id, notes)} />
-              </TableCell>
-              <TableCell className="min-w-24 max-w-32 p-0">
-                <FileLinkModalTrigger
-                  links={task.purchaseOrderLinks || []}
-                  onSave={(links) => handlePOLinksChange(task.id, links)}
-                  title="Purchase Order Links"
-                />
-              </TableCell>
-              <TableCell className="min-w-24 max-w-32 p-0">
-                <FileLinkModalTrigger
-                  links={task.planLinks || []}
-                  onSave={(links) => handlePlanLinksChange(task.id, links)}
-                  title="Plan Links"
-                />
-              </TableCell>
-              <TableCell className="min-w-32 max-w-40">
-                <EmailStatusTrigger value={task.status} onChange={(status) => handleStatusChange(task.id, status)} />
-              </TableCell>
-              <TableCell className="min-w-32 max-w-40">
-                <ProgressTrigger value={task.progress} onChange={(p) => handleProgressChange(task.id, p)} />
-              </TableCell>
-            </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
+    <div className="overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0">
+      <Table className="min-w-[600px] lg:min-w-full">
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-4"></TableHead>
+            <TableHead className="w-32 lg:w-64 text-gray-600 text-xs">Name</TableHead>
+            <TableHead className="w-28 lg:w-36 text-gray-600 text-xs">Supplier</TableHead>
+            <TableHead className="w-20 text-gray-600 text-xs">Start date</TableHead>
+            <TableHead className="hidden md:table-cell w-32 lg:w-40 text-gray-600 text-xs">Notes</TableHead>
+            <TableHead className="w-20 lg:w-24 text-gray-600 text-xs">PO</TableHead>
+            <TableHead className="w-20 lg:w-24 text-gray-600 text-xs">Plans</TableHead>
+            <TableHead className="hidden lg:table-cell w-32 lg:w-40 text-gray-600 text-xs">Email Template</TableHead>
+            <TableHead className="w-28 lg:w-32 text-gray-600 text-xs">Progress</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {tasks.map((task) => {
+            return (
+              <TableRow key={task.id}>
+                <TableCell className="w-4">
+                  <div className={`w-1 h-8 rounded ${CTaskProgressConfig[task.progress].progressColor}`} />
+                </TableCell>
+                <TableCell className="w-32 lg:w-64 font-medium truncate" title={task.name}>
+                  <TaskDetailsTrigger task={task} onSave={handleTaskDetailsChange}>
+                    <span className="block truncate max-w-[120px] lg:max-w-none">{task.name}</span>
+                  </TaskDetailsTrigger>
+                </TableCell>
+                <TableCell className="w-28 lg:w-36 p-0">
+                  <SupplierTrigger
+                    value={task.supplierId ?? undefined}
+                    onChange={(supplierId) => handleSupplierChange(task.id, supplierId)}
+                  />
+                </TableCell>
+                <TableCell className="w-20 p-0">
+                  <DatePickerTrigger value={task.startDate} onChange={(date) => handleDateChange(task.id, date)} />
+                </TableCell>
+                <TableCell className="hidden md:table-cell w-32 lg:w-40 p-0">
+                  <NotesTrigger
+                    value={task.notes ?? undefined}
+                    onChange={(notes) => handleNotesChange(task.id, notes)}
+                  />
+                </TableCell>
+                <TableCell className="w-20 lg:w-24 p-0">
+                  <FileLinkModalTrigger
+                    links={task.purchaseOrderLinks || []}
+                    onSave={(links) => handlePOLinksChange(task.id, links)}
+                    title="Purchase Order Links"
+                  />
+                </TableCell>
+                <TableCell className="w-20 lg:w-24 p-0">
+                  <FileLinkModalTrigger
+                    links={task.planLinks || []}
+                    onSave={(links) => handlePlanLinksChange(task.id, links)}
+                    title="Plan Links"
+                  />
+                </TableCell>
+                <TableCell className="hidden lg:table-cell w-32 lg:w-40">
+                  <EmailStatusTrigger value={task.status} onChange={(status) => handleStatusChange(task.id, status)} />
+                </TableCell>
+                <TableCell className="w-28 lg:w-32">
+                  <ProgressTrigger value={task.progress} onChange={(p) => handleProgressChange(task.id, p)} />
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </div>
   );
 }

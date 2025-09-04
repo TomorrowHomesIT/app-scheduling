@@ -8,12 +8,13 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Button } from "@/components/ui/button";
 import { TaskTable } from "@/app/jobs/[id]/task-table";
 import { JobEditModal } from "@/components/modals/job-edit/job-edit-modal";
-import { ChevronLeft, Settings } from "lucide-react";
+import { ChevronLeft, Settings, Menu } from "lucide-react";
 import useJobStore from "@/store/job-store";
 import useSupplierStore from "@/store/supplier-store";
 import useTaskStore from "@/store/task-store";
 import { Spinner } from "@/components/ui/spinner";
 import { Badge } from "@/components/ui/badge";
+import { useSidebar } from "@/components/sidebar/sidebar-context";
 
 interface JobDetailPageProps {
   params: Promise<{ id: string }>;
@@ -24,6 +25,7 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
   const { taskStages, loadTaskStages } = useTaskStore();
   const { currentJob, loadJob, updateJob } = useJobStore();
   const { loadSuppliers } = useSupplierStore();
+  const { setIsSidebarOpen } = useSidebar();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Load suppliers when component mounts
@@ -72,26 +74,32 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
     <div className="flex flex-col h-full">
       <div className="border-b bg-background">
         <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-4">
-            <Link href="/jobs">
+          <div className="flex items-center gap-2 lg:gap-4">
+            <Link href="/jobs" className="hidden lg:block">
               <Button variant="ghost" size="icon">
                 <ChevronLeft className="h-4 w-4" />
               </Button>
             </Link>
-            <div>
+            <div className="flex-1">
               <div className="flex items-end gap-2">
-                <h1 className="text-2xl font-semibold">{currentJob.name}</h1>
-                <Badge variant="outline" className="mb-1">
+                <h1 className="text-xl lg:text-2xl font-semibold">{currentJob.name}</h1>
+                <Badge variant="outline" className="mb-0.5 lg:mb-1">
                   {completedTasks} / {totalTasks}
                 </Badge>
               </div>
               <p className="text-sm text-muted-foreground">{currentJob.location}</p>
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={() => setIsEditModalOpen(true)}>
-            <Settings className="h-4 w-4" />
-            Edit Job
-          </Button>
+
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="default" className="flex" onClick={() => setIsEditModalOpen(true)}>
+              <Settings className="h-4 w-4" />
+              <span className="hidden lg:block">Edit Job</span>
+            </Button>
+            <Button variant="outline" size="default" className="lg:hidden" onClick={() => setIsSidebarOpen(true)}>
+              <Menu className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
 

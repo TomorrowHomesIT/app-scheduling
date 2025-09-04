@@ -8,12 +8,18 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import useJobStore from "@/store/job-store";
 import useOwnersStore from "@/store/owners-store";
-import { LogoutButton } from "./auth/logout-button";
+import { LogoutButton } from "@/components/auth/logout-button";
 import Image from "next/image";
 
-export function Sidebar() {
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+function SidebarContent({ onJobSelect }: { onJobSelect?: () => void }) {
   const pathname = usePathname();
   const { currentJob } = useJobStore();
   const { owners, loadOwners } = useOwnersStore();
@@ -67,7 +73,7 @@ export function Sidebar() {
     .filter((owner): owner is NonNullable<typeof owner> => owner !== null);
 
   return (
-    <div className="flex h-full w-58 flex-col border-r">
+    <>
       <div className="p-4 border-b flex items-center gap-2">
         <div className="flex items-center justify-center p-2 rounded-sm bg-primary">
           <Image src="/logos/light-green.svg" alt="Scheduling" width={16} height={16} />
@@ -114,6 +120,7 @@ export function Sidebar() {
                   <Link
                     key={job.id}
                     href={`/jobs/${job.id}`}
+                    onClick={onJobSelect}
                     className={cn(
                       "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground",
                       pathname === `/jobs/${job.id}` && "bg-accent font-bold",
@@ -132,6 +139,24 @@ export function Sidebar() {
       <div className="border-t p-4">
         <LogoutButton />
       </div>
-    </div>
+    </>
+  );
+}
+
+export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
+  return (
+    <>
+      {/* Desktop sidebar - always visible */}
+      <div className="hidden lg:flex h-full w-58 flex-col border-r bg-background">
+        <SidebarContent />
+      </div>
+
+      {/* Mobile sidebar - Sheet component */}
+      <Sheet open={isOpen} onOpenChange={onClose ? () => onClose() : undefined}>
+        <SheetContent side="left" className="w-58 p-0 flex flex-col">
+          <SidebarContent onJobSelect={onClose} />
+        </SheetContent>
+      </Sheet>
+    </>
   );
 }

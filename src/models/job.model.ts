@@ -3,6 +3,7 @@ export interface IJob {
   name: string;
   location: string;
   googleDriveDirId: string | null;
+  ownerId: number;
   tasks: IJobTask[];
 }
 
@@ -69,5 +70,6 @@ export interface ICreateJobRequest {
 
 export interface IUpdateJobRequest {
   name: string;
-  location: string;
+  location?: string;
+  ownerId: number;
 }

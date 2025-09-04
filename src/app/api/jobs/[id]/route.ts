@@ -65,10 +65,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
 
     // Construct the complete job object
     const completeJob: IJob = {
-      id: job.id,
-      name: job.name,
-      location: job.location || "",
-      googleDriveDirId: job.googleDriveDirId || null,
+      ...job,
       tasks: mappedTasks,
     };
 
@@ -93,13 +90,16 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return Response.json({ error: "Job name is required" }, { status: 400 });
   }
 
+  const updateData: Record<string, string | null | number> = {
+    name: updates.name.trim(),
+    location: updates.location?.trim() || null,
+    owner_id: updates.ownerId,
+  };
+
   // Update job in cf_jobs table
   const { data: jobData, error: jobError } = await supabase
     .from("cf_jobs")
-    .update({
-      name: updates.name.trim(),
-      location: updates.location?.trim() || null,
-    })
+    .update(updateData)
     .eq("id", jobId)
     .select("id, name, location, owner_id")
     .single();

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { IOwner } from "@/models/owner.model";
+import type { IOwner, IOwnerJob } from "@/models/owner.model";
 import { toast } from "@/store/toast-store";
 
 interface OwnersStore {
@@ -8,6 +8,7 @@ interface OwnersStore {
   isLoading: boolean;
   loadOwners: () => Promise<void>;
   setJobName: (jobId: number, name: string) => void;
+  setJobOwner: (jobId: number, ownerId: number) => void;
 }
 
 const useOwnersStore = create<OwnersStore>((set, get) => ({
@@ -43,6 +44,29 @@ const useOwnersStore = create<OwnersStore>((set, get) => ({
         jobs: owner.jobs?.map((job) => (job.id === jobId ? { ...job, name } : job)),
       })),
     }));
+  },
+
+  setJobOwner: (jobId: number, newOwnerId: number) => {
+    set((state) => {
+      const matchingJob = state.owners.flatMap((owner) => owner.jobs).find((job) => job?.id === jobId);
+      if (!matchingJob) return state;
+
+      const updatedJob: IOwnerJob = { ...matchingJob, ownerId: newOwnerId };
+
+      // Update owners: remove job from old owner, add to new owner
+      return {
+        owners: state.owners.map((owner) => {
+          // Remove job from any current owner
+          const filteredJobs = owner.jobs?.filter((j) => j.id !== jobId) || [];
+
+          if (owner.id === newOwnerId) {
+            return { ...owner, jobs: [...filteredJobs, updatedJob] };
+          }
+
+          return { ...owner, jobs: filteredJobs };
+        }),
+      };
+    });
   },
 }));
 

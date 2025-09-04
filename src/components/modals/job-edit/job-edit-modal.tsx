@@ -5,7 +5,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { IJob, IUpdateJobRequest } from "@/models/job.model";
+import useOwnersStore from "@/store/owners-store";
 
 interface JobEditModalProps {
   job: IJob;
@@ -15,17 +17,23 @@ interface JobEditModalProps {
 }
 
 export function JobEditModal({ job, onSave, open, onOpenChange }: JobEditModalProps) {
+  const owners = useOwnersStore((state) => state.owners);
   const [localJob, setLocalJob] = useState<IUpdateJobRequest>({
     name: job.name,
     location: job.location || "",
+    ownerId: job.ownerId,
   });
   const [isSaving, setIsSaving] = useState(false);
+
+  // Find the current owner
+  const currentOwnerId = job.ownerId || owners.find((owner) => owner.jobs?.some((j) => j.id === job.id))?.id;
 
   useEffect(() => {
     if (open) {
       setLocalJob({
         name: job.name,
-        location: job.location || "",
+        location: job.location,
+        ownerId: job.ownerId,
       });
     }
   }, [open, job]);
@@ -43,10 +51,7 @@ export function JobEditModal({ job, onSave, open, onOpenChange }: JobEditModalPr
   };
 
   const handleCancel = () => {
-    setLocalJob({
-      name: job.name,
-      location: job.location || "",
-    });
+    setLocalJob({ name: job.name, location: job.location, ownerId: job.ownerId });
     onOpenChange(false);
   };
 
@@ -79,6 +84,26 @@ export function JobEditModal({ job, onSave, open, onOpenChange }: JobEditModalPr
               onChange={(e) => setLocalJob((prev) => ({ ...prev, location: e.target.value }))}
               placeholder="Enter job location"
             />
+          </div>
+
+          {/* Owner */}
+          <div className="space-y-2">
+            <Label htmlFor="job-owner">Owner</Label>
+            <Select
+              value={localJob.ownerId?.toString() || currentOwnerId?.toString() || ""}
+              onValueChange={(value) => setLocalJob((prev) => ({ ...prev, ownerId: parseInt(value, 10) }))}
+            >
+              <SelectTrigger id="job-owner">
+                <SelectValue placeholder="Select an owner" />
+              </SelectTrigger>
+              <SelectContent>
+                {owners.map((owner) => (
+                  <SelectItem key={owner.id} value={owner.id.toString()}>
+                    {owner.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 

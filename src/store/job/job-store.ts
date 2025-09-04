@@ -101,9 +101,14 @@ const useJobStore = create<JobStore>((set, get) => ({
       },
     });
 
+    const ownersStore = useOwnersStore.getState();
     if (updates.name) {
-      useOwnersStore.getState().setJobName(jobId, updates.name);
+      ownersStore.setJobName(jobId, updates.name);
     }
+    if (updates.ownerId !== undefined) {
+      ownersStore.setJobOwner(jobId, updates.ownerId);
+    }
+
 
     set((state) => {
       const updatedJobs = state.jobs.map((job) => (job.id === jobId ? { ...job, ...updates } : job));

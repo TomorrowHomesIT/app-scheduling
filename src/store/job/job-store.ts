@@ -1,19 +1,18 @@
 import { create } from "zustand";
-import type { IJob, IUpdateJobRequest } from "@/models/job.model";
-import type { IJobTask } from "@/models/job.model";
+import type { IJob, IJobTask, IUpdateJobRequest } from "@/models/job.model";
 import { toast } from "@/store/toast-store";
 import { getApiErrorMessage } from "@/lib/api/error";
 import useOwnersStore from "@/store/owners-store";
 
 interface JobStore {
-  jobs: IJob[];
+  jobs: IJob[]; // TODO I'm not sure this is actually uesd? We never load a list of jobs lol
   currentJob: IJob | null;
   isLoading: boolean;
 
   loadJob: (id: number) => Promise<void>;
   setCurrentJob: (job: IJob | null) => void;
   updateJob: (jobId: number, updates: IUpdateJobRequest) => Promise<void>;
-  updateTask: (taskId: number, updates: Partial<IJobTask>) => Promise<void>;
+  updateJobTask: (jobId: number, jobTaskId: number, updates: Partial<IJobTask>) => void;
 }
 
 const fetchJobByIdFromApi = async (id: number): Promise<IJob | null> => {
@@ -28,28 +27,6 @@ const fetchJobByIdFromApi = async (id: number): Promise<IJob | null> => {
     return job;
   } catch (error) {
     console.error("Error fetching job:", error);
-    throw error;
-  }
-};
-
-const updateTaskApi = async (taskId: number, updates: Partial<IJobTask>): Promise<IJobTask | null> => {
-  try {
-    const response = await fetch(`/api/tasks/${taskId}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(updates),
-    });
-
-    if (!response.ok) {
-      throw new Error(await getApiErrorMessage(response, "Failed to update task"));
-    }
-
-    const updatedTask: IJobTask = await response.json();
-    return updatedTask;
-  } catch (error) {
-    console.error("Error updating task:", error);
     throw error;
   }
 };
@@ -139,36 +116,23 @@ const useJobStore = create<JobStore>((set, get) => ({
     });
   },
 
-  updateTask: async (taskId: number, updates: Partial<IJobTask>) => {
-    // Store the current state in case we need to rollback
-    // TODO we probably need to just store the request if there is no internet
-    const previousState = get();
-
-    // Optimistically update the UI
+  updateJobTask: (jobId: number, jobTaskId: number, updates: Partial<IJobTask>) => {
     set((state) => {
-      // Find which job contains this task
-      const jobWithTask = state.jobs.find((job) => job.tasks?.some((task) => task.id === taskId));
-
-      if (!jobWithTask) return state;
-
-      // Update the task in the specific job
       const updatedJobs = state.jobs.map((job) => {
-        if (job.id === jobWithTask.id) {
+        if (job.id === jobId) {
           return {
             ...job,
-            tasks: job.tasks?.map((task) => (task.id === taskId ? { ...task, ...updates } : task)),
+            tasks: job.tasks.map((task) => (task.id === jobTaskId ? { ...task, ...updates } : task)),
           };
         }
-
         return job;
       });
 
-      // Also update currentJob if it's the same job
       let updatedCurrentJob = state.currentJob;
-      if (updatedCurrentJob?.id === jobWithTask.id) {
+      if (updatedCurrentJob?.id === jobId) {
         updatedCurrentJob = {
           ...updatedCurrentJob,
-          tasks: updatedCurrentJob.tasks.map((task) => (task.id === taskId ? { ...task, ...updates } : task)),
+          tasks: updatedCurrentJob.tasks.map((task) => (task.id === jobTaskId ? { ...task, ...updates } : task)),
         };
       }
 
@@ -177,37 +141,6 @@ const useJobStore = create<JobStore>((set, get) => ({
         currentJob: updatedCurrentJob,
       };
     });
-
-    // Determine what's being updated for specific toast messages
-    const getUpdateMessage = () => {
-      if (updates.supplierId !== undefined) return "supplier";
-      if (updates.progress !== undefined) return "progress";
-      if (updates.startDate !== undefined) return "start date";
-      if (updates.notes !== undefined) return "notes";
-      if (updates.purchaseOrderLinks !== undefined) return "purchase orders";
-      if (updates.planLinks !== undefined) return "plan links";
-
-      return "task";
-    };
-
-    const updateType = getUpdateMessage();
-
-    try {
-      await toast.while(updateTaskApi(taskId, updates), {
-        loading: `Saving ${updateType}...`,
-        success: `Updated ${updateType}`,
-        error: (error) => {
-          // Rollback on error
-          set({
-            jobs: previousState.jobs,
-            currentJob: previousState.currentJob,
-          });
-          return `${error}`;
-        },
-      });
-    } catch {
-      // handled internally
-    }
   },
 }));
 

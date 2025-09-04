@@ -51,7 +51,7 @@ export const CTaskProgressConfig = {
   },
   [EJobTaskProgress.Completed]: {
     label: "Done",
-    className: "bg-green-300 text-green-900 hover:bg-green-400",
+    className: "bg-green-200 text-green-900 hover:bg-green-400",
     progressColor: "bg-green-500",
   },
   [EJobTaskProgress.NotRequired]: {

@@ -1,6 +1,7 @@
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import type { ComponentProps } from "react";
+import { useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
@@ -35,14 +36,45 @@ function Button({
   variant,
   size,
   asChild = false,
+  onClick,
+  disabled,
   ...props
 }: ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean;
   }) {
   const Comp = asChild ? Slot : "button";
+  const isProcessing = useRef<boolean>(false);
+  const DEBOUNCE_DELAY = 300; // milliseconds
 
-  return <Comp data-slot="button" className={cn(buttonVariants({ variant, size, className }))} {...props} />;
+  const handleClick = useCallback(
+    (event: React.MouseEvent<HTMLButtonElement>) => {
+      if (disabled || isProcessing.current) {
+        console.log("Button is disabled or already processing a click");
+        event.preventDefault();
+        return;
+      }
+
+      isProcessing.current = true;
+      if (onClick) onClick(event);
+
+      // Reset processing flag after delay
+      setTimeout(() => {
+        isProcessing.current = false;
+      }, DEBOUNCE_DELAY);
+    },
+    [onClick, disabled],
+  );
+
+  return (
+    <Comp
+      data-slot="button"
+      className={cn(buttonVariants({ variant, size, className }))}
+      onClick={handleClick}
+      disabled={disabled}
+      {...props}
+    />
+  );
 }
 
 export { Button, buttonVariants };

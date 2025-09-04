@@ -107,7 +107,7 @@ export const toast = {
       useToastStore.getState().updateToast(id, {
         message: successMsg,
         type: "success",
-        duration: 1000,
+        duration: 2000,
       });
       return result;
     } catch (error) {
@@ -115,7 +115,7 @@ export const toast = {
       useToastStore.getState().updateToast(id, {
         message: errorMsg,
         type: "error",
-        duration: 8000,
+        duration: 20000,
       });
       throw error;
     }

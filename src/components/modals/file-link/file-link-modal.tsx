@@ -236,7 +236,7 @@ export function FileLinkModalTrigger({
       <ModalTriggerButton hasValue={count > 0} setOpen={setOpen}>
         <Badge variant="secondary" className="gap-1 p-1 h-auto justify-start">
           <Paperclip className="h-3 w-3" />
-          <span className="text-xs">{count}</span>
+          {count > 1 && <span className="text-xs">{count}</span>}
         </Badge>
       </ModalTriggerButton>
       <FileLinkModal open={open} links={links} onSave={onSave} title={title} onOpenChange={setOpen} />

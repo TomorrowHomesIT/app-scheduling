@@ -16,8 +16,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const serviceEmailUrl = process.env.BASED_SERVICE_URL;
-    const serviceToken = process.env.BASED_SERVICE_TOKEN;
+    const serviceEmailUrl = process.env.BASD_SERVICE_URL;
+    const serviceToken = process.env.BASD_SERVICE_TOKEN;
     
     if (!serviceEmailUrl || !serviceToken) {
       return errorHandler("evn not configured", "Failed to send email");

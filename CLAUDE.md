@@ -1,7 +1,7 @@
 # App Scheduling - Project Documentation
 
 ## Overview
-A Next.js-based scheduling application for managing construction jobs, tasks, and suppliers with a hierarchical owner structure.
+A Next.js-basd scheduling application for managing construction jobs, tasks, and suppliers with a hierarchical owner structure.
 
 ## Tech Stack
 - **Framework**: Next.js 15 (App Router)

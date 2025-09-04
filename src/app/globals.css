@@ -40,31 +40,31 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  --color-based-green-50: #f6ffe6;
+  --color-basd-green-50: #f6ffe6;
   /* Primary light green color */
-  --color-based-green-100: #e5ffbc;
-  --color-based-green-200: #d5ff97;
-  --color-based-green-300: #b6fb5b;
-  --color-based-green-400: #9af12a;
-  --color-based-green-500: #79d70b;
-  --color-based-green-600: #5dac04;
-  --color-based-green-700: #468308;
-  --color-based-green-800: #3a670d;
-  --color-based-green-900: #325710;
-  --color-based-green-950: #122601;
+  --color-basd-green-100: #e5ffbc;
+  --color-basd-green-200: #d5ff97;
+  --color-basd-green-300: #b6fb5b;
+  --color-basd-green-400: #9af12a;
+  --color-basd-green-500: #79d70b;
+  --color-basd-green-600: #5dac04;
+  --color-basd-green-700: #468308;
+  --color-basd-green-800: #3a670d;
+  --color-basd-green-900: #325710;
+  --color-basd-green-950: #122601;
 
   /* Replace the tailwind green color scale with our custom one created from #e5ffbc */
-  --color-green-50: var(--color-based-green-50);
-  --color-green-100: var(--color-based-green-100);
-  --color-green-200: var(--color-based-green-200);
-  --color-green-300: var(--color-based-green-300);
-  --color-green-400: var(--color-based-green-400);
-  --color-green-500: var(--color-based-green-500);
-  --color-green-600: var(--color-based-green-600);
-  --color-green-700: var(--color-based-green-700);
-  --color-green-800: var(--color-based-green-800);
-  --color-green-900: var(--color-based-green-900);
-  --color-green-950: var(--color-based-green-950);
+  --color-green-50: var(--color-basd-green-50);
+  --color-green-100: var(--color-basd-green-100);
+  --color-green-200: var(--color-basd-green-200);
+  --color-green-300: var(--color-basd-green-300);
+  --color-green-400: var(--color-basd-green-400);
+  --color-green-500: var(--color-basd-green-500);
+  --color-green-600: var(--color-basd-green-600);
+  --color-green-700: var(--color-basd-green-700);
+  --color-green-800: var(--color-basd-green-800);
+  --color-green-900: var(--color-basd-green-900);
+  --color-green-950: var(--color-basd-green-950);
 }
 
 :root {

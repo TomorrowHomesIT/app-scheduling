@@ -17,8 +17,10 @@ export async function POST(request: NextRequest) {
     }
 
     const serviceEmailUrl = process.env.BASED_SERVICE_URL;
-    if (!serviceEmailUrl) {
-      return errorHandler("BASED_SERVICE_URL not configured", "Failed to send email");
+    const serviceToken = process.env.BASED_SERVICE_TOKEN;
+    
+    if (!serviceEmailUrl || !serviceToken) {
+      return errorHandler("evn not configured", "Failed to send email");
     }
 
     // Parse request body
@@ -56,6 +58,7 @@ export async function POST(request: NextRequest) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "X-App-Auth": serviceToken,
         },
         body: JSON.stringify(emailServiceRequest),
       });

@@ -10,4 +10,5 @@ export interface IOwnerJob {
   id: number;
   ownerId: number;
   name: string;
+  location?: string;
 }

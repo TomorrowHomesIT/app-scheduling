@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
 
     const serviceEmailUrl = process.env.BASD_SERVICE_URL;
     const serviceToken = process.env.BASD_SERVICE_TOKEN;
-    
+
     if (!serviceEmailUrl || !serviceToken) {
       return errorHandler("evn not configured", "Failed to send email");
     }

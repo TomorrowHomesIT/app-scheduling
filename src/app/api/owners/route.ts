@@ -18,7 +18,7 @@ export async function GET() {
   // Fetch jobs from ck_jobs table
   const { data: jobsData, error: jobsError } = await supabase
     .from("cf_jobs")
-    .select("id, name, owner_id")
+    .select("id, name, owner_id, location")
     .order("name");
 
   if (jobsError) {

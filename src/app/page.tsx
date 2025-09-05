@@ -40,9 +40,9 @@ export default function HomePage() {
         <PageHeader title="Home" description="Quick access to all features" />
       </div>
 
-      <div className="flex-1 overflow-auto p-6">
-        <div className="max-w-5xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+      <div className="flex-1 overflow-auto p-6 sm:flex sm:items-center sm:justify-center">
+        <div className="w-full max-w-5xl">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 md:max-w-3xl md:mx-auto">
             {navigationCards.map((card) => (
               <button
                 key={card.href}

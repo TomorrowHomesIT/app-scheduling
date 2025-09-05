@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { ChevronDown, ChevronRight, Search, Folder, ListChecks } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ function SidebarContent({ onJobSelect }: { onJobSelect?: () => void }) {
   const { owners, loadOwners } = useOwnersStore();
   const [expandedOwners, setExpandedOwners] = useState<Set<number>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
+  const router = useRouter();
 
   // Load owners on mount
   useEffect(() => {
@@ -74,7 +75,9 @@ function SidebarContent({ onJobSelect }: { onJobSelect?: () => void }) {
 
   return (
     <>
-      <Logo className="border-b p-4" />
+      <button type="button" onClick={() => router.push("/")}>
+        <Logo className="border-b p-4" />
+      </button>
 
       <div className="p-4">
         <div className="relative">

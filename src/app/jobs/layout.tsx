@@ -1,4 +1,3 @@
-import { JobsLayoutClient } from "./layout-client";
 import { ProtectedLayout } from "@/components/auth/protected-layout";
 
 export default async function JobsLayout({
@@ -6,9 +5,5 @@ export default async function JobsLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <ProtectedLayout>
-      <JobsLayoutClient>{children}</JobsLayoutClient>
-    </ProtectedLayout>
-  );
+  return <ProtectedLayout>{children}</ProtectedLayout>;
 }

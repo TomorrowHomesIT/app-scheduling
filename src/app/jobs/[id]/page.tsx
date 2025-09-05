@@ -15,6 +15,7 @@ import useTaskStore from "@/store/task-store";
 import { Spinner } from "@/components/ui/spinner";
 import { Badge } from "@/components/ui/badge";
 import { useSidebar } from "@/components/sidebar/sidebar-context";
+import { PageHeader } from "@/components/ui/page-header";
 
 interface JobDetailPageProps {
   params: Promise<{ id: string }>;
@@ -73,45 +74,31 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
   return (
     <div className="flex flex-col h-full">
       <div className="border-b bg-background">
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-2 lg:gap-4">
-            <Link href="/jobs" className="hidden lg:block">
-              <Button variant="ghost" size="icon">
-                <ChevronLeft className="h-4 w-4" />
+        <PageHeader
+          title={currentJob.name}
+          description={currentJob.location}
+          backLink="/jobs"
+          badge={`${completedTasks}/${totalTasks}`}
+        >
+          {currentJob.googleDriveDirId && (
+            <Link
+              href={`https://drive.google.com/drive/folders/${currentJob.googleDriveDirId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button variant="outline" size="icon">
+                <HardDrive className="h-4 w-4" />
               </Button>
             </Link>
-            <div className="flex-1">
-              <div className="flex items-end gap-2">
-                <h1 className="text-xl lg:text-2xl font-semibold">{currentJob.name}</h1>
-                <Badge variant="outline" className="mb-0.5 lg:mb-1">
-                  {completedTasks} / {totalTasks}
-                </Badge>
-              </div>
-              <p className="text-sm text-muted-foreground">{currentJob.location}</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {currentJob.googleDriveDirId && (
-              <Link
-                href={`https://drive.google.com/drive/folders/${currentJob.googleDriveDirId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Button variant="outline" size="icon">
-                  <HardDrive className="h-4 w-4" />
-                </Button>
-              </Link>
-            )}
-            <Button variant="outline" size="default" className="flex" onClick={() => setIsEditModalOpen(true)}>
-              <Settings className="h-4 w-4" />
-              <span className="hidden lg:block">Edit Job</span>
-            </Button>
-            <Button variant="outline" size="default" className="lg:hidden" onClick={() => setIsSidebarOpen(true)}>
-              <Menu className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+          )}
+          <Button variant="outline" size="default" className="flex" onClick={() => setIsEditModalOpen(true)}>
+            <Settings className="h-4 w-4" />
+            <span className="hidden lg:block">Edit Job</span>
+          </Button>
+          <Button variant="outline" size="default" className="lg:hidden" onClick={() => setIsSidebarOpen(true)}>
+            <Menu className="h-4 w-4" />
+          </Button>
+        </PageHeader>
       </div>
 
       <div className="flex-1 overflow-auto p-4">

@@ -1,0 +1,41 @@
+import { ChevronLeft } from "lucide-react";
+import type { ComponentProps } from "react";
+import { Button } from "./button";
+import { Badge } from "./badge";
+import Link from "next/link";
+
+interface PageHaderProps extends ComponentProps<"div"> {
+  title: string;
+  description?: string;
+  backLink?: string;
+  badge?: string;
+}
+
+export function PageHeader({ title, description, backLink, badge, children }: PageHaderProps) {
+  return (
+    <div className="flex items-center justify-between p-4">
+      <div className="flex items-center gap-2 lg:gap-4">
+        {backLink && (
+          <Link href={backLink} className="hidden lg:block">
+            <Button variant="ghost" size="icon">
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+        )}
+        <div className="flex-1">
+          <div className="flex items-end gap-2">
+            <h1 className="text-xl lg:text-2xl font-semibold">{title}</h1>
+            {badge && (
+              <Badge variant="outline" className="mb-0.5 lg:mb-1">
+                {badge}
+              </Badge>
+            )}
+          </div>
+          <p className="text-sm text-muted-foreground">{description}</p>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2">{children}</div>
+    </div>
+  );
+}

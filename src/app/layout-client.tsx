@@ -5,7 +5,7 @@ import { SidebarProvider, useSidebar } from "@/components/sidebar/sidebar-contex
 import type { ReactNode } from "react";
 
 /** Function is required so that useSidebar is used within the context */
-function JobsLayoutContent({ children }: { children: ReactNode }) {
+function AppLayoutContent({ children }: { children: ReactNode }) {
   const { isSidebarOpen, setIsSidebarOpen } = useSidebar();
   return (
     <>
@@ -15,14 +15,14 @@ function JobsLayoutContent({ children }: { children: ReactNode }) {
   );
 }
 
-export function JobsLayoutClient({
+export function AppLayoutClient({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
     <SidebarProvider>
-      <JobsLayoutContent>{children}</JobsLayoutContent>
+      <AppLayoutContent>{children}</AppLayoutContent>
     </SidebarProvider>
   );
 }

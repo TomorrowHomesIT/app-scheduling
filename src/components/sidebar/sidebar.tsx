@@ -95,7 +95,7 @@ function SidebarContent({ onJobSelect }: { onJobSelect?: () => void }) {
             <Collapsible key={owner.id} open={expandedOwners.has(owner.id)} onOpenChange={() => toggleOwner(owner.id)}>
               <CollapsibleTrigger asChild>
                 <Button variant="ghost" className="w-full justify-start p-2 h-auto font-normal group">
-                  <span className="mr-2 relative inline-flex h-4 w-4 items-center justify-center">
+                  <span className="mr-1 relative inline-flex h-4 w-4 items-center justify-center">
                     {expandedOwners.has(owner.id) ? (
                       <ChevronDown className="absolute h-4 w-4 opacity-0 transition-opacity group-hover:opacity-100" />
                     ) : (

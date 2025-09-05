@@ -3,4 +3,5 @@ export interface ISupplier {
   name: string;
   email: string | null;
   secondaryEmail: string | null;
+  active: boolean;
 }

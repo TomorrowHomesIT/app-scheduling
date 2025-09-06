@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { IJobTask } from "@/models/job.model";
-import { EJobTaskStatus } from "@/models/job.model";
+import type { EJobTaskStatus } from "@/models/job.model";
 import type { IScheduleEmailRequest } from "@/models/email";
 import { toast } from "@/store/toast-store";
 import { getApiErrorMessage } from "@/lib/api/error";
@@ -112,15 +112,6 @@ const useJobTaskStore = create<JobTaskStore>(() => ({
       throw new Error("Supplier is required to send email");
     }
 
-    // Map status to email type
-    const emailTypeMap: Record<EJobTaskStatus, IScheduleEmailRequest["emailType"]> = {
-      [EJobTaskStatus.Scheduled]: "schedule",
-      [EJobTaskStatus.ReScheduled]: "reschedule",
-      [EJobTaskStatus.Cancelled]: "cancel",
-      [EJobTaskStatus.None]: "cancel",
-    };
-    const emailType = emailTypeMap[status];
-
     const googleFileIds: string[] = [];
     task.purchaseOrderLinks?.forEach((link) => {
       if (link.googleDriveId) {
@@ -138,15 +129,15 @@ const useJobTaskStore = create<JobTaskStore>(() => ({
 
     const emailRequest: IScheduleEmailRequest = {
       jobTaskId: task.id,
-      jobLotCode: currentJob.name || "",
-      jobLocation: currentJob.location || "",
+      jobLotCode: currentJob.name,
+      jobLocation: currentJob.location,
       taskTitle: task.name,
-      taskStartDate: task.startDate ? new Date(task.startDate).toISOString() : "",
-      taskNotes: task.notes || "",
-      recipientName: supplier.name || "",
+      taskStartDate: task.startDate ? new Date(task.startDate).toISOString() : null,
+      taskNotes: task.notes,
+      recipientName: supplier.name,
       recipientEmails,
       googleFileIds,
-      emailType,
+      status,
     };
 
     try {

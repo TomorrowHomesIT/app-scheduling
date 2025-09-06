@@ -1,16 +1,25 @@
+import type { EJobTaskStatus } from "./job.model";
+
 export interface IScheduleEmailRequest {
   jobTaskId: number;
   jobLotCode: string;
   jobLocation: string;
 
   taskTitle: string;
-  taskStartDate: string;
-  taskNotes: string;
+  taskStartDate: string | null;
+  taskNotes: string | null;
 
   recipientName: string;
   recipientEmails: string[];
 
-  sentBy?: string;
   googleFileIds: string[];
-  emailType: "schedule" | "reschedule" | "cancel";
+  status: EJobTaskStatus;
+}
+
+export type TEmailType = "schedule" | "reschedule" | "cancel";
+
+export interface IScheduleEmailServiceRequest extends IScheduleEmailRequest {
+  sentByName?: string;
+  sentByEmail: string;
+  emailType: TEmailType;
 }

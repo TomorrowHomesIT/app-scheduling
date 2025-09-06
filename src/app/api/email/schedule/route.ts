@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import type { IScheduleEmailRequest } from "@/models/email";
+import type { IScheduleEmailRequest, IScheduleEmailServiceRequest } from "@/models/email";
 import { createClient } from "@/lib/supabase/server";
 import { EJobTaskStatus } from "@/models/job.model";
 
@@ -25,8 +25,6 @@ export async function POST(request: NextRequest) {
 
     // Parse request body
     const body: IScheduleEmailRequest = await request.json();
-
-    // Validate required fields
     const requiredFields: (keyof IScheduleEmailRequest)[] = [
       "jobTaskId",
       "jobLotCode",
@@ -35,11 +33,14 @@ export async function POST(request: NextRequest) {
       "taskStartDate",
       "recipientName",
       "recipientEmails",
-      "emailType",
+      "status",
     ];
 
     const missingFields = requiredFields.filter((field) => !body[field]);
 
+    if (!user.email) {
+      return NextResponse.json({ error: "User is missing an email address" }, { status: 404 });
+    }
     if (missingFields.length > 0) {
       return NextResponse.json({ error: `Missing required fields: ${missingFields.join(", ")}` }, { status: 400 });
     } else if (!body.recipientEmails?.length) {
@@ -47,9 +48,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Prepare the request for the email service
-    const emailServiceRequest: IScheduleEmailRequest = {
+    const statusMap: Record<EJobTaskStatus, IScheduleEmailServiceRequest["emailType"]> = {
+      [EJobTaskStatus.Scheduled]: "schedule",
+      [EJobTaskStatus.ReScheduled]: "reschedule",
+      [EJobTaskStatus.Cancelled]: "cancel",
+      [EJobTaskStatus.None]: "cancel",
+    };
+    const emailServiceRequest: IScheduleEmailServiceRequest = {
       ...body,
-      sentBy: user.email || user.id,
+      emailType: statusMap[body.status],
+      sentByEmail: user.email,
+      sentByName: "", // TODO add a name
     };
 
     const endpoint = `${serviceEmailUrl}/THGScheduling/Automation/SchedulingEmail`;
@@ -71,15 +80,10 @@ export async function POST(request: NextRequest) {
       return errorHandler(emailError, "Failed to send email");
     }
 
-    const statusMap: Record<IScheduleEmailRequest["emailType"], EJobTaskStatus> = {
-      schedule: EJobTaskStatus.Scheduled,
-      reschedule: EJobTaskStatus.ReScheduled,
-      cancel: EJobTaskStatus.Cancelled,
-    };
     try {
       const { data: updatedTask, error: updateError } = await supabase
         .from("cf_job_tasks")
-        .update({ status: statusMap[body.emailType] })
+        .update({ status: body.status })
         .eq("id", body.jobTaskId)
         .select()
         .single();

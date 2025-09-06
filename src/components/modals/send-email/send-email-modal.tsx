@@ -11,7 +11,7 @@ import { EmailStatusButton } from "@/components/modals/send-email/email-status-b
 import useJobStore from "@/store/job/job-store";
 import useSupplierStore from "@/store/supplier-store";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Send } from "lucide-react";
+import { Zap } from "lucide-react";
 import { EmailPreview } from "./email-preview";
 
 interface SendEmailModalProps {
@@ -106,7 +106,7 @@ export function SendEmailModal({ task, onSendEmail, open, onOpenChange }: SendEm
                         !canSendEmail && "opacity-50 cursor-not-allowed",
                       )}
                     >
-                      <Send className={cn("absolute left-4 h-5 w-5", config.textColor)} />
+                      <Zap className={cn("absolute left-4 h-5 w-5", config.textColor)} />
                       <span className="ml-8 font-medium">{config.label}</span>
                     </Button>
                   );

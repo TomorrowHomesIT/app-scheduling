@@ -1,8 +1,9 @@
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Menu } from "lucide-react";
 import type { ComponentProps } from "react";
 import { Button } from "./button";
 import { Badge } from "./badge";
 import Link from "next/link";
+import { useSidebar } from "../sidebar/sidebar-context";
 
 interface PageHaderProps extends ComponentProps<"div"> {
   title: string;
@@ -12,6 +13,8 @@ interface PageHaderProps extends ComponentProps<"div"> {
 }
 
 export function PageHeader({ title, description, backLink, badge, children }: PageHaderProps) {
+  const { setIsSidebarOpen } = useSidebar();
+
   return (
     <div className="flex items-center justify-between p-4">
       <div className="flex items-center gap-2 lg:gap-4">
@@ -35,7 +38,13 @@ export function PageHeader({ title, description, backLink, badge, children }: Pa
         </div>
       </div>
 
-      <div className="flex items-center gap-2">{children}</div>
+      <div className="flex items-center gap-2">
+        {children}
+        {/* Mobile menu button */}
+        <Button variant="outline" size="default" className="lg:hidden" onClick={() => setIsSidebarOpen(true)}>
+          <Menu className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 }

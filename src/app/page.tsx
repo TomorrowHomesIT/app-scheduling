@@ -1,9 +1,11 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { BookUser, Briefcase, Calendar, House } from "lucide-react";
+import { redirect, useRouter } from "next/navigation";
+import { BookUser, House } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuth } from "@/components/auth/auth-context";
+import { Spinner } from "@/components/ui/spinner";
 
 interface NavigationCard {
   title: string;
@@ -14,6 +16,20 @@ interface NavigationCard {
 
 export default function HomePage() {
   const router = useRouter();
+  const { isAuthenticated, isAuthLoading } = useAuth();
+
+  if (isAuthLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Spinner variant="default" size="xl" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    redirect("/auth/login");
+    return;
+  }
 
   const navigationCards: NavigationCard[] = [
     {

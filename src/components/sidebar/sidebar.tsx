@@ -151,7 +151,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
 
       {/* Mobile sidebar - Sheet component */}
       <Sheet open={isOpen} onOpenChange={onClose ? () => onClose() : undefined}>
-        <SheetContent side="left" className="w-58 p-0 flex flex-col">
+        <SheetContent side="left" className="w-58 p-0 flex flex-col gap-0">
           <SidebarContent onJobSelect={onClose} />
         </SheetContent>
       </Sheet>

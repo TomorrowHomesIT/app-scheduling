@@ -35,8 +35,7 @@ export function SendEmailModal({ task, onSendEmail, open, onOpenChange }: SendEm
     if (!currentJob?.location) missing.push("Job location");
     if (!task.startDate) missing.push("Start date");
     if (!supplier) missing.push("Supplier");
-    if (!task.purchaseOrderLinks?.length) missing.push("Purchase order");
-    if (!task.planLinks?.length) missing.push("Plan");
+    if (supplier && !supplier.email) missing.push("Supplier email");
 
     return missing;
   }, [currentJob, task, supplier]);
@@ -59,60 +58,63 @@ export function SendEmailModal({ task, onSendEmail, open, onOpenChange }: SendEm
           <DialogTitle>Schedule</DialogTitle>
           <DialogDescription>Select a template to send an email to the supplier</DialogDescription>
         </DialogHeader>
+        {/* Can't send email at all */}
+        {!canSendEmail && (
+          <Alert variant="destructive">
+            <AlertTitle>Cannot send email</AlertTitle>
+            <AlertDescription>
+              The following fields are required, try adding them to the task first:
+              <ul className="mt-2 ml-4 list-disc text-sm">
+                {missingFields.map((field) => (
+                  <li key={field}>{field}</li>
+                ))}
+              </ul>
+            </AlertDescription>
+          </Alert>
+        )}
 
-        <div className="flex flex-col sm:flex-row gap-6 py-4">
-          <div className="flex-1 space-y-4">
-            <h3 className="font-semibold text-sm text-gray-700">Email</h3>
-            {/* Email Preview Section */}
-            {canSendEmail && (
-              <EmailPreview
-                recipientName={supplier?.name}
-                task={task}
-                location={currentJob?.location}
-                attachmentCount={attachmentCount}
-              />
-            )}
-            {!canSendEmail && (
-              <Alert variant="warning">
-                <AlertTitle>Cannot send email</AlertTitle>
-                <AlertDescription>
-                  The following required fields are missing:
-                  <ul className="mt-2 ml-4 list-disc text-sm">
-                    {missingFields.map((field) => (
-                      <li key={field}>{field}</li>
-                    ))}
-                  </ul>
-                </AlertDescription>
-              </Alert>
-            )}
-          </div>
+        {/* Only display options if email can be sent */}
+        {canSendEmail && (
+          <div className="flex flex-col sm:flex-row gap-6 py-4">
+            <div className="flex-1 space-y-4">
+              <h3 className="font-semibold text-sm text-gray-700">Email</h3>
+              {/* Email Preview Section */}
+              {canSendEmail && (
+                <EmailPreview
+                  recipientName={supplier?.name}
+                  task={task}
+                  location={currentJob?.location}
+                  attachmentCount={attachmentCount}
+                />
+              )}
+            </div>
 
-          {/* Email Template Selection */}
-          <div className="flex-1 sm:max-w-[250px] space-y-4">
-            <h3 className="font-semibold text-sm text-gray-700">Choose Template</h3>
+            {/* Email Template Selection */}
+            <div className="flex-1 flex flex-col sm:max-w-[250px] space-y-4">
+              <h3 className="font-semibold text-sm text-gray-700">Choose Template</h3>
 
-            <div className="space-y-3">
-              {statusOptions.map((status) => {
-                const config = CTaskStatusConfig[status];
-                return (
-                  <Button
-                    key={status}
-                    variant="outline"
-                    onClick={() => onSelectEmailTemplate(status)}
-                    disabled={!canSendEmail}
-                    className={cn(
-                      "w-full h-12 px-4 relative justify-start",
-                      !canSendEmail && "opacity-50 cursor-not-allowed",
-                    )}
-                  >
-                    <Send className={cn("absolute left-4 h-5 w-5", config.textColor)} />
-                    <span className="ml-8 font-medium">{config.label}</span>
-                  </Button>
-                );
-              })}
+              <div className="space-y-3">
+                {statusOptions.map((status) => {
+                  const config = CTaskStatusConfig[status];
+                  return (
+                    <Button
+                      key={status}
+                      variant="outline"
+                      onClick={() => onSelectEmailTemplate(status)}
+                      className={cn(
+                        "w-full h-12 px-4 relative justify-start",
+                        !canSendEmail && "opacity-50 cursor-not-allowed",
+                      )}
+                    >
+                      <Send className={cn("absolute left-4 h-5 w-5", config.textColor)} />
+                      <span className="ml-8 font-medium">{config.label}</span>
+                    </Button>
+                  );
+                })}
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </DialogContent>
     </Dialog>
   );

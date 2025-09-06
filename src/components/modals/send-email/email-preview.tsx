@@ -1,4 +1,6 @@
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { IJobTask } from "@/models";
+import { useMemo } from "react";
 
 interface EmailPreviewProps {
   recipientName?: string;
@@ -19,6 +21,15 @@ export function EmailPreview({ recipientName, task, location, attachmentCount = 
       year: "numeric",
     });
   };
+
+  const missingAttachments = useMemo(() => {
+    const missing: string[] = [];
+
+    if (!task.purchaseOrderLinks?.length) missing.push("Purchase order");
+    if (!task.planLinks?.length) missing.push("Plan");
+
+    return missing;
+  }, [task]);
 
   return (
     <div className="rounded-lg border bg-gray-50 p-4 space-y-3">
@@ -59,11 +70,26 @@ export function EmailPreview({ recipientName, task, location, attachmentCount = 
         </div>
       )}
 
-      <div className="pt-2 border-t">
-        <p className="text-xs text-gray-500">
-          {attachmentCount} document{attachmentCount > 1 ? "s" : ""} will be included
-        </p>
-      </div>
+      {attachmentCount > 0 && (
+        <div className="pt-2 border-t">
+          <p className="text-xs text-gray-500">
+            {attachmentCount} document{attachmentCount > 1 ? "s" : ""} will be included
+          </p>
+        </div>
+      )}
+
+      {!attachmentCount && (
+        <Alert variant="warning">
+          <AlertDescription>
+            The email will be sent without a:
+            <ul className="mt-2 ml-4 list-disc text-sm">
+              {missingAttachments.map((field) => (
+                <li key={field}>{field}</li>
+              ))}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
     </div>
   );
 }

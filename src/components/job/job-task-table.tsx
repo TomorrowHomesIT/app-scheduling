@@ -1,6 +1,6 @@
 "use client";
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import type { EJobTaskProgress, EJobTaskStatus, IJobTaskUrl } from "@/models/job.model";
 import type { IJobTask } from "@/models";
 import { DatePickerTrigger } from "@/components/modals/date-picker/date-picker-modal";
@@ -13,11 +13,11 @@ import { TaskDetailsTrigger } from "@/components/modals/task-details/task-detail
 import { CTaskProgressConfig } from "@/models/job.const";
 import useJobTaskStore from "@/store/job/job-task-store";
 
-interface TaskTableProps {
+interface JobTaskTableProps {
   tasks: IJobTask[];
 }
 
-export function TaskTable({ tasks }: TaskTableProps) {
+export function JobTaskTable({ tasks }: JobTaskTableProps) {
   const { updateTask, sendTaskEmail } = useJobTaskStore();
 
   const handleDateChange = async (taskId: number, date: Date | undefined) => {
@@ -59,32 +59,17 @@ export function TaskTable({ tasks }: TaskTableProps) {
   };
 
   return (
-    <div className="overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0 relative">
+    <div className="overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0">
       <Table className="min-w-[900px] lg:min-w-full">
-        <TableHeader>
-          <TableRow>
-            <TableHead className="sticky left-0 z-10 bg-white w-4"></TableHead>
-            <TableHead className="sticky left-4 z-10 bg-white w-32 lg:w-64 text-gray-600 text-xs after:absolute after:right-0 after:top-0 after:bottom-0 after:w-px after:bg-gray-200">
-              Name
-            </TableHead>
-            <TableHead className="w-28 lg:w-36 text-gray-600 text-xs">Supplier</TableHead>
-            <TableHead className="w-20 text-gray-600 text-xs">Start date</TableHead>
-            <TableHead className="w-32 lg:w-40 text-gray-600 text-xs">Notes</TableHead>
-            <TableHead className="w-20 lg:w-24 text-gray-600 text-xs">PO</TableHead>
-            <TableHead className="w-20 lg:w-24 text-gray-600 text-xs">Plans</TableHead>
-            <TableHead className="w-32 lg:w-40 text-gray-600 text-xs">Email</TableHead>
-            <TableHead className="w-28 lg:w-32 text-gray-600 text-xs">Progress</TableHead>
-          </TableRow>
-        </TableHeader>
         <TableBody>
           {tasks.map((task) => {
             return (
               <TableRow key={task.id}>
-                <TableCell className="sticky left-0 z-10 bg-white w-4">
+                <TableCell className="sticky left-0 z-15 bg-white w-4">
                   <div className={`w-1 h-8 rounded ${CTaskProgressConfig[task.progress].progressColor}`} />
                 </TableCell>
                 <TableCell
-                  className="sticky left-4 z-10 bg-white w-32 lg:w-64 font-medium truncate after:absolute after:right-0 after:top-0 after:bottom-0 after:w-px after:bg-gray-200"
+                  className="sticky left-4 z-15 bg-white w-32 lg:w-64 font-medium truncate after:absolute after:right-0 after:top-0 after:bottom-0 after:w-px after:bg-gray-200"
                   title={task.name}
                 >
                   <TaskDetailsTrigger task={task} onSave={handleTaskDetailsChange}>

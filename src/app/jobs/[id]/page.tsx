@@ -4,19 +4,19 @@ import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EJobTaskProgress, type IUpdateJobRequest } from "@/models/job.model";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Accordion, AccordionContent, AccordionHeader, AccordionItem } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { TaskTable } from "@/app/jobs/[id]/task-table";
+import { JobTaskTable } from "@/components/job/job-task-table";
 import { JobEditModal } from "@/components/modals/job-edit/job-edit-modal";
-import { ChevronLeft, Settings, Menu, HardDrive } from "lucide-react";
+import { Settings, Menu, HardDrive } from "lucide-react";
 import useJobStore from "@/store/job/job-store";
 import useSupplierStore from "@/store/supplier-store";
 import useTaskStore from "@/store/task-store";
 import { Spinner } from "@/components/ui/spinner";
-import { Badge } from "@/components/ui/badge";
 import { useSidebar } from "@/components/sidebar/sidebar-context";
 import { PageHeader } from "@/components/page-header";
-import { JobTaskStatusBadge } from "@/components/job/job-task-status-badge";
+import { JobTaskStatus } from "@/components/job/job-task-status";
+import { JobTaskTableHeader } from "@/components/job/job-task-table-header";
 
 interface JobDetailPageProps {
   params: Promise<{ id: string }>;
@@ -102,29 +102,20 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
         </PageHeader>
       </div>
 
-      <div className="flex-1 overflow-auto p-4">
+      <div className="flex-1 overflow-auto px-4 pb-4">
         <Accordion type="multiple" defaultValue={taskStages.map((s) => s.id.toString())}>
           {tasksByStage.map((stage, index) => {
-            const stageCompleted = stage.tasks.filter((t) => t.progress === EJobTaskProgress.Completed).length;
-            const stageTotal = stage.tasks.length;
-
             return (
-              <AccordionItem key={stage.id} value={stage.id.toString()}>
-                <AccordionTrigger className="hover:no-underline">
-                  <div className="flex items-center justify-between w-full pr-4">
-                    <div className="flex items-center gap-2">
-                      <JobTaskStatusBadge occuranceIndex={index} name={stage.name} />
-                      <span className="text-sm text-muted-foreground">{stageTotal} tasks</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">
-                        {stageCompleted}/{stageTotal}
-                      </span>
-                    </div>
-                  </div>
-                </AccordionTrigger>
+              <AccordionItem key={stage.id} value={stage.id.toString()} className="relative">
+                <AccordionHeader
+                  className="sticky top-0 bg-white z-30 flex flex-col w-full"
+                  triggerClassName=""
+                  triggerChildren={<JobTaskStatus stage={stage} index={index} />}
+                >
+                  <JobTaskTableHeader />
+                </AccordionHeader>
                 <AccordionContent>
-                  <TaskTable tasks={stage.tasks} />
+                  <JobTaskTable tasks={stage.tasks} />
                 </AccordionContent>
               </AccordionItem>
             );

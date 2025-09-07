@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { EJobTaskProgress } from "@/models/job.model";
 import { CTaskProgressConfig } from "@/models/job.const";
 import { cn } from "@/lib/utils";
-import { ModalTriggerButton } from "@/components/ui/buttons/modal-trigger-button";
+import { ModalTriggerButton } from "@/components/modal-trigger-button";
 
 interface ProgressBadgeButtonProps {
   progress: EJobTaskProgress;

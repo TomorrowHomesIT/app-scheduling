@@ -15,7 +15,8 @@ import useTaskStore from "@/store/task-store";
 import { Spinner } from "@/components/ui/spinner";
 import { Badge } from "@/components/ui/badge";
 import { useSidebar } from "@/components/sidebar/sidebar-context";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageHeader } from "@/components/page-header";
+import { JobTaskStatusBadge } from "@/components/job/job-task-status-badge";
 
 interface JobDetailPageProps {
   params: Promise<{ id: string }>;
@@ -112,9 +113,7 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
                 <AccordionTrigger className="hover:no-underline">
                   <div className="flex items-center justify-between w-full pr-4">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-base">
-                        {index + 1}. {stage.name}
-                      </span>
+                      <JobTaskStatusBadge occuranceIndex={index} name={stage.name} />
                       <span className="text-sm text-muted-foreground">{stageTotal} tasks</span>
                     </div>
                     <div className="flex items-center gap-2">

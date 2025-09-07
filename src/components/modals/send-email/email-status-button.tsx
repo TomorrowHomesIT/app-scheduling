@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { EJobTaskStatus } from "@/models/job.model";
 import { cn } from "@/lib/utils";
 import { CTaskStatusConfig } from "@/models/job.const";
-import { ModalTriggerButton } from "@/components/ui/buttons/modal-trigger-button";
+import { ModalTriggerButton } from "@/components/modal-trigger-button";
 
 interface EmailStatusButtonProps {
   status: EJobTaskStatus;

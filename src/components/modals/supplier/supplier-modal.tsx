@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import useSupplierStore from "@/store/supplier-store";
-import { ModalTriggerButton } from "@/components/ui/buttons/modal-trigger-button";
+import { ModalTriggerButton } from "@/components/modal-trigger-button";
 
 interface SupplierModalProps {
   value?: number; // supplier ID

@@ -11,7 +11,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { ModalTriggerButton } from "@/components/ui/buttons/modal-trigger-button";
+import { ModalTriggerButton } from "@/components/modal-trigger-button";
 
 interface NotesModalProps {
   value?: string;

@@ -2,7 +2,7 @@
 
 import { redirect, useRouter } from "next/navigation";
 import { BookUser, House } from "lucide-react";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageHeader } from "@/components/page-header";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/components/auth/auth-context";
 import { Spinner } from "@/components/ui/spinner";

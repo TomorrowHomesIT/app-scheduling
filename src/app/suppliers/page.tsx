@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Spinner } from "@/components/ui/spinner";
-import { PageHeader } from "@/components/ui/page-header";
+import { PageHeader } from "@/components/page-header";
 import { SuppliersTable } from "./suppliers-table";
 import useSupplierStore from "@/store/supplier-store";
 import { Input } from "@/components/ui/input";

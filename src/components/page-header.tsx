@@ -1,9 +1,9 @@
 import { ChevronLeft, Menu } from "lucide-react";
 import type { ComponentProps } from "react";
-import { Button } from "./button";
-import { Badge } from "./badge";
+import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
 import Link from "next/link";
-import { useSidebar } from "../sidebar/sidebar-context";
+import { useSidebar } from "./sidebar/sidebar-context";
 
 interface PageHaderProps extends ComponentProps<"div"> {
   title: string;

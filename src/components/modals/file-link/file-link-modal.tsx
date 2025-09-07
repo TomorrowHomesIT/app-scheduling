@@ -7,7 +7,7 @@ import { ExternalLink, Paperclip } from "lucide-react";
 import type { IJobTaskUrl } from "@/models/job.model";
 import { getGoogleDriveWebViewLink } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { ModalTriggerButton } from "@/components/ui/buttons/modal-trigger-button";
+import { ModalTriggerButton } from "@/components/modal-trigger-button";
 
 interface FileLinkModalProps {
   links: IJobTaskUrl[];

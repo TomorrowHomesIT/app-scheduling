@@ -1,14 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
 import { toCamelCase } from "@/lib/api/casing";
 import type { ISupplier } from "@/models/supplier.model";
-import { NextRequest } from "next/server";
+import type { NextRequest } from "next/server";
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
   const searchParams = request.nextUrl.searchParams;
   const activeParam = searchParams.get("active");
 
-  let query = supabase.from("suppliers").select("id, name, email, secondary_email");
+  let query = supabase.from("suppliers").select("id, name, email, secondary_email, active");
 
   // Add active filter if provided
   if (activeParam !== null) {

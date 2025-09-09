@@ -1,18 +1,18 @@
 import { type NextRequest, NextResponse } from "next/server";
 import type { IScheduleEmailRequest, IScheduleEmailServiceRequest } from "@/models/email";
 import { createClient } from "@/lib/supabase/server";
+import { withAuth } from "@/lib/api/auth";
 import { EJobTaskStatus } from "@/models/job.model";
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: NextRequest) => {
   try {
-    // Check authentication since our API is exposed to the public
     const supabase = await createClient();
     const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+      data: { session },
+    } = await supabase.auth.getSession();
 
-    if (authError || !user) {
+    const user = session?.user;
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     return errorHandler(error, "Failed to send email");
   }
-}
+});
 
 const errorHandler = (error: unknown, message: string) => {
   console.error(message, error);

@@ -1,9 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { toCamelCase } from "@/lib/api/casing";
+import { withAuth } from "@/lib/api/auth";
 import type { ISupplier } from "@/models/supplier.model";
 import type { NextRequest } from "next/server";
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest) => {
   const supabase = await createClient();
   const searchParams = request.nextUrl.searchParams;
   const activeParam = searchParams.get("active");
@@ -24,4 +25,4 @@ export async function GET(request: NextRequest) {
 
   const suppliers: ISupplier[] = toCamelCase(data);
   return Response.json(suppliers, { status: 200 });
-}
+});

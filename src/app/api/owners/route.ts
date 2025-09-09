@@ -1,8 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { toCamelCase } from "@/lib/api/casing";
+import { withAuth } from "@/lib/api/auth";
 import type { IOwner, IOwnerJob } from "@/models/owner.model";
 
-export async function GET() {
+export const GET = withAuth(async () => {
   const supabase = await createClient();
 
   // Fetch owners from cf_owners table
@@ -36,4 +37,4 @@ export async function GET() {
   }));
 
   return Response.json(ownersWithJobs, { status: 200 });
-}
+});

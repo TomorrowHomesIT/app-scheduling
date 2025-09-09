@@ -1,9 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { toCamelCase } from "@/lib/api/casing";
 import { validateJobTaskUrls } from "@/lib/api/validation";
+import { withAuth } from "@/lib/api/auth";
 import type { IJobTask } from "@/models/job.model";
 
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = withAuth(async (request, { params }: { params: Promise<{ id: string }> }) => {
   const supabase = await createClient();
   const { id } = await params;
   const taskId = parseInt(id, 10);
@@ -72,4 +73,4 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     console.error("Error in PATCH /api/tasks/[id]:", error);
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
-}
+});

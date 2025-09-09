@@ -1,8 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import type { IOwner } from "@/models/owner.model";
-import { Folder, MapPin } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import type { ISupplier } from "@/models/supplier.model";
 
@@ -12,7 +9,7 @@ interface SuppliersTableProps {
 }
 
 export function SuppliersTable({ suppliers, mode }: SuppliersTableProps) {
-  const handleSupplierClick = (supplierId: number) => {
+  const handleSupplierClick = (_: number) => {
     if (mode === "current") {
       //   router.push(`/suppliers/${supplierId}`);
     }

@@ -1,8 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { toCamelCase } from "@/lib/api/casing";
+import { withAuth } from "@/lib/api/auth";
 import type { ICreateJobRequest } from "@/models/job.model";
 
-export async function POST(request: Request) {
+export const POST = withAuth(async (request) => {
   const supabase = await createClient();
 
   try {
@@ -51,9 +52,9 @@ export async function POST(request: Request) {
     console.error("Error in POST /api/jobs:", error);
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
-}
+});
 
-export async function GET() {
+export const GET = withAuth(async () => {
   const supabase = await createClient();
 
   const { data, error } = await supabase.from("ck_jobs").select("id, name, owner_id").order("name");
@@ -64,4 +65,4 @@ export async function GET() {
 
   const jobs = toCamelCase(data);
   return Response.json(jobs, { status: 200 });
-}
+});

@@ -1,8 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { toCamelCase } from "@/lib/api/casing";
+import { withAuth } from "@/lib/api/auth";
 import type { ITask } from "@/models/task.model";
 
-export async function GET() {
+export const GET = withAuth(async () => {
   const supabase = await createClient();
 
   const { data, error } = await supabase
@@ -16,4 +17,4 @@ export async function GET() {
 
   const tasks: ITask[] = toCamelCase(data);
   return Response.json(tasks, { status: 200 });
-}
+});

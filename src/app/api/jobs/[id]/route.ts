@@ -1,8 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { toCamelCase } from "@/lib/api/casing";
+import { withAuth } from "@/lib/api/auth";
 import type { IJob, IJobTask, IUpdateJobRequest } from "@/models/job.model";
 
-export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
+export const GET = withAuth(async (_, { params }: { params: Promise<{ id: string }> }) => {
   const supabase = await createClient();
   const { id } = await params;
   const jobId = parseInt(id, 10);
@@ -74,9 +75,9 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
     console.error("Error in GET /api/jobs/[id]:", error);
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
-}
+});
 
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = withAuth(async (request, { params }: { params: Promise<{ id: string }> }) => {
   const supabase = await createClient();
   const { id } = await params;
   const jobId = parseInt(id, 10);
@@ -110,4 +111,4 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 
   return Response.json(true, { status: 200 });
-}
+});

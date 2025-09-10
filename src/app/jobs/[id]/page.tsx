@@ -8,12 +8,11 @@ import { Accordion, AccordionContent, AccordionHeader, AccordionItem } from "@/c
 import { Button } from "@/components/ui/button";
 import { JobTaskTable } from "@/components/job/job-task-table";
 import { JobEditModal } from "@/components/modals/job-edit/job-edit-modal";
-import { Settings, Menu, HardDrive } from "lucide-react";
+import { Settings, HardDrive } from "lucide-react";
 import useJobStore from "@/store/job/job-store";
 import useSupplierStore from "@/store/supplier-store";
 import useTaskStore from "@/store/task-store";
 import { Spinner } from "@/components/ui/spinner";
-import { useSidebar } from "@/components/sidebar/sidebar-context";
 import { PageHeader } from "@/components/page-header";
 import { JobTaskStatus } from "@/components/job/job-task-status";
 import { JobTaskTableHeader } from "@/components/job/job-task-table-header";
@@ -27,7 +26,6 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
   const { taskStages, loadTaskStages } = useTaskStore();
   const { currentJob, loadJob, updateJob } = useJobStore();
   const { loadSuppliers } = useSupplierStore();
-  const { setIsSidebarOpen } = useSidebar();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Load suppliers when component mounts
@@ -95,9 +93,6 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
           <Button variant="outline" size="default" className="flex" onClick={() => setIsEditModalOpen(true)}>
             <Settings className="h-4 w-4" />
             <span className="hidden lg:block">Edit Job</span>
-          </Button>
-          <Button variant="outline" size="default" className="lg:hidden" onClick={() => setIsSidebarOpen(true)}>
-            <Menu className="h-4 w-4" />
           </Button>
         </PageHeader>
       </div>

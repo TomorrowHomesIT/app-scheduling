@@ -44,3 +44,10 @@ next-env.d.ts
 .env*.local
 .env
 
+# PWA/Serwist files
+public/sw.js
+public/sw.js.map
+public/swe-worker-*.js
+public/swe-worker-*.js.map
+sw-test-cache-*
+

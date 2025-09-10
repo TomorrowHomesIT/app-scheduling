@@ -19,7 +19,7 @@ export function PageHeader({ title, description, backLink, badge, children }: Pa
     <div className="flex items-center justify-between p-4">
       <div className="flex items-center gap-2 lg:gap-4">
         {backLink && (
-          <Link href={backLink} className="hidden lg:block">
+          <Link href={backLink}>
             <Button variant="ghost" size="icon">
               <ChevronLeft className="h-4 w-4" />
             </Button>

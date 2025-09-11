@@ -1,10 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import type { NextRequest } from "next/server";
 
-type Handler = (req: NextRequest, context?: unknown) => Promise<Response>;
+type Handler<T = unknown> = (req: NextRequest, context: T) => Promise<Response>;
 
 /** Ensure pretty much all API requests are from authenticated users via Supabase */
-export function withAuth(handler: Handler): Handler {
+export function withAuth<T = unknown>(handler: Handler<T>): Handler<T> {
   return async (req, context) => {
     const supabase = await createClient();
 

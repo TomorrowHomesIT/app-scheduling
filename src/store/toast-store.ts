@@ -96,19 +96,29 @@ export const toast = {
     promise: Promise<T>,
     messages: {
       loading: string;
-      success: string | ((data: T) => string);
+      success: string | ((data: T) => { message: string; type: TToastType });
       error: string | ((error: unknown) => string);
     },
   ): Promise<T> => {
     const id = toast.loading(messages.loading);
     try {
       const result = await promise;
-      const successMsg = typeof messages.success === "function" ? messages.success(result) : messages.success;
-      useToastStore.getState().updateToast(id, {
-        message: successMsg,
-        type: "success",
-        duration: 2000,
-      });
+
+      if (typeof messages.success === "function") {
+        const successData = messages.success(result);
+        useToastStore.getState().updateToast(id, {
+          message: successData.message,
+          type: successData.type,
+          duration: 2000,
+        });
+      } else {
+        useToastStore.getState().updateToast(id, {
+          message: messages.success,
+          type: "success",
+          duration: 2000,
+        });
+      }
+
       return result;
     } catch (error) {
       const errorMsg = typeof messages.error === "function" ? messages.error(error) : messages.error;

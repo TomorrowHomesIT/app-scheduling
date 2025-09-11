@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { offlineQueue } from "@/lib/offline-queue";
 
 interface AuthContextType {
   isAuthLoading: boolean;
@@ -30,6 +31,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     await supabase.auth.signOut();
     setIsAuthenticated(false);
+
+    // Clear offline queue on logout
+    offlineQueue.clearQueue();
   };
 
   const login = () => {

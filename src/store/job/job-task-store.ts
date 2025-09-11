@@ -4,6 +4,7 @@ import type { EJobTaskStatus } from "@/models/job.model";
 import type { IScheduleEmailRequest } from "@/models/email";
 import { toast } from "@/store/toast-store";
 import { getApiErrorMessage } from "@/lib/api/error";
+import { offlineQueue } from "@/lib/offline-queue";
 import useJobStore from "./job-store";
 import useSupplierStore from "@/store/supplier-store";
 
@@ -14,42 +15,44 @@ interface JobTaskStore {
 
 const updateTaskApi = async (taskId: number, updates: Partial<IJobTask>): Promise<IJobTask | null> => {
   try {
-    const response = await fetch(`/api/tasks/${taskId}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(updates),
+    const result = await offlineQueue.queueRequest(`/api/tasks/${taskId}`, "PATCH", updates, {
+      "Content-Type": "application/json",
     });
 
-    if (!response.ok) {
-      throw new Error(await getApiErrorMessage(response, "Failed to update task"));
+    if (result.success && result.response) {
+      if (!result.response.ok) {
+        throw new Error(await getApiErrorMessage(result.response, "Failed to update task"));
+      }
+      const updatedTask: IJobTask = await result.response.json();
+      return updatedTask;
+    } else if (result.queued) {
+      // Request was queued for offline processing - return null to indicate no immediate response
+      return null;
+    } else {
+      throw new Error("Failed to update task");
     }
-
-    const updatedTask: IJobTask = await response.json();
-    return updatedTask;
   } catch (error) {
     console.error("Error updating task:", error);
     throw error;
   }
 };
 
-const sendEmailApi = async (emailRequest: IScheduleEmailRequest): Promise<void> => {
-  const response = await fetch("/api/email/schedule", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(emailRequest),
+const sendEmailApi = async (emailRequest: IScheduleEmailRequest): Promise<{ success: boolean; queued: boolean }> => {
+  const result = await offlineQueue.queueRequest("/api/email/schedule", "POST", emailRequest, {
+    "Content-Type": "application/json",
   });
 
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.error || "Failed to send email");
+  if (result.success && result.response) {
+    const data = await result.response.json();
+    if (!result.response.ok) {
+      throw new Error(data.error || "Failed to send email");
+    }
+    return { success: true, queued: false };
+  } else if (result.queued) {
+    return { success: true, queued: true };
+  } else {
+    throw new Error("Failed to send email");
   }
-
-  return data;
 };
 
 const useJobTaskStore = create<JobTaskStore>(() => ({
@@ -86,7 +89,12 @@ const useJobTaskStore = create<JobTaskStore>(() => ({
     try {
       await toast.while(updateTaskApi(taskId, updates), {
         loading: `Saving ${updateType}...`,
-        success: `Updated ${updateType}`,
+        success: (data) => {
+          if (data === null) {
+            return { message: `${updateType} will be saved when online`, type: "warning" };
+          }
+          return { message: `Updated ${updateType}`, type: "success" };
+        },
         error: (error) => {
           updateJobTask(previousTask.jobId, taskId, previousTask);
           return `${error}`;
@@ -147,7 +155,12 @@ const useJobTaskStore = create<JobTaskStore>(() => ({
 
       await toast.while(sendEmailApi(emailRequest), {
         loading: "Sending email...",
-        success: "Email sent successfully",
+        success: (data) => {
+          if (data === null) {
+            return { message: "Email will be sent when online", type: "warning" };
+          }
+          return { message: "Email sent successfully", type: "success" };
+        },
         error: (e) => {
           updateJobTask(currentJob.id, task.id, { status: previousStatus });
 

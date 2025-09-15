@@ -1,42 +1,41 @@
 "use client";
 
-export interface QueuedRequest {
-  id: string;
-  url: string;
-  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
-  body?: unknown;
-  headers?: Record<string, string>;
-  timestamp: number;
-  attempts: number;
-  maxAttempts: number;
-}
+import { DB_NAME, DB_VERSION, STORE_NAME, type QueuedRequest } from "@/models/db.model";
 
 class OfflineQueue {
-  private readonly STORAGE_KEY = "offline-queue";
-  private isProcessing = false;
-  private onlineListener: (() => void) | null = null;
+  private db: IDBDatabase | null = null;
 
   constructor() {
-    // Only start listening if we're in the browser
+    // Only initialize if we're in the browser
     if (typeof window !== "undefined") {
-      this.startListening();
+      this.initDB();
     }
   }
 
-  private startListening() {
-    if (typeof window === "undefined") return;
+  private async initDB(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-    this.onlineListener = () => {
-      if (navigator.onLine) {
-        this.processQueue();
-      }
-    };
-    window.addEventListener("online", this.onlineListener);
+      request.onerror = () => {
+        console.error("Failed to open IndexedDB:", request.error);
+        reject(request.error);
+      };
 
-    // Process queue on startup if online
-    if (navigator.onLine) {
-      setTimeout(() => this.processQueue(), 1000);
-    }
+      request.onsuccess = () => {
+        this.db = request.result;
+        resolve();
+      };
+
+      request.onupgradeneeded = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+
+        // Create object store if it doesn't exist
+        if (!db.objectStoreNames.contains(STORE_NAME)) {
+          const store = db.createObjectStore(STORE_NAME, { keyPath: "id" });
+          store.createIndex("timestamp", "timestamp", { unique: false });
+        }
+      };
+    });
   }
 
   // Add a request to the queue
@@ -71,30 +70,62 @@ class OfflineQueue {
       }
     }
 
-    // Queue the request for later
-    this.addToQueue(queuedRequest);
+    // Queue the request for later processing by service worker
+    await this.addToQueue(queuedRequest);
     return { success: false, queued: true };
   }
 
-  private addToQueue(request: QueuedRequest) {
-    const queue = this.getQueue();
-    queue.push(request);
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(queue));
-  }
-
-  private getQueue(): QueuedRequest[] {
-    if (typeof localStorage === "undefined") return [];
-    try {
-      const stored = localStorage.getItem(this.STORAGE_KEY);
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
+  private async addToQueue(request: QueuedRequest): Promise<void> {
+    if (!this.db) {
+      await this.initDB();
     }
+
+    return new Promise((resolve, reject) => {
+      if (!this.db) {
+        reject(new Error("Database not initialized"));
+        return;
+      }
+
+      const transaction = this.db.transaction([STORE_NAME], "readwrite");
+      const store = transaction.objectStore(STORE_NAME);
+      const addRequest = store.add(request);
+
+      addRequest.onsuccess = () => {
+        console.log(`Added request ${request.id} to queue`);
+        resolve();
+      };
+
+      addRequest.onerror = () => {
+        console.error("Failed to add request to queue:", addRequest.error);
+        reject(addRequest.error);
+      };
+    });
   }
 
-  private setQueue(queue: QueuedRequest[]) {
-    if (typeof localStorage === "undefined") return;
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(queue));
+  private async getQueue(): Promise<QueuedRequest[]> {
+    if (!this.db) {
+      await this.initDB();
+    }
+
+    return new Promise((resolve, reject) => {
+      if (!this.db) {
+        reject(new Error("Database not initialized"));
+        return;
+      }
+
+      const transaction = this.db.transaction([STORE_NAME], "readonly");
+      const store = transaction.objectStore(STORE_NAME);
+      const getAllRequest = store.getAll();
+
+      getAllRequest.onsuccess = () => {
+        resolve(getAllRequest.result || []);
+      };
+
+      getAllRequest.onerror = () => {
+        console.error("Failed to get queue from IndexedDB:", getAllRequest.error);
+        reject(getAllRequest.error);
+      };
+    });
   }
 
   private async makeRequest(request: QueuedRequest): Promise<Response> {
@@ -110,71 +141,42 @@ class OfflineQueue {
     return fetch(request.url, options);
   }
 
-  // Process all queued requests
-  async processQueue() {
-    if (typeof navigator === "undefined" || this.isProcessing || !navigator.onLine) {
-      return;
+  async getQueueCount() {
+    try {
+      const queue = await this.getQueue();
+      return queue.length;
+    } catch (error) {
+      console.error("Failed to get queue status:", error);
+      return 0;
     }
-
-    this.isProcessing = true;
-    const queue = this.getQueue();
-    const remainingQueue: QueuedRequest[] = [];
-
-    for (const request of queue) {
-      try {
-        const response = await this.makeRequest(request);
-
-        if (response.ok) {
-          console.log(`Successfully processed queued request: ${request.method} ${request.url}`);
-          // Request successful, don't add back to queue
-        } else {
-          // Server error, retry if under max attempts
-          request.attempts++;
-          if (request.attempts < request.maxAttempts) {
-            remainingQueue.push(request);
-          } else {
-            // TODO log
-            console.error(`Max attempts reached for request: ${request.method} ${request.url}`);
-          }
-        }
-      } catch (error) {
-        // Network error, retry if under max attempts
-        request.attempts++;
-        if (request.attempts < request.maxAttempts) {
-          remainingQueue.push(request);
-        } else {
-          console.error(`Max attempts reached for request: ${request.method} ${request.url}`, error);
-        }
-      }
-    }
-
-    // Update queue with remaining requests
-    this.setQueue(remainingQueue);
-    this.isProcessing = false;
-  }
-
-  // Get current queue status
-  getQueueStatus() {
-    const queue = this.getQueue();
-    return {
-      count: queue.length,
-      hasItems: queue.length > 0,
-      items: queue,
-    };
   }
 
   // Clear the queue (useful for logout)
-  clearQueue() {
-    if (typeof localStorage !== "undefined") {
-      localStorage.removeItem(this.STORAGE_KEY);
+  async clearQueue(): Promise<void> {
+    if (!this.db) {
+      await this.initDB();
     }
-  }
 
-  // Clean up listeners
-  destroy() {
-    if (typeof window !== "undefined" && this.onlineListener) {
-      window.removeEventListener("online", this.onlineListener);
-    }
+    return new Promise((resolve, reject) => {
+      if (!this.db) {
+        reject(new Error("Database not initialized"));
+        return;
+      }
+
+      const transaction = this.db.transaction([STORE_NAME], "readwrite");
+      const store = transaction.objectStore(STORE_NAME);
+      const clearRequest = store.clear();
+
+      clearRequest.onsuccess = () => {
+        console.log("Cleared offline queue");
+        resolve();
+      };
+
+      clearRequest.onerror = () => {
+        console.error("Failed to clear queue:", clearRequest.error);
+        reject(clearRequest.error);
+      };
+    });
   }
 }
 

@@ -10,7 +10,6 @@ import { JobTaskTable } from "@/components/job/job-task-table";
 import { JobEditModal } from "@/components/modals/job-edit/job-edit-modal";
 import { Settings, HardDrive } from "lucide-react";
 import useJobStore from "@/store/job/job-store";
-import useSupplierStore from "@/store/supplier-store";
 import useTaskStore from "@/store/task-store";
 import { Spinner } from "@/components/ui/spinner";
 import { PageHeader } from "@/components/page-header";
@@ -23,16 +22,10 @@ interface JobDetailPageProps {
 
 export default function JobDetailPage({ params }: JobDetailPageProps) {
   const { id } = use(params);
-  const { taskStages, loadTaskStages } = useTaskStore();
+  const { taskStages } = useTaskStore();
   const { currentJob, loadJob, updateJob } = useJobStore();
-  const { loadSuppliers } = useSupplierStore();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  // Load suppliers when component mounts
-  useEffect(() => {
-    loadSuppliers();
-    loadTaskStages();
-  }, [loadSuppliers, loadTaskStages]);
   const [error, setError] = useState<boolean>(false);
 
   useEffect(() => {

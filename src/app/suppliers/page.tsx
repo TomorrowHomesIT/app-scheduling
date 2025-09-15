@@ -8,17 +8,17 @@ import { SuppliersTable } from "./suppliers-table";
 import useSupplierStore from "@/store/supplier-store";
 import { Input } from "@/components/ui/input";
 import type { ISupplier } from "@/models/supplier.model";
+import useLoadingStore from "@/store/loading-store";
 
 export default function JobsPage() {
-  const { suppliers, archivedSuppliers, loadSuppliers, isLoaded, loadArchivedSuppliers, isArchivedLoaded } =
-    useSupplierStore();
+  const { suppliers, archivedSuppliers, loadArchivedSuppliers, isArchivedLoaded } = useSupplierStore();
+  const { isLoading } = useLoadingStore();
   const [activeTab, setActiveTab] = useState("current");
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    loadSuppliers();
     loadArchivedSuppliers();
-  }, [loadSuppliers, loadArchivedSuppliers]);
+  }, [loadArchivedSuppliers]);
 
   const filteredSuppliers = () => {
     if (activeTab === "current") {
@@ -32,7 +32,7 @@ export default function JobsPage() {
     return supplier.name.toLowerCase().includes(searchQuery.toLowerCase());
   };
 
-  if (!isLoaded || !isArchivedLoaded) {
+  if (isLoading || !isArchivedLoaded) {
     return (
       <div className="flex items-center justify-center h-full">
         <Spinner variant="default" size="xl" />

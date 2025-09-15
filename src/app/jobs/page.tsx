@@ -6,9 +6,11 @@ import useOwnersStore from "@/store/owners-store";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Spinner } from "@/components/ui/spinner";
 import { PageHeader } from "@/components/page-header";
+import useLoadingStore from "@/store/loading-store";
 
 export default function JobsPage() {
-  const { owners, isLoading } = useOwnersStore();
+  const { owners } = useOwnersStore();
+  const { isLoading } = useLoadingStore();
   const [activeTab, setActiveTab] = useState("current");
 
   if (isLoading) {

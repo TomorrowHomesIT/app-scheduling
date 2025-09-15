@@ -10,6 +10,7 @@ interface LoadingStore {
   // Individual loading states
   owners: LoadingState;
   suppliers: LoadingState;
+  job: LoadingState;
   jobs: LoadingState;
   
   // Global loading state
@@ -17,9 +18,9 @@ interface LoadingStore {
   isGlobalLoaded: boolean;
   
   // Actions
-  setLoading: (key: 'owners' | 'suppliers' | 'jobs', isLoading: boolean) => void;
-  setLoaded: (key: 'owners' | 'suppliers' | 'jobs', isLoaded: boolean) => void;
-  setError: (key: 'owners' | 'suppliers' | 'jobs', error: string | null) => void;
+  setLoading: (key: 'owners' | 'suppliers' | 'job' | 'jobs', isLoading: boolean) => void;
+  setLoaded: (key: 'owners' | 'suppliers' | 'job' | 'jobs', isLoaded: boolean) => void;
+  setError: (key: 'owners' | 'suppliers' | 'job' | 'jobs', error: string | null) => void;
   reset: () => void;
   
   // Computed getters
@@ -32,6 +33,7 @@ const useLoadingStore = create<LoadingStore>((set, get) => ({
   // Initial state
   owners: { isLoading: false, isLoaded: false, error: null },
   suppliers: { isLoading: false, isLoaded: false, error: null },
+  job: { isLoading: false, isLoaded: false, error: null },
   jobs: { isLoading: false, isLoaded: false, error: null },
   isLoading: false,
   isGlobalLoaded: false,
@@ -72,6 +74,7 @@ const useLoadingStore = create<LoadingStore>((set, get) => ({
       owners: { isLoading: false, isLoaded: false, error: null },
       suppliers: { isLoading: false, isLoaded: false, error: null },
       jobs: { isLoading: false, isLoaded: false, error: null },
+      job: { isLoading: false, isLoaded: false, error: null },
       isLoading: false,
       isGlobalLoaded: false,
     });

@@ -8,6 +8,7 @@ interface JobStore {
   jobs: IJob[]; // TODO I'm not sure this is actually uesd? We never load a list of jobs lol
   currentJob: IJob | null;
 
+  loadUserJobs: () => Promise<void>;
   loadJob: (id: number) => Promise<void>;
   setCurrentJob: (job: IJob | null) => void;
   updateJob: (jobId: number, updates: IUpdateJobRequest) => Promise<void>;
@@ -26,6 +27,22 @@ const fetchJobByIdFromApi = async (id: number): Promise<IJob | null> => {
     return job;
   } catch (error) {
     console.error("Error fetching job:", error);
+    throw error;
+  }
+};
+
+const fetchUserJobsFromApi = async (): Promise<IJob[] | null> => {
+  try {
+    const response = await fetch(`/api/user/jobs`);
+
+    if (!response.ok) {
+      throw new Error(await getApiErrorMessage(response, "Failed to fetch job"));
+    }
+
+    const job: IJob[] = await response.json();
+    return job;
+  } catch (error) {
+    console.error("Error fetching user jobs:", error);
     throw error;
   }
 };
@@ -55,31 +72,52 @@ const updateJobApi = async (jobId: number, updates: IUpdateJobRequest): Promise<
 const useJobStore = create<JobStore>((set, get) => ({
   jobs: [],
   currentJob: null,
-  isLoading: false,
 
-  loadJob: async (id: number) => {
-    if (get().isLoading) return;
-    set({ isLoading: true });
+  loadUserJobs: async () => {
+    const loading = useLoadingStore.getState();
+    if (loading.jobs.isLoading) return;
+    loading.setLoading("jobs", true);
 
     try {
+      const jobs = await fetchUserJobsFromApi();
+      localStorage.setItem(JOB_STORAGE_KEY, JSON.stringify(jobs));
+      loading.setLoaded("jobs", true);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to load jobs";
+      loading.setError("jobs", errorMessage);
+      set({ jobs: getJobsFromLocalStorage() });
+    } finally {
+      loading.setLoading("jobs", false);
+    }
+  },
+
+  loadJob: async (id: number) => {
+    const loading = useLoadingStore.getState();
+
+    if (loading.jobs.isLoading) return;
+    loading.setLoading("job", true);
+
+    try {
+      // First try to load from localStorage
+      const localJob = getJobFromLocalStorage(id);
+      if (localJob) {
+        set(() => ({ currentJob: localJob }));
+        return;
+      }
+
+      // Then fetch from API to get latest data
       const job = await fetchJobByIdFromApi(id);
       if (job) {
-        set((state) => {
-          // Update or add job to jobs array
-          const jobIndex = state.jobs.findIndex((j) => j.id === id);
-          const updatedJobs = jobIndex !== -1 ? state.jobs.map((j) => (j.id === id ? job : j)) : [...state.jobs, job];
-
-          return {
-            jobs: updatedJobs,
-            currentJob: job,
-            isLoading: false,
-          };
-        });
+        // Save to localStorage
+        saveJobToLocalStorage(job);
+        set(() => ({ currentJob: job }));
       }
     } catch {
-      // TODO error
+      // If API fails but we have local data, use it
+      const localJob = getJobFromLocalStorage(id);
+      if (localJob) set(() => ({ currentJob: localJob }));
     } finally {
-      set({ isLoading: false });
+      loading.setLoading("job", false);
     }
   },
 

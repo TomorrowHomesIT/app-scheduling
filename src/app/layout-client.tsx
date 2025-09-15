@@ -7,6 +7,7 @@ import { SidebarProvider, useSidebar } from "@/components/sidebar/sidebar-contex
 import useOwnersStore from "@/store/owners-store";
 import useSupplierStore from "@/store/supplier-store";
 import type { ReactNode } from "react";
+import useJobStore from "@/store/job/job-store";
 
 /** Function is required so that useSidebar is used within the context */
 function AppLayoutContent({ children }: { children: ReactNode }) {
@@ -14,6 +15,7 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth();
   const { loadOwners } = useOwnersStore();
   const { loadSuppliers } = useSupplierStore();
+  const { loadUserJobs } = useJobStore();
 
   // Bootstrap all data when user is authenticated
   useEffect(() => {
@@ -23,7 +25,7 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
     const bootstrapData = async () => {
       try {
         console.log("Bootstrapping data...");
-        await Promise.all([loadOwners(), loadSuppliers()]);
+        await Promise.all([loadOwners(), loadSuppliers(), loadUserJobs()]);
         console.log("Data bootstrapped successfully");
       } catch (error) {
         console.error("Failed to bootstrap data:", error);
@@ -31,7 +33,7 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
     };
 
     bootstrapData();
-  }, [isAuthenticated, loadOwners, loadSuppliers]);
+  }, [isAuthenticated, loadOwners, loadSuppliers, loadUserJobs]);
 
   return (
     <>

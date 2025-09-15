@@ -45,7 +45,7 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
       }
     }
 
-    if (currentJob) document.title = currentJob.name;
+    if (currentJob) document.title = `${currentJob.name} | BASD Scheduling`;
   }, [id, loadJob, currentJob]);
 
   if (error || Number.isNaN(Number(id))) {

@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "BASD - Scheduling",
+  title: "BASD Scheduling",
   description: "Construction project scheduling and management",
   manifest: "/manifest.json",
   appleWebApp: {
@@ -30,13 +30,13 @@ export const metadata: Metadata = {
     telephone: false,
   },
   openGraph: {
-    title: "BASD - Scheduling",
+    title: "BASD Scheduling",
     description: "Construction project scheduling and management",
     type: "website",
   },
   twitter: {
     card: "summary",
-    title: "BASD - Scheduling",
+    title: "BASD Scheduling",
     description: "Construction project scheduling and management",
   },
 };

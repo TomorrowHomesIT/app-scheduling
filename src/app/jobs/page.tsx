@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { JobsTable } from "@/app/jobs/jobs-table";
 import useOwnersStore from "@/store/owners-store";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,12 +8,8 @@ import { Spinner } from "@/components/ui/spinner";
 import { PageHeader } from "@/components/page-header";
 
 export default function JobsPage() {
-  const { owners, loadOwners, isLoading } = useOwnersStore();
+  const { owners, isLoading } = useOwnersStore();
   const [activeTab, setActiveTab] = useState("current");
-
-  useEffect(() => {
-    loadOwners();
-  }, [loadOwners]);
 
   if (isLoading) {
     return (

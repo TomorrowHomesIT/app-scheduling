@@ -7,7 +7,6 @@ import useOwnersStore from "@/store/owners-store";
 interface JobStore {
   jobs: IJob[]; // TODO I'm not sure this is actually uesd? We never load a list of jobs lol
   currentJob: IJob | null;
-  isLoading: boolean;
 
   loadJob: (id: number) => Promise<void>;
   setCurrentJob: (job: IJob | null) => void;

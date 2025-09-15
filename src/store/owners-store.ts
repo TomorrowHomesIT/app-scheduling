@@ -1,11 +1,10 @@
 import { create } from "zustand";
 import type { IOwner, IOwnerJob } from "@/models/owner.model";
 import { toast } from "@/store/toast-store";
+import useLoadingStore from "@/store/loading-store";
 
 interface OwnersStore {
   owners: IOwner[];
-  isLoaded: boolean;
-  isLoading: boolean;
   loadOwners: () => Promise<void>;
   setJobName: (jobId: number, name: string) => void;
   setJobOwner: (jobId: number, ownerId: number) => void;
@@ -13,13 +12,12 @@ interface OwnersStore {
 
 const useOwnersStore = create<OwnersStore>((set, get) => ({
   owners: [],
-  isLoaded: false,
-  isLoading: false,
 
   loadOwners: async () => {
-    if (get().isLoaded || get().isLoading) return; // Don't load if already loaded or loading
+    const loading = useLoadingStore.getState();
 
-    set({ isLoading: true });
+    if (loading.owners.isLoading) return;
+    loading.setLoading("owners", true);
 
     try {
       const response = await fetch("/api/owners");
@@ -29,11 +27,14 @@ const useOwnersStore = create<OwnersStore>((set, get) => ({
       }
 
       const owners: IOwner[] = await response.json();
-      set({ owners, isLoaded: true, isLoading: false });
-    } catch {
+      set({ owners });
+      loading.setLoaded("owners", true);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to fetch owners";
+      loading.setError("owners", errorMessage);
       toast.error("Failed to fetch owners");
     } finally {
-      set({ isLoading: false });
+      loading.setLoading("owners", false);
     }
   },
 

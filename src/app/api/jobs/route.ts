@@ -57,7 +57,7 @@ export const POST = withAuth(async (request) => {
 export const GET = withAuth(async () => {
   const supabase = await createClient();
 
-  const { data, error } = await supabase.from("ck_jobs").select("id, name, owner_id").order("name");
+  const { data, error } = await supabase.from("cf_jobs").select("id, name, owner_id").order("name");
 
   if (!data || error) {
     return Response.json({ error }, { status: 500 });

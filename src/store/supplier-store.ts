@@ -2,11 +2,11 @@ import { create } from "zustand";
 import type { ISupplier } from "@/models/supplier.model";
 import { toast } from "./toast-store";
 import { getApiErrorMessage } from "@/lib/api/error";
+import useLoadingStore from "@/store/loading-store";
 
 interface SupplierStore {
   suppliers: ISupplier[];
   archivedSuppliers: ISupplier[];
-  isLoaded: boolean;
   isArchivedLoaded: boolean;
   loadSuppliers: () => Promise<void>;
   loadArchivedSuppliers: () => Promise<void>;
@@ -26,17 +26,24 @@ const fetchSuppliers = async (active: boolean): Promise<ISupplier[]> => {
 const useSupplierStore = create<SupplierStore>((set, get) => ({
   suppliers: [],
   archivedSuppliers: [],
-  isLoaded: false,
   isArchivedLoaded: false,
 
   loadSuppliers: async () => {
-    if (get().isLoaded) return; // Don't load if already loaded
+    const loading = useLoadingStore.getState();
+    if (loading.suppliers.isLoading) return;
+
+    loading.setLoading("suppliers", true);
 
     try {
       const suppliers = await fetchSuppliers(true);
-      set({ suppliers, isLoaded: true });
+      set({ suppliers });
+      loading.setLoaded("suppliers", true);
     } catch (error) {
-      toast.error(await getApiErrorMessage(error));
+      const errorMessage = await getApiErrorMessage(error);
+      loading.setError("suppliers", errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      loading.setLoading("suppliers", false);
     }
   },
 

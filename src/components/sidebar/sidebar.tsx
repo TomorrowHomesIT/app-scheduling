@@ -22,15 +22,10 @@ interface SidebarProps {
 function SidebarContent({ onJobSelect }: { onJobSelect?: () => void }) {
   const pathname = usePathname();
   const { currentJob } = useJobStore();
-  const { owners, loadOwners } = useOwnersStore();
+  const { owners } = useOwnersStore();
   const [expandedOwners, setExpandedOwners] = useState<Set<number>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
-
-  // Load owners on mount
-  useEffect(() => {
-    loadOwners();
-  }, [loadOwners]);
 
   // Auto-expand owner when current job changes
   useEffect(() => {

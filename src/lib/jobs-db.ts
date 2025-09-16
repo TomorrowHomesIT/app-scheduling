@@ -180,7 +180,9 @@ class JobsDB {
     });
   }
 
-  async getJobSyncStatus(id: number): Promise<{ lastUpdated: number; lastSynced: number; hasPendingUpdates: boolean } | null> {
+  async getJobSyncStatus(
+    id: number,
+  ): Promise<{ lastUpdated: number; lastSynced: number; hasPendingUpdates: boolean } | null> {
     await this.ensureDBReady();
 
     return new Promise((resolve, reject) => {

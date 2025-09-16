@@ -58,7 +58,7 @@ const sendEmailApi = async (emailRequest: IScheduleEmailRequest): Promise<{ succ
 const useJobTaskStore = create<JobTaskStore>(() => ({
   updateTask: async (taskId: number, updates: Partial<IJobTask>) => {
     const jobStore = useJobStore.getState();
-    const { updateJobTask } = jobStore;
+    const { updateJobTask, updateJobLastSynced } = jobStore;
 
     // Find which job contains this task
     const task = jobStore.currentJob?.tasks.find((task) => task.id === taskId);
@@ -93,6 +93,9 @@ const useJobTaskStore = create<JobTaskStore>(() => ({
           if (data === null) {
             return { message: `${updateType} will be saved when online`, type: "warning" };
           }
+
+          // Mark the job as synced if it goes through the API
+          updateJobLastSynced(previousTask.jobId);
           return { message: `Updated ${updateType}`, type: "success" };
         },
         error: (error) => {

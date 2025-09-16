@@ -23,6 +23,7 @@ interface JobStore {
   setCurrentJob: (job: IJob | null) => void;
   updateJob: (jobId: number, updates: IUpdateJobRequest) => Promise<void>;
   updateJobTask: (jobId: number, jobTaskId: number, updates: Partial<IJobTask>) => Promise<void>;
+  updateJobLastSynced: (jobId: number) => Promise<void>;
   loadJobSyncStatus: (jobId: number) => Promise<void>;
   refreshJob: (jobId: number) => Promise<void>;
 }
@@ -136,6 +137,24 @@ const useJobStore = create<JobStore>((set, get) => ({
     set({ currentJob: job });
   },
 
+  updateJobLastSynced: async (jobId: number) => {
+    // Update the database
+    await jobsDB.updateJobLastSynced(jobId);
+
+    // Update the store's sync status in memory (avoid extra DB call)
+    const currentStatus = get().currentJobSyncStatus;
+    if (currentStatus) {
+      const now = Date.now();
+      set({
+        currentJobSyncStatus: {
+          ...currentStatus,
+          lastSynced: now,
+          hasPendingUpdates: false,
+        },
+      });
+    }
+  },
+
   loadJobSyncStatus: async (jobId: number) => {
     try {
       const syncStatus = await jobsDB.getJobSyncStatus(jobId);
@@ -193,21 +212,35 @@ const useJobStore = create<JobStore>((set, get) => ({
       ownersStore.setJobOwner(jobId, updates.ownerId);
     }
 
+    // Update the store state
     set((state) => {
       const updatedJobs = state.jobs.map((job) => (job.id === jobId ? { ...job, ...updates } : job));
       const updatedCurrentJob = state.currentJob?.id === jobId ? { ...state.currentJob, ...updates } : state.currentJob;
-
-      // Save updated job to IndexedDB and mark as updated
-      if (updatedCurrentJob) {
-        jobsDB.saveJob(updatedCurrentJob);
-        jobsDB.updateJobLastUpdated(jobId);
-      }
 
       return {
         jobs: updatedJobs,
         currentJob: updatedCurrentJob,
       };
     });
+
+    // Save to IndexedDB and update sync status asynchronously
+    const currentJob = get().currentJob;
+    if (currentJob?.id === jobId) {
+      await jobsDB.saveJob(currentJob);
+      await jobsDB.updateJobLastUpdated(jobId);
+
+      // Update sync status in memory (avoid extra DB call)
+      const currentStatus = get().currentJobSyncStatus;
+      if (currentStatus) {
+        set({
+          currentJobSyncStatus: {
+            ...currentStatus,
+            lastUpdated: Date.now(),
+            hasPendingUpdates: true,
+          },
+        });
+      }
+    }
   },
 
   // Sync the job with the updated task
@@ -236,7 +269,16 @@ const useJobStore = create<JobStore>((set, get) => ({
       jobsDB.saveJob(updatedCurrentJob);
       jobsDB.updateJobLastUpdated(jobId);
       jobsDB.updateTaskLastUpdated(jobId, jobTaskId);
-      syncStatus = await jobsDB.getJobSyncStatus(jobId);
+
+      // Update sync status in memory (avoid extra DB call)
+      const currentStatus = get().currentJobSyncStatus;
+      if (currentStatus) {
+        syncStatus = {
+          ...currentStatus,
+          lastUpdated: Date.now(),
+          hasPendingUpdates: true,
+        };
+      }
     }
 
     set(() => {

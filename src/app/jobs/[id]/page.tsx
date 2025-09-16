@@ -50,7 +50,7 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
 
     // If we have a previous sync status, check if it changed
     if (lastKnownSyncStatus) {
-      const syncStatusChanged = 
+      const syncStatusChanged =
         lastKnownSyncStatus.lastSynced !== currentJobSyncStatus.lastSynced ||
         lastKnownSyncStatus.hasPendingUpdates !== currentJobSyncStatus.hasPendingUpdates;
 

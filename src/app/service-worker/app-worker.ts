@@ -603,7 +603,7 @@ const stopJobSync = () => {
     jobSyncInterval = null;
     console.log("Stopped periodic job sync");
   }
-  };
+};
 
 // Install event - prepare the service worker and force update
 self.addEventListener("install", () => {
@@ -617,11 +617,11 @@ self.addEventListener("activate", (event: any) => {
   console.log("Service worker activating...");
   // Take control of all clients immediately
   event.waitUntil((self as any).clients.claim());
-  
+
   // Start background processes
   startQueueProcessing();
   startJobSync();
-  
+
   console.log("Service worker activated and background processes started");
 });
 

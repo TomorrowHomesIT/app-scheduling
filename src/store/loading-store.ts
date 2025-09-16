@@ -17,8 +17,8 @@ interface LoadingStore {
   isGlobalLoaded: boolean;
 
   // Actions
-  setLoading: (key: "owners" | "suppliers" |  "jobs", isLoading: boolean) => void;
-  setLoaded: (key: "owners" | "suppliers" |  "jobs", isLoaded: boolean) => void;
+  setLoading: (key: "owners" | "suppliers" | "jobs", isLoading: boolean) => void;
+  setLoaded: (key: "owners" | "suppliers" | "jobs", isLoaded: boolean) => void;
   setError: (key: "owners" | "suppliers" | "jobs", error: string | null) => void;
   reset: () => void;
 

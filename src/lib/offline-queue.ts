@@ -125,19 +125,19 @@ class OfflineQueue {
     // - 408 Request Timeout
     // - 429 Too Many Requests
     // - Network errors (handled separately)
-    
+
     // Non-retryable errors:
     // - 4xx client errors (400, 403, 404, etc.) - these won't succeed on retry
     // - 3xx redirects - these are handled by the browser
-    
+
     if (status >= 500) {
       return true; // All 5xx server errors are retryable
     }
-    
+
     if (status === 408 || status === 429 || status === 401) {
       return true; // Timeout and rate limiting are retryable
     }
-    
+
     return false; // All other errors (4xx, 3xx) are not retryable
   }
 

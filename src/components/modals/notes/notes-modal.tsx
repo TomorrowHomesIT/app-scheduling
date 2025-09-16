@@ -56,7 +56,7 @@ export function NotesModal({ value, onChange, open, onOpenChange }: NotesModalPr
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Add notes for this task..."
-            className="min-h-[160px]"
+            className="min-h-[120px]"
           />
         </div>
         <DialogFooter className="flex">

@@ -39,7 +39,7 @@ export function DatePickerModal({ value, onChange, open, onOpenChange }: DatePic
           <DialogTitle>Select start date</DialogTitle>
           <DialogDescription></DialogDescription>
         </DialogHeader>
-        <div className="flex space-y-4">
+        <div className="flex flex-col sm:flex-row space-y-4 ">
           <div className="flex flex-col gap-4 mt-2 border-r pr-6">
             <Button variant="outline" onClick={() => handleSelect(today)}>
               Today

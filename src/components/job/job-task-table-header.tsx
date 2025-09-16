@@ -15,10 +15,10 @@ export function JobTaskTableHeader() {
             <TableHead className="w-28 lg:w-36 text-gray-600 text-xs">Supplier</TableHead>
             <TableHead className="w-20 text-gray-600 text-xs">Start date</TableHead>
             <TableHead className="w-32 lg:w-40 text-gray-600 text-xs">Notes</TableHead>
-            <TableHead className="w-18 lg:w-20 text-gray-600 text-xs">PO</TableHead>
-            <TableHead className="w-18 lg:w-20 text-gray-600 text-xs">Plans</TableHead>
-            <TableHead className="w-32 lg:w-32 text-gray-600 text-xs">Email</TableHead>
-            <TableHead className="w-28 lg:w-32 text-gray-600 text-xs">Progress</TableHead>
+            <TableHead className="w-12 lg:w-14 text-gray-600 text-xs">PO</TableHead>
+            <TableHead className="w-12 lg:w-14 text-gray-600 text-xs">Plans</TableHead>
+            <TableHead className="w-24 lg:w-28 text-gray-600 text-xs">Email</TableHead>
+            <TableHead className="w-24 lg:w-28 text-gray-600 text-xs">Progress</TableHead>
           </TableRow>
         </TableHeader>
       </Table>

@@ -91,28 +91,28 @@ export function JobTaskTable({ tasks }: JobTaskTableProps) {
                     onChange={(notes) => handleNotesChange(task.id, notes)}
                   />
                 </TableCell>
-                <TableCell className="w-18 lg:w-20 p-0">
+                <TableCell className="w-12 lg:w-14 p-0">
                   <FileLinkModalTrigger
                     links={task.purchaseOrderLinks || []}
                     onSave={(links) => handlePOLinksChange(task.id, links)}
                     title="Purchase Order Links"
                   />
                 </TableCell>
-                <TableCell className="w-18 lg:w-20 p-0">
+                <TableCell className="w-12 lg:w-14 p-0">
                   <FileLinkModalTrigger
                     links={task.planLinks || []}
                     onSave={(links) => handlePlanLinksChange(task.id, links)}
                     title="Plan Links"
                   />
                 </TableCell>
-                <TableCell className="w-32 lg:w-32">
+                <TableCell className="w-24 lg:w-28 p-0">
                   <EmailStatusTrigger
                     task={task}
                     value={task.status}
                     onSendEmail={(status) => handleEmailStatusChange(task.id, status)}
                   />
                 </TableCell>
-                <TableCell className="w-28 lg:w-32">
+                <TableCell className="w-24 lg:w-28 p-0">
                   <ProgressTrigger value={task.progress} onChange={(p) => handleProgressChange(task.id, p)} />
                 </TableCell>
               </TableRow>

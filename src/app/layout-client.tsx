@@ -74,6 +74,11 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
       for (let i = 0; i < allRoutes.length; i++) {
         const route = allRoutes[i];
         try {
+          // Check if we're offline before attempting navigation
+          if (!navigator.onLine) {
+            return;
+          }
+
           console.log(`Navigating to: ${route} (${i + 1}/${allRoutes.length})`);
           setPreloadingProgress({ current: i + 1, total: allRoutes.length });
           router.push(route);
@@ -83,6 +88,7 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
           console.error(`Failed to navigate to ${route}:`, error);
         }
       }
+
       console.log("Finished preloading all routes");
       router.push(jobRoutes[0]);
       await new Promise((resolve) => setTimeout(resolve, 200));

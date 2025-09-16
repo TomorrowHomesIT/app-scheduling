@@ -25,6 +25,8 @@ declare global {
 
 declare const self: WorkerGlobalScope & SerwistGlobalConfig;
 
+const cacheVersion = "1.0.0";
+
 const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST,
   skipWaiting: true,
@@ -37,7 +39,7 @@ const serwist = new Serwist({
       // Cache navigation requests (pages) with NetworkFirst for better offline experience
       matcher: ({ request }) => request.mode === "navigate",
       handler: new NetworkFirst({
-        cacheName: "pages-cache",
+        cacheName: `pages-cache-${cacheVersion}`,
         plugins: [
           {
             cacheWillUpdate: async ({ response }) => {
@@ -55,7 +57,7 @@ const serwist = new Serwist({
         return pathname === "/api/owners" || pathname === "/api/suppliers" || pathname === "/api/task-stages";
       },
       handler: new StaleWhileRevalidate({
-        cacheName: "common-api-data",
+        cacheName: `common-api-data-${cacheVersion}`,
         plugins: [
           {
             cacheWillUpdate: async ({ response }) => {
@@ -73,7 +75,7 @@ const serwist = new Serwist({
       // Cache other API responses with NetworkFirst for better offline handling
       matcher: ({ url }) => url.pathname.startsWith("/api/"),
       handler: new NetworkFirst({
-        cacheName: "api-cache",
+        cacheName: `api-cache-${cacheVersion}`,
         plugins: [
           {
             cacheWillUpdate: async ({ response }) => {
@@ -391,9 +393,9 @@ self.addEventListener("message", (event: Event) => {
   const { type } = messageEvent.data;
 
   if (type === "process-queue") {
-    // processQueue();
+    processQueue();
   } else if (type === "sync-jobs") {
-    // syncJobs();
+    syncJobs();
   }
 });
 

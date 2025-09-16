@@ -11,6 +11,7 @@ import useJobStore from "@/store/job/job-store";
 import useTaskStore from "@/store/task-store";
 import useLoadingStore from "@/store/loading-store";
 import { Spinner } from "@/components/ui/spinner";
+import { preloadJobsForOffline } from "@/lib/pwa-utils";
 
 /** Function is required so that useSidebar is used within the context */
 function AppLayoutContent({ children }: { children: ReactNode }) {
@@ -32,6 +33,9 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
         console.log("Bootstrapping data...");
         await Promise.all([loadOwners(), loadSuppliers(), loadUserJobs(), loadTaskStages()]);
         console.log("Data bootstrapped successfully");
+        
+        // After data is loaded, trigger PWA preloading for offline support (non-blocking)
+        preloadJobsForOffline().catch(console.error);
       } catch (error) {
         console.error("Failed to bootstrap data:", error);
       }

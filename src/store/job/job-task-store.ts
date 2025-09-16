@@ -100,6 +100,7 @@ const useJobTaskStore = create<JobTaskStore>(() => ({
         },
         error: (error) => {
           updateJobTask(previousTask.jobId, taskId, previousTask);
+          updateJobLastSynced(previousTask.jobId);
           return `${error}`;
         },
       });
@@ -111,7 +112,7 @@ const useJobTaskStore = create<JobTaskStore>(() => ({
   sendTaskEmail: async (taskId: number, status: EJobTaskStatus) => {
     const jobStore = useJobStore.getState();
     const supplierStore = useSupplierStore.getState();
-    const { currentJob, updateJobTask } = jobStore;
+    const { currentJob, updateJobTask, updateJobLastSynced } = jobStore;
     const task = currentJob?.tasks.find((task) => task.id === taskId);
 
     if (!currentJob || !task) {
@@ -162,11 +163,14 @@ const useJobTaskStore = create<JobTaskStore>(() => ({
           if (data === null) {
             return { message: "Email will be sent when online", type: "warning" };
           }
+
+          // Mark the job as synced if it goes through the API
+          updateJobLastSynced(currentJob.id);
           return { message: "Email sent successfully", type: "success" };
         },
         error: (e) => {
           updateJobTask(currentJob.id, task.id, { status: previousStatus });
-
+          updateJobLastSynced(currentJob.id);
           return `Failed to send email: ${e instanceof Error ? e.message : "Unknown error"}`;
         },
       });

@@ -121,7 +121,6 @@ class OfflineQueue {
 
   private isRetryableError(status: number): boolean {
     // Retryable errors are typically:
-    // - 5xx server errors (500, 502, 503, 504, etc.)
     // - 408 Request Timeout
     // - 429 Too Many Requests
     // - Network errors (handled separately)
@@ -129,10 +128,7 @@ class OfflineQueue {
     // Non-retryable errors:
     // - 4xx client errors (400, 403, 404, etc.) - these won't succeed on retry
     // - 3xx redirects - these are handled by the browser
-
-    if (status >= 500) {
-      return true; // All 5xx server errors are retryable
-    }
+    // - 5xx server errors (500, 502, 503, 504, etc.)
 
     if (status === 408 || status === 429 || status === 401) {
       return true; // Timeout and rate limiting are retryable

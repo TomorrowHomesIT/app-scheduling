@@ -4,22 +4,11 @@ import { useState } from "react";
 import { JobsTable } from "@/app/jobs/jobs-table";
 import useOwnersStore from "@/store/owners-store";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Spinner } from "@/components/ui/spinner";
 import { PageHeader } from "@/components/page-header";
-import useLoadingStore from "@/store/loading-store";
 
 export default function JobsPage() {
   const { owners } = useOwnersStore();
-  const { isLoading } = useLoadingStore();
   const [activeTab, setActiveTab] = useState("current");
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <Spinner variant="default" size="xl" />
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col h-full bg-background">

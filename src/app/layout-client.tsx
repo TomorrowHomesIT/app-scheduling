@@ -9,6 +9,8 @@ import useSupplierStore from "@/store/supplier-store";
 import type { ReactNode } from "react";
 import useJobStore from "@/store/job/job-store";
 import useTaskStore from "@/store/task-store";
+import useLoadingStore from "@/store/loading-store";
+import { Spinner } from "@/components/ui/spinner";
 
 /** Function is required so that useSidebar is used within the context */
 function AppLayoutContent({ children }: { children: ReactNode }) {
@@ -18,6 +20,7 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
   const { loadSuppliers } = useSupplierStore();
   const { loadUserJobs } = useJobStore();
   const { loadTaskStages } = useTaskStore();
+  const { isLoading } = useLoadingStore();
 
   // Bootstrap all data when user is authenticated
   useEffect(() => {
@@ -36,6 +39,14 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
 
     bootstrapData();
   }, [isAuthenticated, loadOwners, loadSuppliers, loadUserJobs, loadTaskStages]);
+
+  if (isLoading && isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center h-full w-full">
+        <Spinner variant="default" size="xl" />
+      </div>
+    );
+  }
 
   return (
     <>

@@ -8,13 +8,8 @@ export const POST = withAuth(async (request: NextRequest) => {
   try {
     const supabase = await createClient();
     const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    const user = session?.user;
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+      data: { user },
+    } = await supabase.auth.getUser();
 
     const serviceEmailUrl = process.env.BASD_SERVICE_URL;
     const serviceToken = process.env.BASD_SERVICE_TOKEN;
@@ -38,10 +33,9 @@ export const POST = withAuth(async (request: NextRequest) => {
 
     const missingFields = requiredFields.filter((field) => !body[field]);
 
-    if (!user.email) {
-      return NextResponse.json({ error: "User is missing an email address" }, { status: 404 });
-    }
-    if (missingFields.length > 0) {
+    if (!user?.email) {
+      return NextResponse.json({ error: "User is missing an email address" }, { status: 400 });
+    } else if (missingFields.length > 0) {
       return NextResponse.json({ error: `Missing required fields: ${missingFields.join(", ")}` }, { status: 400 });
     } else if (!body.recipientEmails?.length) {
       return NextResponse.json({ error: "At least one recipient email is required" }, { status: 400 });
@@ -58,7 +52,7 @@ export const POST = withAuth(async (request: NextRequest) => {
       ...body,
       emailType: statusMap[body.status],
       sentByEmail: user.email,
-      sentByName: "", // TODO add a name
+      sentByName: user.user_metadata?.full_name || user.email,
     };
 
     const endpoint = `${serviceEmailUrl}/THGScheduling/Automation/SchedulingEmail`;

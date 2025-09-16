@@ -8,6 +8,7 @@ import {
   TASKS_STORE_NAME,
   type QueuedRequest,
 } from "@/models/db.model";
+import { getApiErrorMessage } from "./api/error";
 
 class OfflineQueue {
   private db: IDBDatabase | null = null;
@@ -71,7 +72,7 @@ class OfflineQueue {
     body?: unknown,
     headers?: Record<string, string>,
     maxAttempts = 10,
-  ): Promise<{ success: boolean; queued: boolean; response?: Response }> {
+  ): Promise<{ success: boolean; queued: boolean; response?: Response; error?: Error }> {
     const queuedRequest: QueuedRequest = {
       id: `${Date.now()}-${Math.random()}`,
       url,
@@ -89,10 +90,21 @@ class OfflineQueue {
         const response = await this.makeRequest(queuedRequest);
         if (response.ok) {
           return { success: true, queued: false, response };
+        } else {
+          // Check if this is a retryable error
+          if (this.isRetryableError(response.status)) {
+            console.log(`Request failed with retryable error ${response.status}, queuing for retry`);
+            // Fall through to queue the request
+          } else {
+            // Non-retryable error (404, 403, etc.) - don't queue, return error
+            const errorMessage = await getApiErrorMessage(response, "Failed to make request");
+            console.log(`Request failed with non-retryable error ${response.status}:`, errorMessage);
+            return { success: false, queued: false, error: new Error(errorMessage) };
+          }
         }
       } catch (error) {
-        // Network error, fall through to queue
-        console.log("Request failed, queuing for retry:", error);
+        // Network error or other exception, fall through to queue
+        console.log("Request failed with network error, queuing for retry:", error);
       }
     }
 
@@ -105,6 +117,28 @@ class OfflineQueue {
     if (!this.db) {
       await this.initDB();
     }
+  }
+
+  private isRetryableError(status: number): boolean {
+    // Retryable errors are typically:
+    // - 5xx server errors (500, 502, 503, 504, etc.)
+    // - 408 Request Timeout
+    // - 429 Too Many Requests
+    // - Network errors (handled separately)
+    
+    // Non-retryable errors:
+    // - 4xx client errors (400, 403, 404, etc.) - these won't succeed on retry
+    // - 3xx redirects - these are handled by the browser
+    
+    if (status >= 500) {
+      return true; // All 5xx server errors are retryable
+    }
+    
+    if (status === 408 || status === 429 || status === 401) {
+      return true; // Timeout and rate limiting are retryable
+    }
+    
+    return false; // All other errors (4xx, 3xx) are not retryable
   }
 
   private async addToQueue(request: QueuedRequest): Promise<void> {

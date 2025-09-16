@@ -244,6 +244,29 @@ const shouldRetryRequest = (): boolean => {
   return navigator.onLine;
 };
 
+// Function to determine if an HTTP status code is retryable
+const isRetryableError = (status: number): boolean => {
+  // Retryable errors are typically:
+  // - 5xx server errors (500, 502, 503, 504, etc.)
+  // - 408 Request Timeout
+  // - 429 Too Many Requests
+  // - Network errors (handled separately)
+  
+  // Non-retryable errors:
+  // - 4xx client errors (400, 403, 404, etc.) - these won't succeed on retry
+  // - 3xx redirects - these are handled by the browser
+  
+  if (status >= 500) {
+    return true; // All 5xx server errors are retryable
+  }
+  
+  if (status === 408 || status === 429 || status === 401) {
+    return true; // Timeout and rate limiting are retryable
+  }
+  
+  return false; // All other errors (4xx, 3xx) are not retryable
+};
+
 // Function to process queued request
 const processRequest = async (queuedRequest: QueuedRequest): Promise<boolean> => {
   try {
@@ -262,12 +285,18 @@ const processRequest = async (queuedRequest: QueuedRequest): Promise<boolean> =>
       console.log(`Successfully processed queued request: ${queuedRequest.method} ${queuedRequest.url}`);
       return true;
     } else {
-      console.warn(`Failed to process request ${queuedRequest.method} ${queuedRequest.url}: ${response.status}`);
-      return false;
+      // Check if this is a retryable error
+      if (isRetryableError(response.status)) {
+        console.warn(`Failed to process request ${queuedRequest.method} ${queuedRequest.url} with retryable error: ${response.status}`);
+        return false; // Will be retried
+      } else {
+        console.warn(`Failed to process request ${queuedRequest.method} ${queuedRequest.url} with non-retryable error: ${response.status} - removing from queue`);
+        return true; // Mark as "successful" to remove from queue (but it actually failed)
+      }
     }
   } catch (error) {
     console.error(`Error processing request ${queuedRequest.method} ${queuedRequest.url}:`, error);
-    return false;
+    return false; // Network errors are retryable
   }
 };
 

@@ -25,7 +25,7 @@ interface JobDetailPageProps {
 export default function JobDetailPage({ params }: JobDetailPageProps) {
   const { id } = use(params);
   const { taskStages } = useTaskStore();
-  const { currentJob, currentJobSyncStatus, isLoadingJobs, loadJob, updateJob, refreshJob } = useJobStore();
+  const { currentJob, loadJob, updateJob } = useJobStore();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const [error, setError] = useState<boolean>(false);
@@ -74,21 +74,10 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
           backLink="/jobs"
           badge={`${completedTasks}/${totalTasks}`}
         >
-          {currentJobSyncStatus && (
-            <div className="flex items-center gap-2">
-              <JobSyncStatus
-                lastUpdated={currentJobSyncStatus.lastUpdated}
-                lastSynced={currentJobSyncStatus.lastSynced}
-                hasPendingUpdates={currentJobSyncStatus.hasPendingUpdates}
-              />
-              <JobRefreshButton
-                jobId={currentJob.id}
-                hasPendingUpdates={currentJobSyncStatus.hasPendingUpdates}
-                isLoading={isLoadingJobs}
-                onRefresh={refreshJob}
-              />
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            <JobSyncStatus />
+            <JobRefreshButton jobId={currentJob.id} />
+          </div>
           {currentJob.googleDriveDirId && (
             <Link
               href={`//drive.google.com/drive/folders/${currentJob.googleDriveDirId}`}

@@ -2,17 +2,33 @@
 
 import { Clock, Cloud, CloudOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useEffect, useState } from "react";
+import useJobStore from "@/store/job/job-store";
 
-interface JobSyncStatusProps {
-  lastUpdated: number;
-  lastSynced: number;
-  hasPendingUpdates: boolean;
-}
+export function JobSyncStatus() {
+  const { currentJobSyncStatus } = useJobStore();
+  const [currentTime, setCurrentTime] = useState(Date.now());
 
-export function JobSyncStatus({ lastUpdated, hasPendingUpdates }: JobSyncStatusProps) {
+  // Update current time every minute to refresh the "time ago" display
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 5000); // Check for changes every 5 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
+  if (!currentJobSyncStatus) {
+    return;
+  }
+
+  // Use current time for calculations if no sync status available
+  const lastUpdated = currentJobSyncStatus.lastUpdated;
+  const hasPendingUpdates = currentJobSyncStatus.hasPendingUpdates;
+
   const formatTime = (timestamp: number) => {
     const date = new Date(timestamp);
-    const now = new Date();
+    const now = new Date(currentTime);
     const diffMs = now.getTime() - date.getTime();
     const diffMinutes = Math.floor(diffMs / (1000 * 60));
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));

@@ -9,6 +9,7 @@ import { jobsDB } from "@/lib/jobs-db";
 interface JobStore {
   jobs: IJob[]; // TODO I'm not sure this is actually uesd? We never load a list of jobs lol
   currentJob: IJob | null;
+  isLoadingJobs: boolean;
 
   loadUserJobs: () => Promise<void>;
   loadJob: (id: number) => Promise<void>;
@@ -74,6 +75,7 @@ const updateJobApi = async (jobId: number, updates: IUpdateJobRequest): Promise<
 const useJobStore = create<JobStore>((set, get) => ({
   jobs: [],
   currentJob: null,
+  isLoadingJobs: false,
 
   loadUserJobs: async () => {
     const loading = useLoadingStore.getState();
@@ -95,10 +97,8 @@ const useJobStore = create<JobStore>((set, get) => ({
   },
 
   loadJob: async (id: number) => {
-    const loading = useLoadingStore.getState();
-
-    if (loading.jobs.isLoading) return;
-    loading.setLoading("job", true);
+    if (get().isLoadingJobs) return;
+    set({ isLoadingJobs: true });
 
     try {
       const localJob = await jobsDB.getJob(id);
@@ -112,10 +112,8 @@ const useJobStore = create<JobStore>((set, get) => ({
       if (job) {
         set(() => ({ currentJob: job }));
       }
-    } catch {
-      loading.setError("job", "Failed to load job");
     } finally {
-      loading.setLoading("job", false);
+      set({ isLoadingJobs: false });
     }
   },
 

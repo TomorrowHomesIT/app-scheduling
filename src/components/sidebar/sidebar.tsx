@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { ChevronDown, ChevronRight, Search, Folder, ListChecks } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,6 @@ interface SidebarProps {
 
 function SidebarContent({ onJobSelect }: { onJobSelect?: () => void }) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const { currentJob } = useJobStore();
   const { owners } = useOwnersStore();
   const [expandedOwners, setExpandedOwners] = useState<Set<number>>(new Set());
@@ -113,11 +112,11 @@ function SidebarContent({ onJobSelect }: { onJobSelect?: () => void }) {
                 {owner.jobs?.map((job) => (
                   <Link
                     key={job.id}
-                    href={`/jobs/view?id=${job.id}`}
+                    href={`/jobs/${job.id}`}
                     onClick={onJobSelect}
                     className={cn(
                       "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground",
-                      pathname === `/jobs/view` && searchParams?.get('id') === job.id.toString() && "bg-accent font-bold",
+                      pathname === `/jobs/${job.id}` && "bg-accent font-bold",
                     )}
                   >
                     <ListChecks className="h-4 w-4 flex-shrink-0" style={{ color: owner.color || "#0A120A" }} />

@@ -15,7 +15,7 @@ export function JobsTable({ owners, mode }: JobsTableProps) {
 
   const handleJobClick = (jobId: number) => {
     if (mode === "current") {
-      router.push(`/jobs/view?id=${jobId}`);
+      router.push(`/jobs/${jobId}`);
     }
   };
 

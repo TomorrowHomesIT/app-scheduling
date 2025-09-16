@@ -15,6 +15,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { PageHeader } from "@/components/page-header";
 import { JobTaskStatus } from "@/components/job/job-task-status";
 import { JobTaskTableHeader } from "@/components/job/job-task-table-header";
+import { JobSyncStatus } from "@/components/job/job-sync-status";
 
 interface JobDetailPageProps {
   params: Promise<{ id: string }>;
@@ -23,7 +24,7 @@ interface JobDetailPageProps {
 export default function JobDetailPage({ params }: JobDetailPageProps) {
   const { id } = use(params);
   const { taskStages } = useTaskStore();
-  const { currentJob, loadJob, updateJob } = useJobStore();
+  const { currentJob, currentJobSyncStatus, loadJob, updateJob } = useJobStore();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const [error, setError] = useState<boolean>(false);
@@ -83,9 +84,16 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
               </Button>
             </Link>
           )}
+          {currentJobSyncStatus && (
+            <JobSyncStatus
+              lastUpdated={currentJobSyncStatus.lastUpdated}
+              lastSynced={currentJobSyncStatus.lastSynced}
+              hasPendingUpdates={currentJobSyncStatus.hasPendingUpdates}
+            />
+          )}
           <Button variant="outline" size="default" className="flex" onClick={() => setIsEditModalOpen(true)}>
             <Settings className="h-4 w-4" />
-            <span className="hidden lg:block">Edit Job</span>
+            <span className="hidden xl:block">Edit Job</span>
           </Button>
         </PageHeader>
       </div>

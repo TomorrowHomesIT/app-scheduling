@@ -6,9 +6,16 @@ import useOwnersStore from "@/store/owners-store";
 import useLoadingStore from "@/store/loading-store";
 import { jobsDB } from "@/lib/jobs-db";
 
+interface JobSyncStatus {
+  lastUpdated: number;
+  lastSynced: number;
+  hasPendingUpdates: boolean;
+}
+
 interface JobStore {
   jobs: IJob[]; // TODO I'm not sure this is actually uesd? We never load a list of jobs lol
   currentJob: IJob | null;
+  currentJobSyncStatus: JobSyncStatus | null;
   isLoadingJobs: boolean;
 
   loadUserJobs: () => Promise<void>;
@@ -16,6 +23,7 @@ interface JobStore {
   setCurrentJob: (job: IJob | null) => void;
   updateJob: (jobId: number, updates: IUpdateJobRequest) => Promise<void>;
   updateJobTask: (jobId: number, jobTaskId: number, updates: Partial<IJobTask>) => Promise<void>;
+  loadJobSyncStatus: (jobId: number) => Promise<void>;
 }
 
 const fetchJobByIdFromApi = async (id: number): Promise<IJob | null> => {
@@ -75,6 +83,7 @@ const updateJobApi = async (jobId: number, updates: IUpdateJobRequest): Promise<
 const useJobStore = create<JobStore>((set, get) => ({
   jobs: [],
   currentJob: null,
+  currentJobSyncStatus: null,
   isLoadingJobs: false,
 
   loadUserJobs: async () => {
@@ -104,6 +113,9 @@ const useJobStore = create<JobStore>((set, get) => ({
       const localJob = await jobsDB.getJob(id);
       if (localJob) {
         set(() => ({ currentJob: localJob }));
+        // Load sync status for local job
+        const syncStatus = await jobsDB.getJobSyncStatus(id);
+        set(() => ({ currentJobSyncStatus: syncStatus }));
         return;
       }
 
@@ -111,6 +123,8 @@ const useJobStore = create<JobStore>((set, get) => ({
       const job = await fetchJobByIdFromApi(id);
       if (job) {
         set(() => ({ currentJob: job }));
+        // For API-loaded jobs, we don't have sync status
+        set(() => ({ currentJobSyncStatus: null }));
       }
     } finally {
       set({ isLoadingJobs: false });
@@ -119,6 +133,15 @@ const useJobStore = create<JobStore>((set, get) => ({
 
   setCurrentJob: (job: IJob | null) => {
     set({ currentJob: job });
+  },
+
+  loadJobSyncStatus: async (jobId: number) => {
+    try {
+      const syncStatus = await jobsDB.getJobSyncStatus(jobId);
+      set({ currentJobSyncStatus: syncStatus });
+    } catch (error) {
+      console.error("Failed to load job sync status:", error);
+    }
   },
 
   updateJob: async (jobId: number, updates: IUpdateJobRequest) => {

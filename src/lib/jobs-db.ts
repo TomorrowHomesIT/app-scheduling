@@ -180,6 +180,36 @@ class JobsDB {
     });
   }
 
+  async getJobSyncStatus(id: number): Promise<{ lastUpdated: number; lastSynced: number; hasPendingUpdates: boolean } | null> {
+    await this.ensureDBReady();
+
+    return new Promise((resolve, reject) => {
+      if (!this.db) {
+        reject(new Error("Database not initialized"));
+        return;
+      }
+
+      const transaction = this.db.transaction([JOBS_STORE_NAME], "readonly");
+      const store = transaction.objectStore(JOBS_STORE_NAME);
+      const getRequest = store.get(id);
+
+      getRequest.onsuccess = () => {
+        const storedJob = getRequest.result as StoredJob | undefined;
+        if (storedJob) {
+          resolve({
+            lastUpdated: storedJob.lastUpdated,
+            lastSynced: storedJob.lastSynced,
+            hasPendingUpdates: storedJob.lastUpdated > storedJob.lastSynced,
+          });
+        } else {
+          resolve(null);
+        }
+      };
+
+      getRequest.onerror = () => reject(getRequest.error);
+    });
+  }
+
   // Task operations
   async saveTask(jobId: number, task: IJobTask): Promise<void> {
     await this.ensureDBReady();

@@ -8,6 +8,7 @@ import { jobsDB } from "@/lib/jobs-db";
 interface AuthContextType {
   isAuthLoading: boolean;
   isAuthenticated: boolean;
+  userId: string;
   logout: () => Promise<void>;
   login: () => void;
 }
@@ -17,11 +18,13 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [userId, setUserId] = useState("");
   const supabase = createClient();
 
   useEffect(() => {
     const checkClaims = async () => {
       const { data, error } = await supabase.auth.getClaims();
+      setUserId(data?.claims?.sub || "");
       setIsAuthenticated(!error && !!data?.claims);
       setIsAuthLoading(false);
     };
@@ -43,7 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, isAuthLoading, logout, login }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ isAuthenticated, isAuthLoading, logout, login, userId }}>{children}</AuthContext.Provider>
   );
 }
 

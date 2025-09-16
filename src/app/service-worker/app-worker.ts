@@ -1,5 +1,5 @@
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
-import { Serwist, StaleWhileRevalidate } from "serwist";
+import { Serwist, StaleWhileRevalidate, NetworkFirst } from "serwist";
 import { defaultCache } from "@serwist/next/worker";
 import {
   DB_NAME,
@@ -31,51 +31,17 @@ const serwist = new Serwist({
   clientsClaim: true,
   navigationPreload: true,
   runtimeCaching: [
-    // Use Serwist's default cache strategies for Next.js assets
+    // Use Serwist's default cache strategies for Next.js assets (this handles JS chunks, CSS, etc.)
     ...defaultCache,
     {
-      // Cache job pages specifically with StaleWhileRevalidate
-      matcher: ({ url }) => {
-        const pathname = url.pathname;
-        return pathname.match(/^\/jobs\/\d+$/) || pathname === "/jobs";
-      },
-      handler: new StaleWhileRevalidate({
-        cacheName: "job-pages-cache",
-        plugins: [
-          {
-            cacheWillUpdate: async ({ response }) => {
-              if (response && response.status === 200) {
-                return response;
-              }
-              return null;
-            },
-            handlerDidError: async () => {
-              // Return offline page when both network and cache fail
-              return caches.match("/offline") || new Response("Offline", { status: 503 });
-            },
-          },
-        ],
-      }),
-    },
-    {
-      // Override navigation handling for offline support (non-job pages)
-      matcher: ({ request, url }) => {
-        const pathname = url.pathname;
-        return request.mode === "navigate" && !pathname.match(/^\/jobs(\/\d+)?$/) && pathname !== "/offline";
-      },
-      handler: new StaleWhileRevalidate({
+      // Cache navigation requests (pages) with NetworkFirst for better offline experience
+      matcher: ({ request }) => request.mode === "navigate",
+      handler: new NetworkFirst({
         cacheName: "pages-cache",
         plugins: [
           {
             cacheWillUpdate: async ({ response }) => {
-              if (response && response.status === 200) {
-                return response;
-              }
-              return null;
-            },
-            handlerDidError: async () => {
-              // Return offline page when both network and cache fail
-              return caches.match("/offline") || new Response("Offline", { status: 503 });
+              return response?.status === 200 ? response : null;
             },
           },
         ],
@@ -93,10 +59,7 @@ const serwist = new Serwist({
         plugins: [
           {
             cacheWillUpdate: async ({ response }) => {
-              if (response && response.status === 200) {
-                return response;
-              }
-              return null;
+              return response?.status === 200 ? response : null;
             },
             handlerDidError: async () => {
               // Return empty array as fallback for list endpoints
@@ -107,17 +70,14 @@ const serwist = new Serwist({
       }),
     },
     {
-      // Cache other API responses with NetworkFirst
+      // Cache other API responses with NetworkFirst for better offline handling
       matcher: ({ url }) => url.pathname.startsWith("/api/"),
-      handler: new StaleWhileRevalidate({
+      handler: new NetworkFirst({
         cacheName: "api-cache",
         plugins: [
           {
             cacheWillUpdate: async ({ response }) => {
-              if (response && response.status === 200) {
-                return response;
-              }
-              return null;
+              return response?.status === 200 ? response : null;
             },
             handlerDidError: async () => Response.json({ error: "Offline" }, { status: 503 }),
           },

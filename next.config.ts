@@ -17,6 +17,7 @@ const withSerwist = withSerwistInit({
     { url: "/jobs", revision: null },
     { url: "/offline", revision: null },
     { url: "/suppliers", revision: null },
+    { url: "/manifest.json", revision: null },
   ],
 });
 

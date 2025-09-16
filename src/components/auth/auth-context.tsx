@@ -35,18 +35,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     await supabase.auth.signOut();
     setIsAuthenticated(false);
+    setUserId("");
 
     // Clear offline queue and jobs data on logout
     await offlineQueue.clearQueue();
     await jobsDB.clearAll();
   };
 
-  const login = () => {
-    setIsAuthenticated(true);
+  const login = async () => {
+    const { data, error } = await supabase.auth.getClaims();
+    setUserId(data?.claims?.sub || "");
+    setIsAuthenticated(!error && !!data?.claims);
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, isAuthLoading, logout, login, userId }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ isAuthenticated, isAuthLoading, logout, login, userId }}>
+      {children}
+    </AuthContext.Provider>
   );
 }
 

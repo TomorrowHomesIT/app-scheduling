@@ -46,7 +46,7 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
 
   // Navigate to all routes to preload them for offline access
   useEffect(() => {
-    if (!isAuthenticated || !owners || owners.length === 0) return;
+    if (!isAuthenticated || !owners?.length) return;
 
     console.log("Navigating to all routes for offline preloading...");
 
@@ -60,7 +60,7 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
       }
     });
 
-    // Also navigate to core routes
+    if (!jobRoutes.length) return;
     const coreRoutes = ["/", "/jobs", "/offline"];
     const allRoutes = [...coreRoutes, ...jobRoutes];
 
@@ -84,6 +84,8 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
         }
       }
       console.log("Finished preloading all routes");
+      router.push(jobRoutes[0]);
+      await new Promise((resolve) => setTimeout(resolve, 200));
       setIsPreloadingRoutes(false);
     };
 

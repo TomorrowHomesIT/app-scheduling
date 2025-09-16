@@ -140,7 +140,7 @@ export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   return (
     <>
       {/* Desktop sidebar - always visible */}
-      <div className="hidden lg:flex h-full w-58 flex-col border-r bg-background">
+      <div className="hidden lg:flex h-full w-42 xl:w-58 flex-col border-r bg-background">
         <SidebarContent />
       </div>
 

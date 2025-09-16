@@ -69,7 +69,7 @@ export function JobTaskTable({ tasks }: JobTaskTableProps) {
                   <div className={`w-1 h-8 rounded ${CTaskProgressConfig[task.progress].progressColor}`} />
                 </TableCell>
                 <TableCell
-                  className="sticky left-4 z-15 bg-white w-32 lg:w-64 font-medium truncate after:absolute after:right-0 after:top-0 after:bottom-0 after:w-px after:bg-gray-200"
+                  className="sticky left-4 z-15 bg-white w-32 lg:w-48 xl:w-64 font-medium truncate after:absolute after:right-0 after:top-0 after:bottom-0 after:w-px after:bg-gray-200"
                   title={task.name}
                 >
                   <TaskDetailsTrigger task={task} onSave={handleTaskDetailsChange}>
@@ -91,21 +91,21 @@ export function JobTaskTable({ tasks }: JobTaskTableProps) {
                     onChange={(notes) => handleNotesChange(task.id, notes)}
                   />
                 </TableCell>
-                <TableCell className="w-20 lg:w-24 p-0">
+                <TableCell className="w-18 lg:w-20 p-0">
                   <FileLinkModalTrigger
                     links={task.purchaseOrderLinks || []}
                     onSave={(links) => handlePOLinksChange(task.id, links)}
                     title="Purchase Order Links"
                   />
                 </TableCell>
-                <TableCell className="w-20 lg:w-24 p-0">
+                <TableCell className="w-18 lg:w-20 p-0">
                   <FileLinkModalTrigger
                     links={task.planLinks || []}
                     onSave={(links) => handlePlanLinksChange(task.id, links)}
                     title="Plan Links"
                   />
                 </TableCell>
-                <TableCell className="w-32 lg:w-40">
+                <TableCell className="w-32 lg:w-32">
                   <EmailStatusTrigger
                     task={task}
                     value={task.status}

@@ -78,10 +78,10 @@ export function DatePickerTrigger({ value, onChange, className }: DatePickerTrig
     <>
       <Button
         variant="ghost"
-        className={className || "h-auto py-2 w-full hover:bg-accent font-normal justify-start"}
+        className={className || "h-auto p-2 w-full hover:bg-accent font-normal justify-start"}
         onClick={() => setOpen(true)}
       >
-        {!value && <CalendarPlusIcon className="h-3 w-3 text-muted-foreground" />}
+        {!value && <span><CalendarPlusIcon className="h-3 w-3 text-muted-foreground" /></span>}
         <span className="text-sm">{value ? format(value, "MMM d") : ""}</span>
       </Button>
       <DatePickerModal value={value ?? undefined} onChange={onChange} open={open} onOpenChange={setOpen} />

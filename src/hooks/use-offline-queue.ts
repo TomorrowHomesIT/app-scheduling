@@ -9,16 +9,26 @@ export function useOfflineQueue() {
   useEffect(() => {
     // Get initial count
     const getInitialCount = async () => {
-      const count = await offlineQueue.getQueueCount();
-      setQueueCount(count);
+      try {
+        const count = await offlineQueue.getQueueCount();
+        setQueueCount(count);
+      } catch (error) {
+        console.error("Failed to get initial queue count:", error);
+        setQueueCount(0);
+      }
     };
 
     getInitialCount();
 
     // Poll for changes every 2 seconds
     const pollInterval = setInterval(async () => {
-      const count = await offlineQueue.getQueueCount();
-      setQueueCount(count);
+      try {
+        const count = await offlineQueue.getQueueCount();
+        setQueueCount(count);
+      } catch (error) {
+        console.error("Failed to poll queue count:", error);
+        // Don't update state on polling errors to avoid flickering
+      }
     }, 1000);
 
     return () => {

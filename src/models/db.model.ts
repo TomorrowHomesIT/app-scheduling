@@ -1,6 +1,6 @@
 // IndexedDB configuration
 export const DB_NAME = "AppSchedulingDB";
-export const DB_VERSION = 2; // Incremented to add jobs and tasks stores
+export const DB_VERSION = 3; // Incremented to add jobs and tasks stores
 
 // Store names
 export const QUEUE_STORE_NAME = "queuedRequests";

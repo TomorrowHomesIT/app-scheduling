@@ -16,6 +16,7 @@ import { PageHeader } from "@/components/page-header";
 import { JobTaskStatus } from "@/components/job/job-task-status";
 import { JobTaskTableHeader } from "@/components/job/job-task-table-header";
 import { JobSyncStatus } from "@/components/job/job-sync-status";
+import { JobRefreshButton } from "@/components/job/job-refresh-button";
 
 interface JobDetailPageProps {
   params: Promise<{ id: string }>;
@@ -24,7 +25,7 @@ interface JobDetailPageProps {
 export default function JobDetailPage({ params }: JobDetailPageProps) {
   const { id } = use(params);
   const { taskStages } = useTaskStore();
-  const { currentJob, currentJobSyncStatus, loadJob, updateJob } = useJobStore();
+  const { currentJob, currentJobSyncStatus, isLoadingJobs, loadJob, updateJob, refreshJob } = useJobStore();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const [error, setError] = useState<boolean>(false);
@@ -85,15 +86,22 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
             </Link>
           )}
           {currentJobSyncStatus && (
-            <JobSyncStatus
-              lastUpdated={currentJobSyncStatus.lastUpdated}
-              lastSynced={currentJobSyncStatus.lastSynced}
-              hasPendingUpdates={currentJobSyncStatus.hasPendingUpdates}
-            />
+            <div className="flex items-center gap-2">
+              <JobSyncStatus
+                lastUpdated={currentJobSyncStatus.lastUpdated}
+                lastSynced={currentJobSyncStatus.lastSynced}
+                hasPendingUpdates={currentJobSyncStatus.hasPendingUpdates}
+              />
+              <JobRefreshButton
+                jobId={currentJob.id}
+                hasPendingUpdates={currentJobSyncStatus.hasPendingUpdates}
+                isLoading={isLoadingJobs}
+                onRefresh={refreshJob}
+              />
+            </div>
           )}
-          <Button variant="outline" size="default" className="flex" onClick={() => setIsEditModalOpen(true)}>
+          <Button variant="outline" size="icon" className="flex" onClick={() => setIsEditModalOpen(true)}>
             <Settings className="h-4 w-4" />
-            <span className="hidden xl:block">Edit Job</span>
           </Button>
         </PageHeader>
       </div>

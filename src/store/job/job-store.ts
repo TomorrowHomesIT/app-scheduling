@@ -24,6 +24,7 @@ interface JobStore {
   updateJob: (jobId: number, updates: IUpdateJobRequest) => Promise<void>;
   updateJobTask: (jobId: number, jobTaskId: number, updates: Partial<IJobTask>) => Promise<void>;
   loadJobSyncStatus: (jobId: number) => Promise<void>;
+  refreshJob: (jobId: number) => Promise<void>;
 }
 
 const fetchJobByIdFromApi = async (id: number): Promise<IJob | null> => {
@@ -144,6 +145,33 @@ const useJobStore = create<JobStore>((set, get) => ({
     }
   },
 
+  refreshJob: async (jobId: number) => {
+    if (get().isLoadingJobs) return;
+    set({ isLoadingJobs: true });
+
+    try {
+      // Fetch fresh data from API
+      const job = await fetchJobByIdFromApi(jobId);
+      if (job) {
+        // Save to IndexedDB and mark as synced
+        await jobsDB.saveJob(job);
+        await jobsDB.updateJobLastSynced(jobId);
+
+        // Update store
+        set({ currentJob: job });
+
+        // Refresh sync status
+        const syncStatus = await jobsDB.getJobSyncStatus(jobId);
+        set({ currentJobSyncStatus: syncStatus });
+      }
+    } catch (error) {
+      console.error("Failed to refresh job:", error);
+      throw error;
+    } finally {
+      set({ isLoadingJobs: false });
+    }
+  },
+
   updateJob: async (jobId: number, updates: IUpdateJobRequest) => {
     // Store the current state in case we need to rollback
     const previousState = get();
@@ -184,35 +212,38 @@ const useJobStore = create<JobStore>((set, get) => ({
 
   // Sync the job with the updated task
   updateJobTask: async (jobId: number, jobTaskId: number, updates: Partial<IJobTask>) => {
-    set((state) => {
-      const updatedJobs = state.jobs.map((job) => {
-        if (job.id === jobId) {
-          return {
-            ...job,
-            tasks: job.tasks.map((task) => (task.id === jobTaskId ? { ...task, ...updates } : task)),
-          };
-        }
-        return job;
-      });
-
-      let updatedCurrentJob = state.currentJob;
-      if (updatedCurrentJob?.id === jobId) {
-        updatedCurrentJob = {
-          ...updatedCurrentJob,
-          tasks: updatedCurrentJob.tasks.map((task) => (task.id === jobTaskId ? { ...task, ...updates } : task)),
+    const updatedJobs = get().jobs.map((job) => {
+      if (job.id === jobId) {
+        return {
+          ...job,
+          tasks: job.tasks.map((task) => (task.id === jobTaskId ? { ...task, ...updates } : task)),
         };
       }
+      return job;
+    });
 
-      // Save updated job to IndexedDB and mark task as updated
-      if (updatedCurrentJob) {
-        jobsDB.saveJob(updatedCurrentJob);
-        jobsDB.updateJobLastUpdated(jobId);
-        jobsDB.updateTaskLastUpdated(jobId, jobTaskId);
-      }
+    let updatedCurrentJob = get().currentJob;
+    let syncStatus = get().currentJobSyncStatus;
+    if (updatedCurrentJob?.id === jobId) {
+      updatedCurrentJob = {
+        ...updatedCurrentJob,
+        tasks: updatedCurrentJob.tasks.map((task) => (task.id === jobTaskId ? { ...task, ...updates } : task)),
+      };
+    }
 
+    // Save updated job to IndexedDB and mark task as updated
+    if (updatedCurrentJob) {
+      jobsDB.saveJob(updatedCurrentJob);
+      jobsDB.updateJobLastUpdated(jobId);
+      jobsDB.updateTaskLastUpdated(jobId, jobTaskId);
+      syncStatus = await jobsDB.getJobSyncStatus(jobId);
+    }
+
+    set(() => {
       return {
         jobs: updatedJobs,
         currentJob: updatedCurrentJob,
+        currentJobSyncStatus: syncStatus,
       };
     });
   },

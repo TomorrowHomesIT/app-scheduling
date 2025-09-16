@@ -34,10 +34,10 @@ export function DatePickerModal({ value, onChange, open, onOpenChange }: DatePic
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="">
+      <DialogContent className="box-border h-[400px] max-h-[90vh] overflow-y-auto flex flex-col gap-4">
         <DialogHeader>
-          <DialogTitle>Start date</DialogTitle>
-          <DialogDescription>Select a start date for the task</DialogDescription>
+          <DialogTitle>Select start date</DialogTitle>
+          <DialogDescription></DialogDescription>
         </DialogHeader>
         <div className="flex space-y-4">
           <div className="flex flex-col gap-4 mt-2 border-r pr-6">

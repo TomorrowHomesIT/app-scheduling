@@ -385,20 +385,6 @@ self.addEventListener("online", () => {
   }
 });
 
-/**
- * ! These are setup to test the service worker in development
- */
-self.addEventListener("message", (event: Event) => {
-  const messageEvent = event as any; // MessageEvent is not available in all environments
-  const { type } = messageEvent.data;
-
-  if (type === "process-queue") {
-    processQueue();
-  } else if (type === "sync-jobs") {
-    syncJobs();
-  }
-});
-
 // Set up periodic queue processing (every 10 seconds)
 let queueProcessingInterval: NodeJS.Timeout | null = null;
 
@@ -469,7 +455,7 @@ const hasPendingUpdates = async (): Promise<boolean> => {
   }
 };
 
-// Function to sync jobs from API and preload their routes
+// Function to sync jobs from API
 const syncJobs = async (): Promise<void> => {
   try {
     console.log("Starting job sync...");
@@ -513,9 +499,6 @@ const syncJobs = async (): Promise<void> => {
       return;
     }
 
-    // Preload all job routes in the cache
-    const preloadPromises: Promise<void>[] = [];
-
     jobs.forEach((job: any) => {
       const storedJob: StoredJob = {
         id: job.id,
@@ -535,28 +518,7 @@ const syncJobs = async (): Promise<void> => {
         console.error("Failed to save job to IndexedDB:", putRequest.error);
         completed++;
       };
-
-      // Preload job route for offline access
-      const jobRouteUrl = `/jobs/${job.id}`;
-      const preloadPromise = fetch(jobRouteUrl, {
-        method: "GET",
-        credentials: "same-origin",
-      })
-        .then((response) => {
-          if (response.ok) {
-            console.log(`Preloaded job route: ${jobRouteUrl}`);
-          }
-        })
-        .catch((error) => {
-          console.warn(`Failed to preload job route ${jobRouteUrl}:`, error);
-        });
-
-      preloadPromises.push(preloadPromise);
     });
-
-    // Wait for all preload operations to complete
-    await Promise.allSettled(preloadPromises);
-    console.log(`Completed preloading ${jobs.length} job routes`);
   } catch (error) {
     console.error("Job sync failed:", error);
   }
@@ -587,7 +549,6 @@ const stopJobSync = () => {
 self.addEventListener("activate", () => {
   startQueueProcessing();
   startJobSync();
-  syncJobs();
 });
 
 // Stop queue processing and job sync when service worker is deactivated

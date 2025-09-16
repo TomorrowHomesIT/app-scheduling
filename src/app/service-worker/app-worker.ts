@@ -1,5 +1,5 @@
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
-import { Serwist, NetworkFirst } from "serwist";
+import { Serwist } from "serwist";
 import { defaultCache } from "@serwist/next/worker";
 import {
   DB_NAME,
@@ -25,7 +25,7 @@ declare global {
 
 declare const self: WorkerGlobalScope & SerwistGlobalConfig;
 
-const cacheVersion = "1.0.1";
+const cacheVersion = "1.0.2";
 
 const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST,
@@ -36,84 +36,113 @@ const serwist = new Serwist({
     // Use Serwist's default cache strategies for Next.js assets (this handles JS chunks, CSS, etc.)
     ...defaultCache,
     {
-      // Cache navigation requests (pages) with NetworkFirst for better offline experience
+      // Cache navigation requests (pages) with a custom strategy
       matcher: ({ request }) => request.mode === "navigate",
-      handler: new NetworkFirst({
-        cacheName: `pages-cache-${cacheVersion}`,
-        networkTimeoutSeconds: 3, // Timeout network requests after 3 seconds
-        plugins: [
-          {
-            cacheWillUpdate: async ({ response }) => {
-              return response?.status === 200 ? response : null;
-            },
-            handlerDidError: async ({ request }) => {
-              // When network fails, try to serve from cache
-              const cache = await caches.open(`pages-cache-${cacheVersion}`);
-              const cachedResponse = await cache.match(request);
-              if (cachedResponse) {
-                console.log(`Serving cached page for: ${request.url}`);
-                return cachedResponse;
+      handler: async ({ request }) => {
+        const cacheName = `pages-cache-${cacheVersion}`;
+        const cache = await caches.open(cacheName);
+
+        try {
+          // First, try to get from cache
+          const cachedResponse = await cache.match(request);
+          if (cachedResponse) {
+            console.log(`Found cached page for: ${request.url}`);
+
+            // If we're online, try to update the cache in the background
+            if (navigator.onLine) {
+              try {
+                const networkResponse = await fetch(request);
+                if (networkResponse.ok) {
+                  await cache.put(request, networkResponse.clone());
+                  console.log(`Updated cache for: ${request.url}`);
+                  return networkResponse;
+                }
+              } catch {
+                console.log(`Network failed for ${request.url}, serving cached version`);
               }
-              // If no cache, return offline page
-              return Response.redirect('/offline', 302);
-            },
-          },
-        ],
-      }),
+            }
+
+            return cachedResponse;
+          }
+
+          // If no cache and we're online, try network
+          if (navigator.onLine) {
+            try {
+              const networkResponse = await fetch(request);
+              if (networkResponse.ok) {
+                await cache.put(request, networkResponse.clone());
+                console.log(`Cached new page: ${request.url}`);
+                return networkResponse;
+              }
+            } catch {
+              console.log(`Network failed for ${request.url}`);
+            }
+          }
+
+          // If all else fails, redirect to offline page
+          console.log(`No cache available for ${request.url}, redirecting to offline page`);
+          return Response.redirect("/offline", 302);
+        } catch (error) {
+          console.error(`Error handling navigation request for ${request.url}:`, error);
+          return Response.redirect("/offline", 302);
+        }
+      },
     },
     {
-      // Cache critical API endpoints (owners, suppliers) with NetworkFirst
-      // These rarely change and are needed for navigation
+      // Cache critical API endpoints (owners, suppliers) with custom strategy
       matcher: ({ url }) => {
         const pathname = url.pathname;
         return pathname === "/api/owners" || pathname === "/api/suppliers" || pathname === "/api/task-stages";
       },
-      handler: new NetworkFirst({
-        cacheName: `common-api-data-${cacheVersion}`,
-        networkTimeoutSeconds: 5, // Longer timeout for critical data
-        plugins: [
-          {
-            cacheWillUpdate: async ({ response }) => (response?.status === 200 ? response : null),
-            handlerDidError: async ({ request }) => {
-              // Try to serve from cache when network fails
-              const cache = await caches.open(`common-api-data-${cacheVersion}`);
-              const cachedResponse = await cache.match(request);
-              if (cachedResponse) {
-                console.log(`Serving cached API data for: ${request.url}`);
-                return cachedResponse;
+      handler: async ({ request }) => {
+        const cacheName = `common-api-data-${cacheVersion}`;
+        const cache = await caches.open(cacheName);
+
+        try {
+          // First, try to get from cache
+          const cachedResponse = await cache.match(request);
+          if (cachedResponse) {
+            console.log(`Found cached API data for: ${request.url}`);
+
+            // If we're online, try to update the cache in the background
+            if (navigator.onLine) {
+              try {
+                const networkResponse = await fetch(request);
+                if (networkResponse.ok) {
+                  await cache.put(request, networkResponse.clone());
+                  console.log(`Updated API cache for: ${request.url}`);
+                  return networkResponse;
+                }
+              } catch {
+                console.log(`Network failed for API ${request.url}, serving cached version`);
               }
-              // Return empty array for critical endpoints to prevent crashes
-              return Response.json([], { status: 200 });
-            },
-          },
-        ],
-      }),
-    },
-    {
-      // Cache other API responses with NetworkFirst for better offline handling
-      matcher: ({ url }) => url.pathname.startsWith("/api/"),
-      handler: new NetworkFirst({
-        cacheName: `api-cache-${cacheVersion}`,
-        networkTimeoutSeconds: 3,
-        plugins: [
-          {
-            cacheWillUpdate: async ({ response }) => {
-              return response?.status === 200 ? response : null;
-            },
-            handlerDidError: async ({ request }) => {
-              // Try to serve from cache when network fails
-              const cache = await caches.open(`api-cache-${cacheVersion}`);
-              const cachedResponse = await cache.match(request);
-              if (cachedResponse) {
-                console.log(`Serving cached API response for: ${request.url}`);
-                return cachedResponse;
+            }
+
+            return cachedResponse;
+          }
+
+          // If no cache and we're online, try network
+          if (navigator.onLine) {
+            try {
+              const networkResponse = await fetch(request);
+              if (networkResponse.ok) {
+                await cache.put(request, networkResponse.clone());
+                console.log(`Cached new API data: ${request.url}`);
+                return networkResponse;
               }
-              // Return appropriate error response
-              return Response.json({ error: "Offline", message: "No cached data available" }, { status: 503 });
-            },
-          },
-        ],
-      }),
+            } catch {
+              console.log(`Network failed for API ${request.url}`);
+            }
+          }
+
+          // If all else fails, return empty array for critical endpoints
+          console.log(`No cache available for API ${request.url}, returning empty array`);
+          return Response.json([], { status: 200 });
+        } catch (error) {
+          console.error(`Error handling API request for ${request.url}:`, error);
+          return Response.json([], { status: 200 });
+        }
+      },
     },
   ],
   fallbacks: {
@@ -129,15 +158,15 @@ const serwist = new Serwist({
 serwist.addEventListeners();
 
 // Add global error handling to prevent service worker crashes
-self.addEventListener('error', (event: Event) => {
+self.addEventListener("error", (event: Event) => {
   const errorEvent = event as ErrorEvent;
-  console.error('Service Worker Error:', errorEvent.error);
+  console.error("Service Worker Error:", errorEvent.error);
   // Don't prevent default - let the error be handled normally
 });
 
-self.addEventListener('unhandledrejection', (event: Event) => {
+self.addEventListener("unhandledrejection", (event: Event) => {
   const rejectionEvent = event as PromiseRejectionEvent;
-  console.error('Service Worker Unhandled Promise Rejection:', rejectionEvent.reason);
+  console.error("Service Worker Unhandled Promise Rejection:", rejectionEvent.reason);
   // Prevent the default behavior which would crash the service worker
   rejectionEvent.preventDefault();
 });

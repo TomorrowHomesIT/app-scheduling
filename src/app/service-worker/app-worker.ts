@@ -25,7 +25,7 @@ declare global {
 
 declare const self: WorkerGlobalScope & SerwistGlobalConfig;
 
-const cacheVersion = "1.0.2";
+const cacheVersion = "1.0.3"; // Increment this to force service worker updates
 
 const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST,
@@ -445,13 +445,11 @@ async function processQueue(): Promise<void> {
   }
 }
 
-// Set up periodic queue processing (every 10 seconds)
 let queueProcessingInterval: NodeJS.Timeout | null = null;
-const QUEUE_PROCESSING_INTERVAL = 10000;
+const QUEUE_PROCESSING_INTERVAL = 10000; // 10 seconds
 
-// Set up periodic job sync (every 15 minutes)
 let jobSyncInterval: NodeJS.Timeout | null = null;
-const JOB_SYNC_INTERVAL = 15 * 60 * 1000;
+const JOB_SYNC_INTERVAL = 10 * 60 * 1000; // 10 minutes
 
 const startQueueProcessing = () => {
   if (queueProcessingInterval) {
@@ -596,7 +594,7 @@ const startJobSync = () => {
     syncJobs();
   }, interval); // 15 minutes
 
-  console.log("Started periodic job sync (every 15 minutes)");
+  console.log(`Started periodic job sync (every ${interval / 60000} minutes)`);
 };
 
 const stopJobSync = () => {
@@ -605,16 +603,31 @@ const stopJobSync = () => {
     jobSyncInterval = null;
     console.log("Stopped periodic job sync");
   }
-};
+  };
 
-// Start queue processing and job sync when service worker is activated
-self.addEventListener("activate", () => {
-  startQueueProcessing();
-  startJobSync();
+// Install event - prepare the service worker and force update
+self.addEventListener("install", () => {
+  console.log("Service worker installing...");
+  // Skip waiting to activate immediately - this forces the new SW to take control
+  (self as any).skipWaiting();
 });
 
-// Stop queue processing and job sync when service worker is deactivated
-self.addEventListener("deactivate", () => {
+// Activate event - start background processes
+self.addEventListener("activate", (event: any) => {
+  console.log("Service worker activating...");
+  // Take control of all clients immediately
+  event.waitUntil((self as any).clients.claim());
+  
+  // Start background processes
+  startQueueProcessing();
+  startJobSync();
+  
+  console.log("Service worker activated and background processes started");
+});
+
+// Handle service worker termination (cleanup)
+self.addEventListener("beforeunload", () => {
+  console.log("Service worker terminating, stopping background processes...");
   stopQueueProcessing();
   stopJobSync();
 });

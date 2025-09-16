@@ -25,8 +25,9 @@ interface JobDetailPageProps {
 export default function JobDetailPage({ params }: JobDetailPageProps) {
   const { id } = use(params);
   const { taskStages } = useTaskStore();
-  const { currentJob, loadJob, updateJob } = useJobStore();
+  const { currentJob, currentJobSyncStatus, loadJob, updateJob, loadJobSyncStatus } = useJobStore();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [lastKnownSyncStatus, setLastKnownSyncStatus] = useState<typeof currentJobSyncStatus>(null);
 
   const [error, setError] = useState<boolean>(false);
 
@@ -42,6 +43,40 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
 
     if (currentJob) document.title = `${currentJob.name} | BASD Scheduling`;
   }, [id, loadJob, currentJob]);
+
+  // Monitor sync status changes to detect service worker updates
+  useEffect(() => {
+    if (!currentJobSyncStatus) return;
+
+    // If we have a previous sync status, check if it changed
+    if (lastKnownSyncStatus) {
+      const syncStatusChanged = 
+        lastKnownSyncStatus.lastSynced !== currentJobSyncStatus.lastSynced ||
+        lastKnownSyncStatus.hasPendingUpdates !== currentJobSyncStatus.hasPendingUpdates;
+
+      if (syncStatusChanged) {
+        loadJob(parseInt(id, 10));
+      }
+    }
+
+    // Update our known sync status
+    setLastKnownSyncStatus(currentJobSyncStatus);
+  }, [currentJobSyncStatus, lastKnownSyncStatus, loadJob, id]);
+
+  // Periodically check for sync status updates (every 30 seconds)
+  useEffect(() => {
+    if (!currentJob || !currentJobSyncStatus) return;
+
+    const interval = setInterval(async () => {
+      try {
+        await loadJobSyncStatus(parseInt(id, 10));
+      } catch (error) {
+        console.error("Failed to check sync status:", error);
+      }
+    }, 30000); // Check every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [currentJob, currentJobSyncStatus, id, loadJobSyncStatus]);
 
   if (error || Number.isNaN(Number(id))) {
     return notFound();

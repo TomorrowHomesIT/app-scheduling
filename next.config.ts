@@ -14,7 +14,9 @@ const withSerwist = withSerwistInit({
   cacheOnNavigation: true,
   additionalPrecacheEntries: [
     { url: "/", revision: null },
+    { url: "/jobs", revision: null },
     { url: "/offline", revision: null },
+    { url: "/suppliers", revision: null },
   ],
 });
 

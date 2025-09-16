@@ -34,8 +34,35 @@ const serwist = new Serwist({
     // Use Serwist's default cache strategies for Next.js assets
     ...defaultCache,
     {
-      // Override navigation handling for offline support
-      matcher: ({ request }) => request.mode === "navigate",
+      // Cache job pages specifically with StaleWhileRevalidate
+      matcher: ({ url }) => {
+        const pathname = url.pathname;
+        return pathname.match(/^\/jobs\/\d+$/) || pathname === "/jobs";
+      },
+      handler: new StaleWhileRevalidate({
+        cacheName: "job-pages-cache",
+        plugins: [
+          {
+            cacheWillUpdate: async ({ response }) => {
+              if (response && response.status === 200) {
+                return response;
+              }
+              return null;
+            },
+            handlerDidError: async () => {
+              // Return offline page when both network and cache fail
+              return caches.match("/offline") || new Response("Offline", { status: 503 });
+            },
+          },
+        ],
+      }),
+    },
+    {
+      // Override navigation handling for offline support (non-job pages)
+      matcher: ({ request, url }) => {
+        const pathname = url.pathname;
+        return request.mode === "navigate" && !pathname.match(/^\/jobs(\/\d+)?$/) && pathname !== "/offline";
+      },
       handler: new StaleWhileRevalidate({
         cacheName: "pages-cache",
         plugins: [
@@ -251,19 +278,19 @@ const isRetryableError = (status: number): boolean => {
   // - 408 Request Timeout
   // - 429 Too Many Requests
   // - Network errors (handled separately)
-  
+
   // Non-retryable errors:
   // - 4xx client errors (400, 403, 404, etc.) - these won't succeed on retry
   // - 3xx redirects - these are handled by the browser
-  
+
   if (status >= 500) {
     return true; // All 5xx server errors are retryable
   }
-  
+
   if (status === 408 || status === 429 || status === 401) {
     return true; // Timeout and rate limiting are retryable
   }
-  
+
   return false; // All other errors (4xx, 3xx) are not retryable
 };
 
@@ -287,10 +314,14 @@ const processRequest = async (queuedRequest: QueuedRequest): Promise<boolean> =>
     } else {
       // Check if this is a retryable error
       if (isRetryableError(response.status)) {
-        console.warn(`Failed to process request ${queuedRequest.method} ${queuedRequest.url} with retryable error: ${response.status}`);
+        console.warn(
+          `Failed to process request ${queuedRequest.method} ${queuedRequest.url} with retryable error: ${response.status}`,
+        );
         return false; // Will be retried
       } else {
-        console.warn(`Failed to process request ${queuedRequest.method} ${queuedRequest.url} with non-retryable error: ${response.status} - removing from queue`);
+        console.warn(
+          `Failed to process request ${queuedRequest.method} ${queuedRequest.url} with non-retryable error: ${response.status} - removing from queue`,
+        );
         return true; // Mark as "successful" to remove from queue (but it actually failed)
       }
     }
@@ -392,13 +423,17 @@ self.addEventListener("online", () => {
   }
 });
 
-// Listen for messages from the app
+/**
+ * ! These are setup to test the service worker in development
+ */
 self.addEventListener("message", (event: Event) => {
   const messageEvent = event as any; // MessageEvent is not available in all environments
   const { type } = messageEvent.data;
 
   if (type === "process-queue") {
-    processQueue();
+    // processQueue();
+  } else if (type === "sync-jobs") {
+    // syncJobs();
   }
 });
 
@@ -472,7 +507,7 @@ const hasPendingUpdates = async (): Promise<boolean> => {
   }
 };
 
-// Function to sync jobs from API
+// Function to sync jobs from API and preload their routes
 const syncJobs = async (): Promise<void> => {
   try {
     console.log("Starting job sync...");
@@ -516,6 +551,9 @@ const syncJobs = async (): Promise<void> => {
       return;
     }
 
+    // Preload all job routes in the cache
+    const preloadPromises: Promise<void>[] = [];
+
     jobs.forEach((job: any) => {
       const storedJob: StoredJob = {
         id: job.id,
@@ -535,7 +573,28 @@ const syncJobs = async (): Promise<void> => {
         console.error("Failed to save job to IndexedDB:", putRequest.error);
         completed++;
       };
+
+      // Preload job route for offline access
+      const jobRouteUrl = `/jobs/${job.id}`;
+      const preloadPromise = fetch(jobRouteUrl, {
+        method: "GET",
+        credentials: "same-origin",
+      })
+        .then((response) => {
+          if (response.ok) {
+            console.log(`Preloaded job route: ${jobRouteUrl}`);
+          }
+        })
+        .catch((error) => {
+          console.warn(`Failed to preload job route ${jobRouteUrl}:`, error);
+        });
+
+      preloadPromises.push(preloadPromise);
     });
+
+    // Wait for all preload operations to complete
+    await Promise.allSettled(preloadPromises);
+    console.log(`Completed preloading ${jobs.length} job routes`);
   } catch (error) {
     console.error("Job sync failed:", error);
   }
@@ -566,6 +625,7 @@ const stopJobSync = () => {
 self.addEventListener("activate", () => {
   startQueueProcessing();
   startJobSync();
+  syncJobs();
 });
 
 // Stop queue processing and job sync when service worker is deactivated

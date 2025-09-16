@@ -1,6 +1,6 @@
 "use client";
 
-import { DB_NAME, DB_VERSION, STORE_NAME, type QueuedRequest } from "@/models/db.model";
+import { DB_NAME, DB_VERSION, QUEUE_STORE_NAME, type QueuedRequest } from "@/models/db.model";
 
 class OfflineQueue {
   private db: IDBDatabase | null = null;
@@ -24,16 +24,6 @@ class OfflineQueue {
       request.onsuccess = () => {
         this.db = request.result;
         resolve();
-      };
-
-      request.onupgradeneeded = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result;
-
-        // Create object store if it doesn't exist
-        if (!db.objectStoreNames.contains(STORE_NAME)) {
-          const store = db.createObjectStore(STORE_NAME, { keyPath: "id" });
-          store.createIndex("timestamp", "timestamp", { unique: false });
-        }
       };
     });
   }
@@ -86,8 +76,8 @@ class OfflineQueue {
         return;
       }
 
-      const transaction = this.db.transaction([STORE_NAME], "readwrite");
-      const store = transaction.objectStore(STORE_NAME);
+      const transaction = this.db.transaction([QUEUE_STORE_NAME], "readwrite");
+      const store = transaction.objectStore(QUEUE_STORE_NAME);
       const addRequest = store.add(request);
 
       addRequest.onsuccess = () => {
@@ -113,8 +103,8 @@ class OfflineQueue {
         return;
       }
 
-      const transaction = this.db.transaction([STORE_NAME], "readonly");
-      const store = transaction.objectStore(STORE_NAME);
+      const transaction = this.db.transaction([QUEUE_STORE_NAME], "readonly");
+      const store = transaction.objectStore(QUEUE_STORE_NAME);
       const getAllRequest = store.getAll();
 
       getAllRequest.onsuccess = () => {
@@ -163,8 +153,8 @@ class OfflineQueue {
         return;
       }
 
-      const transaction = this.db.transaction([STORE_NAME], "readwrite");
-      const store = transaction.objectStore(STORE_NAME);
+      const transaction = this.db.transaction([QUEUE_STORE_NAME], "readwrite");
+      const store = transaction.objectStore(QUEUE_STORE_NAME);
       const clearRequest = store.clear();
 
       clearRequest.onsuccess = () => {

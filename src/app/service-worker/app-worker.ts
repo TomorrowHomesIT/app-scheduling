@@ -1,7 +1,16 @@
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
-import { Serwist, NetworkFirst, StaleWhileRevalidate } from "serwist";
+import { Serwist, StaleWhileRevalidate } from "serwist";
 import { defaultCache } from "@serwist/next/worker";
-import { DB_NAME, DB_VERSION, STORE_NAME, type QueuedRequest } from "@/models/db.model";
+import {
+  DB_NAME,
+  DB_VERSION,
+  QUEUE_STORE_NAME,
+  JOBS_STORE_NAME,
+  TASKS_STORE_NAME,
+  type QueuedRequest,
+  type StoredJob,
+  type StoredTask,
+} from "@/models/db.model";
 
 // This declares the value of `injectionPoint` to TypeScript.
 // `injectionPoint` is the string that will be replaced by the
@@ -27,9 +36,8 @@ const serwist = new Serwist({
     {
       // Override navigation handling for offline support
       matcher: ({ request }) => request.mode === "navigate",
-      handler: new NetworkFirst({
+      handler: new StaleWhileRevalidate({
         cacheName: "pages-cache",
-        networkTimeoutSeconds: 3,
         plugins: [
           {
             cacheWillUpdate: async ({ response }) => {
@@ -74,9 +82,8 @@ const serwist = new Serwist({
     {
       // Cache other API responses with NetworkFirst
       matcher: ({ url }) => url.pathname.startsWith("/api/"),
-      handler: new NetworkFirst({
+      handler: new StaleWhileRevalidate({
         cacheName: "api-cache",
-        networkTimeoutSeconds: 10,
         plugins: [
           {
             cacheWillUpdate: async ({ response }) => {
@@ -103,15 +110,59 @@ const serwist = new Serwist({
 
 serwist.addEventListeners();
 
-// Function to get queue from IndexedDB
-const getQueue = (): Promise<QueuedRequest[]> => {
+// Initialize IndexedDB with all stores
+const initIndexedDB = (): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 
+    request.onerror = () => {
+      console.error("Service Worker: Failed to open IndexedDB:", request.error);
+      reject(request.error);
+    };
+
     request.onsuccess = () => {
-      const db = request.result;
-      const transaction = db.transaction([STORE_NAME], "readonly");
-      const store = transaction.objectStore(STORE_NAME);
+      console.log("Service Worker: IndexedDB opened successfully");
+      resolve(request.result);
+    };
+
+    request.onupgradeneeded = (event) => {
+      console.log("Service Worker: IndexedDB upgrade needed, creating stores...");
+      const db = (event.target as IDBOpenDBRequest).result;
+
+      // Create queue store if it doesn't exist
+      if (!db.objectStoreNames.contains(QUEUE_STORE_NAME)) {
+        console.log("Service Worker: Creating queue store:", QUEUE_STORE_NAME);
+        const store = db.createObjectStore(QUEUE_STORE_NAME, { keyPath: "id" });
+        store.createIndex("timestamp", "timestamp", { unique: false });
+      }
+
+      // Create jobs store if it doesn't exist
+      if (!db.objectStoreNames.contains(JOBS_STORE_NAME)) {
+        console.log("Service Worker: Creating jobs store:", JOBS_STORE_NAME);
+        const jobsStore = db.createObjectStore(JOBS_STORE_NAME, { keyPath: "id" });
+        jobsStore.createIndex("lastUpdated", "lastUpdated", { unique: false });
+        jobsStore.createIndex("lastSynced", "lastSynced", { unique: false });
+      }
+
+      // Create tasks store if it doesn't exist
+      if (!db.objectStoreNames.contains(TASKS_STORE_NAME)) {
+        console.log("Service Worker: Creating tasks store:", TASKS_STORE_NAME);
+        const tasksStore = db.createObjectStore(TASKS_STORE_NAME, { keyPath: "id" });
+        tasksStore.createIndex("jobId", "jobId", { unique: false });
+        tasksStore.createIndex("lastUpdated", "lastUpdated", { unique: false });
+        tasksStore.createIndex("lastSynced", "lastSynced", { unique: false });
+      }
+    };
+  });
+};
+
+// Function to get queue from IndexedDB
+const getQueue = async (): Promise<QueuedRequest[]> => {
+  try {
+    const db = await initIndexedDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([QUEUE_STORE_NAME], "readonly");
+      const store = transaction.objectStore(QUEUE_STORE_NAME);
       const getAllRequest = store.getAll();
 
       getAllRequest.onsuccess = () => {
@@ -122,24 +173,20 @@ const getQueue = (): Promise<QueuedRequest[]> => {
         console.error("Failed to get queue from IndexedDB:", getAllRequest.error);
         reject(getAllRequest.error);
       };
-    };
-
-    request.onerror = () => {
-      console.error("Failed to open IndexedDB:", request.error);
-      reject(request.error);
-    };
-  });
+    });
+  } catch (error) {
+    console.error("Failed to initialize IndexedDB:", error);
+    return [];
+  }
 };
 
 // Function to remove request from IndexedDB queue
-const removeFromQueue = (id: string): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-
-    request.onsuccess = () => {
-      const db = request.result;
-      const transaction = db.transaction([STORE_NAME], "readwrite");
-      const store = transaction.objectStore(STORE_NAME);
+const removeFromQueue = async (id: string): Promise<void> => {
+  try {
+    const db = await initIndexedDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([QUEUE_STORE_NAME], "readwrite");
+      const store = transaction.objectStore(QUEUE_STORE_NAME);
       const deleteRequest = store.delete(id);
 
       deleteRequest.onsuccess = () => {
@@ -151,24 +198,20 @@ const removeFromQueue = (id: string): Promise<void> => {
         console.error("Failed to remove request from queue:", deleteRequest.error);
         reject(deleteRequest.error);
       };
-    };
-
-    request.onerror = () => {
-      console.error("Failed to open IndexedDB:", request.error);
-      reject(request.error);
-    };
-  });
+    });
+  } catch (error) {
+    console.error("Failed to initialize IndexedDB:", error);
+    throw error;
+  }
 };
 
 // Function to update retry count in IndexedDB
-const updateRetryCount = (id: string, attempts: number): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-
-    request.onsuccess = () => {
-      const db = request.result;
-      const transaction = db.transaction([STORE_NAME], "readwrite");
-      const store = transaction.objectStore(STORE_NAME);
+const updateRetryCount = async (id: string, attempts: number): Promise<void> => {
+  try {
+    const db = await initIndexedDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([QUEUE_STORE_NAME], "readwrite");
+      const store = transaction.objectStore(QUEUE_STORE_NAME);
 
       // First get the current request
       const getRequest = store.get(id);
@@ -187,13 +230,11 @@ const updateRetryCount = (id: string, attempts: number): Promise<void> => {
       };
 
       getRequest.onerror = () => reject(getRequest.error);
-    };
-
-    request.onerror = () => {
-      console.error("Failed to open IndexedDB:", request.error);
-      reject(request.error);
-    };
-  });
+    });
+  } catch (error) {
+    console.error("Failed to initialize IndexedDB:", error);
+    throw error;
+  }
 };
 
 // Function to determine if a request should be retried
@@ -335,6 +376,9 @@ self.addEventListener("message", (event: Event) => {
 // Set up periodic queue processing (every 10 seconds)
 let queueProcessingInterval: NodeJS.Timeout | null = null;
 
+// Set up periodic job sync (every 15 minutes)
+let jobSyncInterval: NodeJS.Timeout | null = null;
+
 const startQueueProcessing = () => {
   if (queueProcessingInterval) {
     clearInterval(queueProcessingInterval);
@@ -355,12 +399,148 @@ const stopQueueProcessing = () => {
   }
 };
 
-// Start queue processing when service worker is activated
+// Function to check if there are pending updates
+const hasPendingUpdates = async (): Promise<boolean> => {
+  try {
+    const db = await initIndexedDB();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([JOBS_STORE_NAME, TASKS_STORE_NAME], "readonly");
+      const jobsStore = transaction.objectStore(JOBS_STORE_NAME);
+      const tasksStore = transaction.objectStore(TASKS_STORE_NAME);
+
+      let pendingJobs = 0;
+      let pendingTasks = 0;
+      let completed = 0;
+
+      const checkComplete = () => {
+        completed++;
+        if (completed === 2) {
+          resolve(pendingJobs > 0 || pendingTasks > 0);
+        }
+      };
+
+      // Check jobs
+      const jobsRequest = jobsStore.getAll();
+      jobsRequest.onsuccess = () => {
+        const jobs = (jobsRequest.result as StoredJob[]) || [];
+        pendingJobs = jobs.filter((job) => job.lastUpdated > job.lastSynced).length;
+        checkComplete();
+      };
+      jobsRequest.onerror = () => reject(jobsRequest.error);
+
+      // Check tasks
+      const tasksRequest = tasksStore.getAll();
+      tasksRequest.onsuccess = () => {
+        const tasks = (tasksRequest.result as StoredTask[]) || [];
+        pendingTasks = tasks.filter((task) => task.lastUpdated > task.lastSynced).length;
+        checkComplete();
+      };
+      tasksRequest.onerror = () => reject(tasksRequest.error);
+    });
+  } catch (error) {
+    console.error("Failed to initialize IndexedDB:", error);
+    return false;
+  }
+};
+
+// Function to sync jobs from API
+const syncJobs = async (): Promise<void> => {
+  try {
+    console.log("Starting job sync...");
+
+    // Check if there are pending updates
+    const hasPending = await hasPendingUpdates();
+    if (hasPending) {
+      console.log("Skipping job sync - there are pending updates");
+      return;
+    }
+
+    // Only sync if online
+    if (!navigator.onLine) {
+      console.log("Skipping job sync - offline");
+      return;
+    }
+
+    // Fetch user jobs from API
+    const response = await fetch("/api/user/jobs");
+    if (!response.ok) {
+      console.warn("Failed to fetch jobs from API:", response.status);
+      return;
+    }
+
+    const jobs = await response.json();
+    if (!jobs || !Array.isArray(jobs)) {
+      console.warn("Invalid jobs data received");
+      return;
+    }
+
+    // Save jobs to IndexedDB
+    const db = await initIndexedDB();
+    const transaction = db.transaction([JOBS_STORE_NAME], "readwrite");
+    const store = transaction.objectStore(JOBS_STORE_NAME);
+
+    let completed = 0;
+    const totalJobs = jobs.length;
+
+    if (totalJobs === 0) {
+      console.log("No jobs to sync");
+      return;
+    }
+
+    jobs.forEach((job: any) => {
+      const storedJob: StoredJob = {
+        id: job.id,
+        data: job,
+        lastUpdated: Date.now(),
+        lastSynced: Date.now(),
+      };
+
+      const putRequest = store.put(storedJob);
+      putRequest.onsuccess = () => {
+        completed++;
+        if (completed === totalJobs) {
+          console.log(`Successfully synced ${totalJobs} jobs`);
+        }
+      };
+      putRequest.onerror = () => {
+        console.error("Failed to save job to IndexedDB:", putRequest.error);
+        completed++;
+      };
+    });
+  } catch (error) {
+    console.error("Job sync failed:", error);
+  }
+};
+
+const startJobSync = () => {
+  if (jobSyncInterval) {
+    clearInterval(jobSyncInterval);
+  }
+
+  const interval = 15 * 60 * 1000; // 15 minutes
+  jobSyncInterval = setInterval(() => {
+    syncJobs();
+  }, interval); // 15 minutes
+
+  console.log("Started periodic job sync (every 15 minutes)");
+};
+
+const stopJobSync = () => {
+  if (jobSyncInterval) {
+    clearInterval(jobSyncInterval);
+    jobSyncInterval = null;
+    console.log("Stopped periodic job sync");
+  }
+};
+
+// Start queue processing and job sync when service worker is activated
 self.addEventListener("activate", () => {
   startQueueProcessing();
+  startJobSync();
 });
 
-// Stop queue processing when service worker is deactivated
+// Stop queue processing and job sync when service worker is deactivated
 self.addEventListener("deactivate", () => {
   stopQueueProcessing();
+  stopJobSync();
 });

@@ -10,7 +10,7 @@ interface OwnersStore {
   setJobOwner: (jobId: number, ownerId: number) => void;
 }
 
-const useOwnersStore = create<OwnersStore>((set, get) => ({
+const useOwnersStore = create<OwnersStore>((set) => ({
   owners: [],
 
   loadOwners: async () => {

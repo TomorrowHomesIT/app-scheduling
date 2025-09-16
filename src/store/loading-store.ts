@@ -12,17 +12,17 @@ interface LoadingStore {
   suppliers: LoadingState;
   job: LoadingState;
   jobs: LoadingState;
-  
+
   // Global loading state
   isLoading: boolean;
   isGlobalLoaded: boolean;
-  
+
   // Actions
-  setLoading: (key: 'owners' | 'suppliers' | 'job' | 'jobs', isLoading: boolean) => void;
-  setLoaded: (key: 'owners' | 'suppliers' | 'job' | 'jobs', isLoaded: boolean) => void;
-  setError: (key: 'owners' | 'suppliers' | 'job' | 'jobs', error: string | null) => void;
+  setLoading: (key: "owners" | "suppliers" | "job" | "jobs", isLoading: boolean) => void;
+  setLoaded: (key: "owners" | "suppliers" | "job" | "jobs", isLoaded: boolean) => void;
+  setError: (key: "owners" | "suppliers" | "job" | "jobs", error: string | null) => void;
   reset: () => void;
-  
+
   // Computed getters
   getIsLoading: () => boolean;
   getIsLoaded: () => boolean;
@@ -51,10 +51,10 @@ const useLoadingStore = create<LoadingStore>((set, get) => ({
         ...state,
         [key]: { ...state[key], isLoaded, isLoading: false },
       };
-      
+
       // Update global loaded state - all must be loaded
       const allLoaded = newState.owners.isLoaded && newState.suppliers.isLoaded && newState.jobs.isLoaded;
-      
+
       return {
         ...newState,
         isGlobalLoaded: allLoaded,

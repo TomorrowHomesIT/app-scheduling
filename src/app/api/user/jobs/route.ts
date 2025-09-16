@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { withAuth } from "@/lib/api/auth";
-import type { IJob, IUpdateJobRequest } from "@/models/job.model";
+import type { IJob } from "@/models/job.model";
 import { getJobWithTasks } from "@/lib/api/job-with-task";
 
 export const GET = withAuth(async (_) => {
@@ -45,43 +45,7 @@ export const GET = withAuth(async (_) => {
 
     return Response.json(jobDTOs, { status: 200 });
   } catch (error) {
-    console.error("Error in GET /api/jobs/[id]:", error);
+    console.error("Error in GET /api/user/jobs:", error);
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
-});
-
-export const PATCH = withAuth(async (request, { params }: { params: Promise<{ id: string }> }) => {
-  const supabase = await createClient();
-  const { id } = await params;
-  const jobId = parseInt(id, 10);
-
-  if (Number.isNaN(jobId)) {
-    return Response.json({ error: "Invalid job ID" }, { status: 400 });
-  }
-
-  const updates: IUpdateJobRequest = await request.json();
-  if (!updates.name || !updates.name.trim()) {
-    return Response.json({ error: "Job name is required" }, { status: 400 });
-  }
-
-  const updateData: Record<string, string | null | number> = {
-    name: updates.name.trim(),
-    location: updates.location?.trim() || null,
-    owner_id: updates.ownerId,
-  };
-
-  // Update job in cf_jobs table
-  const { data: jobData, error: jobError } = await supabase
-    .from("cf_jobs")
-    .update(updateData)
-    .eq("id", jobId)
-    .select("id, name, location, owner_id")
-    .single();
-
-  if (jobError || !jobData) {
-    console.error("Error updating job:", jobError);
-    return Response.json({ error: "Failed to update job" }, { status: 500 });
-  }
-
-  return Response.json(true, { status: 200 });
 });

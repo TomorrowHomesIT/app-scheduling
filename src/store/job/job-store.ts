@@ -3,6 +3,8 @@ import type { IJob, IJobTask, IUpdateJobRequest } from "@/models/job.model";
 import { toast } from "@/store/toast-store";
 import { getApiErrorMessage } from "@/lib/api/error";
 import useOwnersStore from "@/store/owners-store";
+import useLoadingStore from "@/store/loading-store";
+import { jobsDB } from "@/lib/jobs-db";
 
 interface JobStore {
   jobs: IJob[]; // TODO I'm not sure this is actually uesd? We never load a list of jobs lol
@@ -12,7 +14,7 @@ interface JobStore {
   loadJob: (id: number) => Promise<void>;
   setCurrentJob: (job: IJob | null) => void;
   updateJob: (jobId: number, updates: IUpdateJobRequest) => Promise<void>;
-  updateJobTask: (jobId: number, jobTaskId: number, updates: Partial<IJobTask>) => void;
+  updateJobTask: (jobId: number, jobTaskId: number, updates: Partial<IJobTask>) => Promise<void>;
 }
 
 const fetchJobByIdFromApi = async (id: number): Promise<IJob | null> => {
@@ -80,12 +82,13 @@ const useJobStore = create<JobStore>((set, get) => ({
 
     try {
       const jobs = await fetchUserJobsFromApi();
-      localStorage.setItem(JOB_STORAGE_KEY, JSON.stringify(jobs));
+      for (const job of jobs || []) {
+        await jobsDB.saveJob(job);
+      }
       loading.setLoaded("jobs", true);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to load jobs";
       loading.setError("jobs", errorMessage);
-      set({ jobs: getJobsFromLocalStorage() });
     } finally {
       loading.setLoading("jobs", false);
     }
@@ -98,24 +101,19 @@ const useJobStore = create<JobStore>((set, get) => ({
     loading.setLoading("job", true);
 
     try {
-      // First try to load from localStorage
-      const localJob = getJobFromLocalStorage(id);
+      const localJob = await jobsDB.getJob(id);
       if (localJob) {
         set(() => ({ currentJob: localJob }));
         return;
       }
 
-      // Then fetch from API to get latest data
+      // This likely isn't a users job, so always load from API
       const job = await fetchJobByIdFromApi(id);
       if (job) {
-        // Save to localStorage
-        saveJobToLocalStorage(job);
         set(() => ({ currentJob: job }));
       }
     } catch {
-      // If API fails but we have local data, use it
-      const localJob = getJobFromLocalStorage(id);
-      if (localJob) set(() => ({ currentJob: localJob }));
+      loading.setError("job", "Failed to load job");
     } finally {
       loading.setLoading("job", false);
     }
@@ -150,6 +148,12 @@ const useJobStore = create<JobStore>((set, get) => ({
       const updatedJobs = state.jobs.map((job) => (job.id === jobId ? { ...job, ...updates } : job));
       const updatedCurrentJob = state.currentJob?.id === jobId ? { ...state.currentJob, ...updates } : state.currentJob;
 
+      // Save updated job to IndexedDB and mark as updated
+      if (updatedCurrentJob) {
+        jobsDB.saveJob(updatedCurrentJob);
+        jobsDB.updateJobLastUpdated(jobId);
+      }
+
       return {
         jobs: updatedJobs,
         currentJob: updatedCurrentJob,
@@ -157,7 +161,8 @@ const useJobStore = create<JobStore>((set, get) => ({
     });
   },
 
-  updateJobTask: (jobId: number, jobTaskId: number, updates: Partial<IJobTask>) => {
+  // Sync the job with the updated task
+  updateJobTask: async (jobId: number, jobTaskId: number, updates: Partial<IJobTask>) => {
     set((state) => {
       const updatedJobs = state.jobs.map((job) => {
         if (job.id === jobId) {
@@ -175,6 +180,13 @@ const useJobStore = create<JobStore>((set, get) => ({
           ...updatedCurrentJob,
           tasks: updatedCurrentJob.tasks.map((task) => (task.id === jobTaskId ? { ...task, ...updates } : task)),
         };
+      }
+
+      // Save updated job to IndexedDB and mark task as updated
+      if (updatedCurrentJob) {
+        jobsDB.saveJob(updatedCurrentJob);
+        jobsDB.updateJobLastUpdated(jobId);
+        jobsDB.updateTaskLastUpdated(jobId, jobTaskId);
       }
 
       return {

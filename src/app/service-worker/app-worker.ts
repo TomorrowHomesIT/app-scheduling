@@ -36,20 +36,6 @@ const serwist = new Serwist({
     // Use Serwist's default cache strategies for Next.js assets (this handles JS chunks, CSS, etc.)
     ...defaultCache,
     {
-      // Cache navigation requests (pages) with NetworkFirst for better offline experience
-      matcher: ({ request }) => request.mode === "navigate",
-      handler: new NetworkFirst({
-        cacheName: `pages-cache-${cacheVersion}`,
-        plugins: [
-          {
-            cacheWillUpdate: async ({ response }) => {
-              return response?.status === 200 ? response : null;
-            },
-          },
-        ],
-      }),
-    },
-    {
       // Cache critical API endpoints (owners, suppliers) with StaleWhileRevalidate
       // These rarely change and are needed for navigation
       matcher: ({ url }) => {
@@ -536,8 +522,8 @@ const syncJobs = async (): Promise<void> => {
         completed++;
       };
 
-      // Preload job route for offline access
-      const jobRouteUrl = `/jobs/${job.id}`;
+      // Preload job route for offline access using query parameter
+      const jobRouteUrl = `/jobs/view?id=${job.id}`;
       const preloadPromise = fetch(jobRouteUrl, {
         method: "GET",
         credentials: "same-origin",

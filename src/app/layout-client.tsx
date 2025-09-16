@@ -71,14 +71,15 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
       setIsPreloadingRoutes(true);
       setPreloadingProgress({ current: 0, total: allRoutes.length });
 
+      // Check if we're offline before attempting navigation
+      if (!navigator.onLine) {
+        setIsPreloadingRoutes(false);
+        return;
+      }
+
       for (let i = 0; i < allRoutes.length; i++) {
         const route = allRoutes[i];
         try {
-          // Check if we're offline before attempting navigation
-          if (!navigator.onLine) {
-            return;
-          }
-
           console.log(`Navigating to: ${route} (${i + 1}/${allRoutes.length})`);
           setPreloadingProgress({ current: i + 1, total: allRoutes.length });
           router.push(route);

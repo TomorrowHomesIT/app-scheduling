@@ -1,5 +1,5 @@
 import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
-import { Serwist, StaleWhileRevalidate, NetworkFirst } from "serwist";
+import { Serwist, NetworkFirst } from "serwist";
 import { defaultCache } from "@serwist/next/worker";
 import {
   DB_NAME,
@@ -25,13 +25,13 @@ declare global {
 
 declare const self: WorkerGlobalScope & SerwistGlobalConfig;
 
-const cacheVersion = "1.0.0";
+const cacheVersion = "1.0.1";
 
 const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST,
   skipWaiting: true,
   clientsClaim: true,
-  navigationPreload: true,
+  navigationPreload: false, // Disable navigation preload to ensure proper cache fallback
   runtimeCaching: [
     // Use Serwist's default cache strategies for Next.js assets (this handles JS chunks, CSS, etc.)
     ...defaultCache,
@@ -40,31 +40,49 @@ const serwist = new Serwist({
       matcher: ({ request }) => request.mode === "navigate",
       handler: new NetworkFirst({
         cacheName: `pages-cache-${cacheVersion}`,
+        networkTimeoutSeconds: 3, // Timeout network requests after 3 seconds
         plugins: [
           {
             cacheWillUpdate: async ({ response }) => {
               return response?.status === 200 ? response : null;
+            },
+            handlerDidError: async ({ request }) => {
+              // When network fails, try to serve from cache
+              const cache = await caches.open(`pages-cache-${cacheVersion}`);
+              const cachedResponse = await cache.match(request);
+              if (cachedResponse) {
+                console.log(`Serving cached page for: ${request.url}`);
+                return cachedResponse;
+              }
+              // If no cache, return offline page
+              return Response.redirect('/offline', 302);
             },
           },
         ],
       }),
     },
     {
-      // Cache critical API endpoints (owners, suppliers) with StaleWhileRevalidate
+      // Cache critical API endpoints (owners, suppliers) with NetworkFirst
       // These rarely change and are needed for navigation
       matcher: ({ url }) => {
         const pathname = url.pathname;
         return pathname === "/api/owners" || pathname === "/api/suppliers" || pathname === "/api/task-stages";
       },
-      handler: new StaleWhileRevalidate({
+      handler: new NetworkFirst({
         cacheName: `common-api-data-${cacheVersion}`,
+        networkTimeoutSeconds: 5, // Longer timeout for critical data
         plugins: [
           {
-            cacheWillUpdate: async ({ response }) => {
-              return response?.status === 200 ? response : null;
-            },
-            handlerDidError: async () => {
-              // Return empty array as fallback for list endpoints
+            cacheWillUpdate: async ({ response }) => (response?.status === 200 ? response : null),
+            handlerDidError: async ({ request }) => {
+              // Try to serve from cache when network fails
+              const cache = await caches.open(`common-api-data-${cacheVersion}`);
+              const cachedResponse = await cache.match(request);
+              if (cachedResponse) {
+                console.log(`Serving cached API data for: ${request.url}`);
+                return cachedResponse;
+              }
+              // Return empty array for critical endpoints to prevent crashes
               return Response.json([], { status: 200 });
             },
           },
@@ -76,12 +94,23 @@ const serwist = new Serwist({
       matcher: ({ url }) => url.pathname.startsWith("/api/"),
       handler: new NetworkFirst({
         cacheName: `api-cache-${cacheVersion}`,
+        networkTimeoutSeconds: 3,
         plugins: [
           {
             cacheWillUpdate: async ({ response }) => {
               return response?.status === 200 ? response : null;
             },
-            handlerDidError: async () => Response.json({ error: "Offline" }, { status: 503 }),
+            handlerDidError: async ({ request }) => {
+              // Try to serve from cache when network fails
+              const cache = await caches.open(`api-cache-${cacheVersion}`);
+              const cachedResponse = await cache.match(request);
+              if (cachedResponse) {
+                console.log(`Serving cached API response for: ${request.url}`);
+                return cachedResponse;
+              }
+              // Return appropriate error response
+              return Response.json({ error: "Offline", message: "No cached data available" }, { status: 503 });
+            },
           },
         ],
       }),
@@ -98,6 +127,20 @@ const serwist = new Serwist({
 });
 
 serwist.addEventListeners();
+
+// Add global error handling to prevent service worker crashes
+self.addEventListener('error', (event: Event) => {
+  const errorEvent = event as ErrorEvent;
+  console.error('Service Worker Error:', errorEvent.error);
+  // Don't prevent default - let the error be handled normally
+});
+
+self.addEventListener('unhandledrejection', (event: Event) => {
+  const rejectionEvent = event as PromiseRejectionEvent;
+  console.error('Service Worker Unhandled Promise Rejection:', rejectionEvent.reason);
+  // Prevent the default behavior which would crash the service worker
+  rejectionEvent.preventDefault();
+});
 
 // Initialize IndexedDB with all stores
 const initIndexedDB = (): Promise<IDBDatabase> => {

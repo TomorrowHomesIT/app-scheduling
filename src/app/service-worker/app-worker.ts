@@ -445,23 +445,13 @@ async function processQueue(): Promise<void> {
   }
 }
 
-// Register background sync when online
-self.addEventListener("online", () => {
-  console.log("Service worker detected online status");
-
-  // Register background sync
-  if ("serviceWorker" in navigator && "sync" in window.ServiceWorkerRegistration.prototype) {
-    (self as any).registration.sync.register("background-sync-queue").catch((error: Error) => {
-      console.error("Failed to register background sync:", error);
-    });
-  }
-});
-
 // Set up periodic queue processing (every 10 seconds)
 let queueProcessingInterval: NodeJS.Timeout | null = null;
+const QUEUE_PROCESSING_INTERVAL = 10000;
 
 // Set up periodic job sync (every 15 minutes)
 let jobSyncInterval: NodeJS.Timeout | null = null;
+const JOB_SYNC_INTERVAL = 15 * 60 * 1000;
 
 const startQueueProcessing = () => {
   if (queueProcessingInterval) {
@@ -470,7 +460,7 @@ const startQueueProcessing = () => {
 
   queueProcessingInterval = setInterval(() => {
     processQueue();
-  }, 10000); // 10 seconds
+  }, QUEUE_PROCESSING_INTERVAL);
 
   console.log("Started periodic queue processing (every 10 seconds)");
 };
@@ -601,7 +591,7 @@ const startJobSync = () => {
     clearInterval(jobSyncInterval);
   }
 
-  const interval = 15 * 60 * 1000; // 15 minutes
+  const interval = JOB_SYNC_INTERVAL;
   jobSyncInterval = setInterval(() => {
     syncJobs();
   }, interval); // 15 minutes

@@ -30,13 +30,7 @@ export function JobRefreshButton({ jobId, hasPendingUpdates, isLoading, onRefres
   };
 
   return (
-    <Button
-      variant="outline"
-      size="icon"
-      onClick={handleRefresh}
-      disabled={hasPendingUpdates || isLoading}
-      className="h-8 w-8"
-    >
+    <Button variant="outline" size="icon" onClick={handleRefresh} disabled={hasPendingUpdates || isLoading}>
       <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
     </Button>
   );

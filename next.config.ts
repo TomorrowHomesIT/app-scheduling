@@ -1,9 +1,12 @@
 import type { NextConfig } from "next";
 import withSerwistInit from "@serwist/next";
+import { execSync } from "node:child_process";
 
 /** Turn this on/off to test Serwist in development - it's disabled by default */
 const isTestSwEnabled = true;
 const disableSerwist = !isTestSwEnabled && process.env.NODE_ENV === "development";
+
+const revision = execSync("git rev-parse HEAD", { encoding: "utf8" }).trim().slice(0, 7);
 
 const withSerwist = withSerwistInit({
   disable: disableSerwist,
@@ -13,11 +16,11 @@ const withSerwist = withSerwistInit({
   reloadOnOnline: false,
   cacheOnNavigation: true,
   additionalPrecacheEntries: [
-    { url: "/", revision: null },
-    { url: "/jobs", revision: null },
-    { url: "/offline", revision: null },
-    { url: "/suppliers", revision: null },
-    { url: "/manifest.json", revision: null },
+    { url: "/", revision },
+    { url: "/jobs", revision },
+    { url: "/offline", revision },
+    { url: "/suppliers", revision },
+    { url: "/manifest.json", revision },
   ],
 });
 

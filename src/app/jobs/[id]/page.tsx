@@ -74,17 +74,6 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
           backLink="/jobs"
           badge={`${completedTasks}/${totalTasks}`}
         >
-          {currentJob.googleDriveDirId && (
-            <Link
-              href={`https://drive.google.com/drive/folders/${currentJob.googleDriveDirId}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Button variant="outline" size="icon">
-                <HardDrive className="h-4 w-4" />
-              </Button>
-            </Link>
-          )}
           {currentJobSyncStatus && (
             <div className="flex items-center gap-2">
               <JobSyncStatus
@@ -99,6 +88,17 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
                 onRefresh={refreshJob}
               />
             </div>
+          )}
+          {currentJob.googleDriveDirId && (
+            <Link
+              href={`//drive.google.com/drive/folders/${currentJob.googleDriveDirId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button variant="outline" size="icon">
+                <HardDrive className="h-4 w-4" />
+              </Button>
+            </Link>
           )}
           <Button variant="outline" size="icon" className="flex" onClick={() => setIsEditModalOpen(true)}>
             <Settings className="h-4 w-4" />

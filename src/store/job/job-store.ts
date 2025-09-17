@@ -114,19 +114,15 @@ const useJobStore = create<JobStore>((set, get) => ({
     try {
       const localJob = await jobsDB.getJob(id);
       if (localJob) {
-        set(() => ({ currentJob: localJob }));
-        // Load sync status for local job
         const syncStatus = await jobsDB.getJobSyncStatus(id);
-        set(() => ({ currentJobSyncStatus: syncStatus }));
+        set(() => ({ currentJob: localJob, currentJobSyncStatus: syncStatus }));
         return;
       }
 
       // This likely isn't a users job, so always load from API
       const job = await fetchJobByIdFromApi(id);
       if (job) {
-        set(() => ({ currentJob: job }));
-        // For API-loaded jobs, we don't have sync status
-        set(() => ({ currentJobSyncStatus: null }));
+        set(() => ({ currentJob: job, currentJobSyncStatus: null }));
       }
     } finally {
       set({ isLoadingJobs: false });

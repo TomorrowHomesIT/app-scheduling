@@ -6,8 +6,9 @@ import { LogOut } from "lucide-react";
 import { useState } from "react";
 import { ConfirmationModal } from "../modals/confirm/confirm-modal";
 import { useAuth } from "./auth-context";
+import { cn } from "@/lib/utils";
 
-export function LogoutButton() {
+export function LogoutButton({ className }: { className?: string }) {
   const { logout } = useAuth();
   const router = useRouter();
   const [showDialog, setShowDialog] = useState(false);
@@ -19,7 +20,7 @@ export function LogoutButton() {
 
   return (
     <>
-      <Button onClick={() => setShowDialog(true)} className="w-full justify-between" variant="destructive">
+      <Button onClick={() => setShowDialog(true)} className={cn("justify-between", className)} variant="destructive">
         Logout
         <LogOut className="h-4 w-4" />
       </Button>

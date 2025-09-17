@@ -11,7 +11,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import useJobStore from "@/store/job/job-store";
 import useOwnersStore from "@/store/owners-store";
-import { LogoutButton } from "@/components/auth/logout-button";
+import { UserProfileButton } from "@/components/user-profile-button";
 import { Logo } from "../ui/logo";
 
 interface SidebarProps {
@@ -129,8 +129,8 @@ function SidebarContent({ onJobSelect }: { onJobSelect?: () => void }) {
         </div>
       </div>
 
-      <div className="border-t p-4">
-        <LogoutButton />
+      <div className="border-t p-2">
+        <UserProfileButton />
       </div>
     </>
   );

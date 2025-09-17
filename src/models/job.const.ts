@@ -3,22 +3,26 @@ import { EJobTaskStatus, EJobTaskProgress } from "./job.model";
 export const CTaskStatusConfig = {
   [EJobTaskStatus.None]: {
     label: "-",
-    className: "bg-transparent text-gray-500 hover:bg-gray-200 justify-start",
+    completeLabel: "-",
+    className: "bg-gray-100 text-gray-800 hover:bg-gray-400",
     textColor: "text-gray-500",
   },
   [EJobTaskStatus.Scheduled]: {
     label: "Schedule",
-    className: "bg-blue-300 text-blue-800 hover:bg-blue-400",
+    completeLabel: "Scheduled",
+    className: "bg-blue-100 text-blue-800 hover:bg-blue-300",
     textColor: "text-blue-500",
   },
   [EJobTaskStatus.ReScheduled]: {
     label: "Re-schedule",
-    className: "bg-gray-300 text-gray-800 hover:bg-gray-400",
-    textColor: "text-gray-500",
+    completeLabel: "Re-scheduled",
+    className: "bg-purple-100 text-purple-800 hover:bg-purple-300",
+    textColor: "text-purple-500",
   },
   [EJobTaskStatus.Cancelled]: {
     label: "Cancel",
-    className: "bg-red-300 text-red-800 hover:bg-red-400",
+    completeLabel: "Cancelled",
+    className: "bg-red-100 text-red-800 hover:bg-red-300",
     textColor: "text-red-500",
   },
 } as const;
@@ -26,7 +30,7 @@ export const CTaskStatusConfig = {
 export const CTaskProgressConfig = {
   [EJobTaskProgress.None]: {
     label: "-",
-    className: "bg-transparent text-gray-500 hover:bg-gray-200 justify-start",
+    className: "bg-gray-100 text-gray-800 hover:bg-gray-400",
     progressColor: "bg-transparent",
   },
   [EJobTaskProgress.ToCall]: {
@@ -50,7 +54,7 @@ export const CTaskProgressConfig = {
     progressColor: "bg-pink-500",
   },
   [EJobTaskProgress.Completed]: {
-    label: "Done",
+    label: "Completed",
     className: "bg-green-200 text-green-900 hover:bg-green-400",
     progressColor: "bg-green-500",
   },

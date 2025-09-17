@@ -65,11 +65,11 @@ export function JobTaskTable({ tasks }: JobTaskTableProps) {
           {tasks.map((task) => {
             return (
               <TableRow key={task.id}>
-                <TableCell className="sticky left-0 z-15 bg-white w-4">
+                <TableCell className="sticky left-0 z-15 bg-white w-2 sm:w-4 px-0 sm:px-2">
                   <div className={`w-1 h-8 rounded ${CTaskProgressConfig[task.progress].progressColor}`} />
                 </TableCell>
                 <TableCell
-                  className="sticky left-4 z-15 bg-white w-32 lg:w-48 xl:w-64 font-medium truncate after:absolute after:right-0 after:top-0 after:bottom-0 after:w-px after:bg-gray-200"
+                  className="sticky left-2 z-15 bg-white w-22 sm:w-28 lg:w-48 xl:w-64 font-medium truncate after:absolute after:right-0 after:top-0 after:bottom-0 after:w-px after:bg-gray-200"
                   title={task.name}
                 >
                   <TaskDetailsTrigger task={task} onSave={handleTaskDetailsChange}>

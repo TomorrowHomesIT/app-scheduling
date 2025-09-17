@@ -27,11 +27,15 @@ function SidebarContent({ onJobSelect }: { onJobSelect?: () => void }) {
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
 
-  // Expand all owners by default
+  // Expand only the current user's owner by default
   useEffect(() => {
-    const allOwnerIds = new Set(owners.map((owner) => owner.id));
-    setExpandedOwners(allOwnerIds);
-  }, [owners]);
+    if (user?.id) {
+      const userOwner = owners.find((owner) => owner.userId === user.id);
+      if (userOwner) {
+        setExpandedOwners(new Set([userOwner.id]));
+      }
+    }
+  }, [owners, user?.id]);
 
   const toggleOwner = (ownerId: number) => {
     const newExpanded = new Set(expandedOwners);
@@ -60,13 +64,6 @@ function SidebarContent({ onJobSelect }: { onJobSelect?: () => void }) {
       return null;
     })
     .filter((owner): owner is NonNullable<typeof owner> => owner !== null)
-    .sort((a, b) => {
-      // Sort current user's owner to the top
-      if (a.userId === user?.id) return -1;
-      if (b.userId === user?.id) return 1;
-      // Keep original order for other owners
-      return 0;
-    });
 
   return (
     <>

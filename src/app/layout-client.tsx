@@ -12,16 +12,18 @@ import useTaskStore from "@/store/task-store";
 import useLoadingStore from "@/store/loading-store";
 import { Spinner } from "@/components/ui/spinner";
 import { useRouter } from "next/navigation";
+import useOfflineStore from "@/store/offline-store";
 
 /** Function is required so that useSidebar is used within the context */
 function AppLayoutContent({ children }: { children: ReactNode }) {
   const { isSidebarOpen, setIsSidebarOpen } = useSidebar();
-  const { isAuthenticated, userId } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { loadOwners, owners } = useOwnersStore();
   const { loadSuppliers } = useSupplierStore();
   const { loadUserJobs } = useJobStore();
   const { loadTaskStages } = useTaskStore();
   const { isLoading } = useLoadingStore();
+  const { initializeOfflineMode, isOfflineModeEnabled } = useOfflineStore();
   const router = useRouter();
   const [isPreloadingRoutes, setIsPreloadingRoutes] = useState(false);
   const [preloadingProgress, setPreloadingProgress] = useState({ current: 0, total: 0 });
@@ -34,7 +36,14 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
     const bootstrapData = async () => {
       try {
         console.log("Bootstrapping data...");
-        await Promise.all([loadOwners(), loadSuppliers(), loadUserJobs(), loadTaskStages()]);
+        const isOfflineEnabled = await initializeOfflineMode();
+        const promise = [loadOwners(), loadSuppliers(), loadTaskStages()];
+
+        if (isOfflineEnabled) {
+          promise.push(loadUserJobs());
+        }
+
+        await Promise.all(promise);
         console.log("Data bootstrapped successfully");
       } catch (error) {
         console.error("Failed to bootstrap data:", error);
@@ -42,18 +51,18 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
     };
 
     bootstrapData();
-  }, [isAuthenticated, loadOwners, loadSuppliers, loadUserJobs, loadTaskStages]);
+  }, [isAuthenticated, loadOwners, loadSuppliers, loadUserJobs, loadTaskStages, initializeOfflineMode]);
 
   // Navigate to all routes to preload them for offline access
   useEffect(() => {
-    if (!isAuthenticated || !owners?.length) return;
+    if (!isAuthenticated || !owners?.length || !isOfflineModeEnabled) return;
 
     console.log("Navigating to all routes for offline preloading...");
 
     // Collect all job routes from owners
     const jobRoutes: string[] = [];
     owners.forEach((owner) => {
-      if (owner.jobs && owner.userId && owner.userId === userId) {
+      if (owner.jobs && owner.userId && owner.userId === user?.id) {
         owner.jobs.forEach((job) => {
           jobRoutes.push(`/jobs/${job.id}`);
         });
@@ -97,7 +106,7 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
     };
 
     navigateToRoutes();
-  }, [isAuthenticated, owners, router, userId]);
+  }, [isAuthenticated, owners, router, user, isOfflineModeEnabled]);
 
   if ((isLoading || isPreloadingRoutes) && isAuthenticated) {
     return (

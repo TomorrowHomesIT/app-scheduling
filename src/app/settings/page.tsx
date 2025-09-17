@@ -3,13 +3,16 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { RefreshCw, AlertCircle } from "lucide-react";
+import { RefreshCw, AlertCircle, Wifi } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { LogoutButton } from "@/components/auth/logout-button";
+import { PageHeader } from "@/components/page-header";
+import useOfflineStore from "@/store/offline-store";
 
 export default function SettingsPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [swStatus, setSwStatus] = useState<string | null>(null);
+  const [reloadStatus, setReloadStatus] = useState<string | null>(null);
+  const { isOfflineModeEnabled, setOfflineMode } = useOfflineStore();
 
   const handleHardRefresh = () => {
     setIsRefreshing(true);
@@ -20,7 +23,7 @@ export default function SettingsPage() {
 
   const handleServiceWorkerRefresh = async () => {
     setIsRefreshing(true);
-    setSwStatus("Updating service worker...");
+    setReloadStatus("Updating service worker...");
 
     try {
       if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
@@ -30,56 +33,101 @@ export default function SettingsPage() {
           await registration.unregister();
         }
 
-        setSwStatus("Service worker unregistered. Refreshing...");
+        setReloadStatus("Service worker unregistered. Refreshing...");
 
         setTimeout(() => {
           window.location.reload();
         }, 1000);
       } else {
-        setSwStatus("No service worker found or not supported");
+        setReloadStatus("No service worker found or not supported");
         setIsRefreshing(false);
       }
     } catch (error) {
       console.error("Error refreshing service worker:", error);
-      setSwStatus("Error refreshing service worker");
+      setReloadStatus("Error refreshing service worker");
       setIsRefreshing(false);
     }
   };
 
   const handleFullRefresh = async () => {
     setIsRefreshing(true);
-    setSwStatus("Clearing all caches and refreshing...");
+    setReloadStatus("Clearing all caches and refreshing...");
 
     try {
       if ("serviceWorker" in navigator) {
         const registrations = await navigator.serviceWorker.getRegistrations();
         for (const registration of registrations) {
+          console.log("Unregistering service worker:", registration.scope);
           await registration.unregister();
         }
       }
 
       if ("caches" in window) {
         const cacheNames = await caches.keys();
+        console.log("Clearing caches:", cacheNames);
         await Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)));
       }
 
-      setSwStatus("All caches cleared. Refreshing...");
+      setReloadStatus("All caches cleared. Refreshing...");
 
       setTimeout(() => {
         window.location.reload();
       }, 1000);
     } catch (error) {
       console.error("Error during full refresh:", error);
-      setSwStatus("Error during full refresh");
+      setReloadStatus("Error during full refresh");
       setIsRefreshing(false);
     }
   };
 
-  return (
-    <div className="container mx-auto p-6 max-w-4xl">
-      <h1 className="text-3xl font-bold mb-6">Settings</h1>
+  const handleOfflineModeToggle = async () => {
+    setIsRefreshing(true);
+    setReloadStatus("Toggling offline mode...");
+    try {
+      await setOfflineMode(!isOfflineModeEnabled);
+      await handleFullRefresh();
+    } catch (error) {
+      console.error("Failed to toggle offline mode:", error);
+      setReloadStatus("Failed to toggle offline mode");
+    } finally {
+      setIsRefreshing(false);
+      setReloadStatus(null);
+    }
+  };
 
-      <div className="space-y-6">
+  return (
+    <div className="flex flex-col h-full bg-background">
+      <div className="border-b bg-background">
+        <PageHeader title="Settings" backLink="/" description="Application settings and diagnostics" />
+      </div>
+
+      <div className="container mx-auto p-6 sm:max-w-4xl space-y-6">
+        {reloadStatus && (
+          <Alert variant="warning">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{reloadStatus}</AlertDescription>
+          </Alert>
+        )}
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Offline Mode</CardTitle>
+            <CardDescription>
+              Pre-loads your jobs and enables background sync. Data will sync when reconnected.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button
+              onClick={handleOfflineModeToggle}
+              disabled={isRefreshing}
+              variant={isOfflineModeEnabled ? "destructive" : "default"}
+            >
+              <Wifi className="h-4 w-4" />
+              {isOfflineModeEnabled ? "Disable" : "Enable"}
+            </Button>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle>Restarts</CardTitle>
@@ -118,38 +166,6 @@ export default function SettingsPage() {
                 <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
                 Clear Cache & Reload
               </Button>
-            </div>
-
-            {swStatus && (
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{swStatus}</AlertDescription>
-              </Alert>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>About</CardTitle>
-            <CardDescription>Application information and diagnostics</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Service Worker:</span>
-                <span>
-                  {"serviceWorker" in navigator
-                    ? navigator.serviceWorker.controller
-                      ? "Active"
-                      : "Inactive"
-                    : "Not Supported"}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Online Status:</span>
-                <span>{navigator.onLine ? "Online" : "Offline"}</span>
-              </div>
             </div>
           </CardContent>
         </Card>

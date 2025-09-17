@@ -58,14 +58,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const login = async () => {
-    const { data, error } = await supabase.auth.getClaims();
+    setIsAuthenticated(true);
+    setIsAuthLoading(false);
+
+    const { data } = await supabase.auth.getClaims();
+
     setUser({
       id: data?.claims?.sub,
       email: data?.claims?.email,
       name: data?.claims?.full_name || data?.claims?.name,
       avatar_url: data?.claims?.avatar_url,
     });
-    setIsAuthenticated(!error && !!data?.claims);
   };
 
   return (

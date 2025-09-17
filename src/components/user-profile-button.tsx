@@ -1,63 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { User, ChevronRight } from "lucide-react";
-
-interface IUserProfile {
-  email?: string;
-  name?: string;
-  avatar_url?: string;
-}
+import { ChevronRight } from "lucide-react";
+import { useAuth } from "./auth/auth-context";
 
 export function UserProfileButton() {
-  const [user, setUser] = useState<IUserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
   const router = useRouter();
-  const supabase = createClient();
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const {
-          data: { user: authUser },
-        } = await supabase.auth.getUser();
-
-        if (authUser) {
-          setUser({
-            email: authUser.email,
-            name: authUser.user_metadata?.full_name || authUser.user_metadata?.name,
-            avatar_url: authUser.user_metadata?.avatar_url,
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching user:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUser();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        setUser({
-          email: session.user.email,
-          name: session.user.user_metadata?.full_name || session.user.user_metadata?.name,
-          avatar_url: session.user.user_metadata?.avatar_url,
-        });
-      } else {
-        setUser(null);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [supabase]);
 
   const onClick = () => {
     router.push("/settings");
@@ -77,15 +28,6 @@ export function UserProfileButton() {
     }
     return "U";
   };
-
-  if (loading) {
-    return (
-      <Button variant="ghost" size="sm" className="w-full justify-start" disabled>
-        <User className="mr-2 h-4 w-4" />
-        Loading...
-      </Button>
-    );
-  }
 
   if (!user) {
     return null;

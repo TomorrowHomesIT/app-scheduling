@@ -8,9 +8,16 @@ import { jobsDB } from "@/lib/jobs-db";
 interface AuthContextType {
   isAuthLoading: boolean;
   isAuthenticated: boolean;
-  userId: string;
+  user: IUserProfile | null;
   logout: () => Promise<void>;
   login: () => void;
+}
+
+interface IUserProfile {
+  id?: string;
+  email?: string;
+  name?: string;
+  avatar_url?: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -18,13 +25,18 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
-  const [userId, setUserId] = useState("");
+  const [user, setUser] = useState<IUserProfile | null>(null);
   const supabase = createClient();
 
   useEffect(() => {
     const checkClaims = async () => {
       const { data, error } = await supabase.auth.getClaims();
-      setUserId(data?.claims?.sub || "");
+      setUser({
+        id: data?.claims?.sub,
+        email: data?.claims?.email,
+        name: data?.claims?.full_name || data?.claims?.name,
+        avatar_url: data?.claims?.avatar_url,
+      });
       setIsAuthenticated(!error && !!data?.claims);
       setIsAuthLoading(false);
     };
@@ -35,7 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     await supabase.auth.signOut();
     setIsAuthenticated(false);
-    setUserId("");
+    setUser(null);
 
     // Clear offline queue and jobs data on logout
     await offlineQueue.clearQueue();
@@ -44,12 +56,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async () => {
     const { data, error } = await supabase.auth.getClaims();
-    setUserId(data?.claims?.sub || "");
+    setUser({
+      id: data?.claims?.sub,
+      email: data?.claims?.email,
+      name: data?.claims?.full_name || data?.claims?.name,
+      avatar_url: data?.claims?.avatar_url,
+    });
     setIsAuthenticated(!error && !!data?.claims);
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, isAuthLoading, logout, login, userId }}>
+    <AuthContext.Provider value={{ isAuthenticated, isAuthLoading, logout, login, user }}>
       {children}
     </AuthContext.Provider>
   );

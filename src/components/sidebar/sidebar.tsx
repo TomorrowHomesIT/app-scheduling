@@ -63,7 +63,7 @@ function SidebarContent({ onJobSelect }: { onJobSelect?: () => void }) {
       }
       return null;
     })
-    .filter((owner): owner is NonNullable<typeof owner> => owner !== null)
+    .filter((owner): owner is NonNullable<typeof owner> => owner !== null);
 
   return (
     <>

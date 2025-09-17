@@ -56,7 +56,7 @@ export function SendEmailModal({ task, onSendEmail, open, onOpenChange }: SendEm
       <DialogContent className="sm:max-w-[700px]">
         <DialogHeader>
           <DialogTitle>Schedule</DialogTitle>
-          <DialogDescription>Select a template to send an email to the supplier</DialogDescription>
+          <DialogDescription>{task.name || "Select a template to send an email to the supplier"}</DialogDescription>
         </DialogHeader>
         {/* Can't send email at all */}
         {!canSendEmail && (

@@ -14,9 +14,10 @@ interface SupplierModalProps {
   onChange: (supplierId: number | undefined) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  taskName?: string;
 }
 
-export function SupplierModal({ value, onChange, open, onOpenChange }: SupplierModalProps) {
+export function SupplierModal({ value, onChange, open, onOpenChange, taskName }: SupplierModalProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSupplierId, setSelectedSupplierId] = useState<number | undefined>(value);
   const { suppliers } = useSupplierStore();
@@ -53,7 +54,7 @@ export function SupplierModal({ value, onChange, open, onOpenChange }: SupplierM
       <DialogContent className="sm:max-w-[400px] max-h-[600px] min-h-[600px] flex flex-col">
         <DialogHeader>
           <DialogTitle>Select Supplier</DialogTitle>
-          <DialogDescription>Select a supplier to assign to the task</DialogDescription>
+          <DialogDescription>{taskName || "Select a supplier to assign to the task"}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 flex-1 flex flex-col min-h-0">
@@ -96,9 +97,10 @@ interface SupplierTriggerProps {
   value?: number; // supplier ID
   onChange: (supplierId: number | undefined) => void;
   className?: string;
+  taskName?: string;
 }
 
-export function SupplierTrigger({ value, onChange, className }: SupplierTriggerProps) {
+export function SupplierTrigger({ value, onChange, className, taskName }: SupplierTriggerProps) {
   const [open, setOpen] = useState(false);
   const { getSupplierById } = useSupplierStore();
 
@@ -111,7 +113,7 @@ export function SupplierTrigger({ value, onChange, className }: SupplierTriggerP
           {supplier?.name}
         </Badge>
       </ModalTriggerButton>
-      <SupplierModal value={value} onChange={onChange} open={open} onOpenChange={setOpen} />
+      <SupplierModal value={value} onChange={onChange} open={open} onOpenChange={setOpen} taskName={taskName} />
     </>
   );
 }

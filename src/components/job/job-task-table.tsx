@@ -80,15 +80,21 @@ export function JobTaskTable({ tasks }: JobTaskTableProps) {
                   <SupplierTrigger
                     value={task.supplierId ?? undefined}
                     onChange={(supplierId) => handleSupplierChange(task.id, supplierId)}
+                    taskName={task.name}
                   />
                 </TableCell>
                 <TableCell className="w-20 p-0">
-                  <DatePickerTrigger value={task.startDate} onChange={(date) => handleDateChange(task.id, date)} />
+                  <DatePickerTrigger
+                    value={task.startDate}
+                    onChange={(date) => handleDateChange(task.id, date)}
+                    taskName={task.name}
+                  />
                 </TableCell>
                 <TableCell className="w-32 lg:w-40 p-0">
                   <NotesTrigger
                     value={task.notes ?? undefined}
                     onChange={(notes) => handleNotesChange(task.id, notes)}
+                    taskName={task.name}
                   />
                 </TableCell>
                 <TableCell className="w-12 lg:w-14 p-0">
@@ -96,6 +102,7 @@ export function JobTaskTable({ tasks }: JobTaskTableProps) {
                     links={task.purchaseOrderLinks || []}
                     onSave={(links) => handlePOLinksChange(task.id, links)}
                     title="Purchase Order Links"
+                    taskName={task.name}
                   />
                 </TableCell>
                 <TableCell className="w-12 lg:w-14 p-0">
@@ -103,6 +110,7 @@ export function JobTaskTable({ tasks }: JobTaskTableProps) {
                     links={task.planLinks || []}
                     onSave={(links) => handlePlanLinksChange(task.id, links)}
                     title="Plan Links"
+                    taskName={task.name}
                   />
                 </TableCell>
                 <TableCell className="w-24 lg:w-28 p-0">
@@ -113,7 +121,11 @@ export function JobTaskTable({ tasks }: JobTaskTableProps) {
                   />
                 </TableCell>
                 <TableCell className="w-24 lg:w-28 p-0">
-                  <ProgressTrigger value={task.progress} onChange={(p) => handleProgressChange(task.id, p)} />
+                  <ProgressTrigger
+                    value={task.progress}
+                    onChange={(p) => handleProgressChange(task.id, p)}
+                    taskName={task.name}
+                  />
                 </TableCell>
               </TableRow>
             );

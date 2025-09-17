@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ExternalLink, Paperclip } from "lucide-react";
 import type { IJobTaskUrl } from "@/models/job.model";
@@ -15,9 +15,10 @@ interface FileLinkModalProps {
   title: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  taskName?: string;
 }
 
-export function FileLinkModal({ links, title, open, onOpenChange }: FileLinkModalProps) {
+export function FileLinkModal({ links, title, open, onOpenChange, taskName }: FileLinkModalProps) {
   const [localLinks, setLocalLinks] = useState<IJobTaskUrl[]>(links);
 
   useEffect(() => {
@@ -37,6 +38,7 @@ export function FileLinkModal({ links, title, open, onOpenChange }: FileLinkModa
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
+          {taskName && <DialogDescription>{taskName}</DialogDescription>}
         </DialogHeader>
 
         <div className="space-y-2 py-2 overflow-y-auto">
@@ -76,10 +78,12 @@ export function FileLinkModalTrigger({
   links,
   onSave,
   title,
+  taskName,
 }: {
   links: IJobTaskUrl[];
   onSave: (links: IJobTaskUrl[]) => void;
   title: string;
+  taskName?: string;
 }) {
   const [open, setOpen] = useState(false);
   const count = links.length;
@@ -92,7 +96,14 @@ export function FileLinkModalTrigger({
           {count > 1 && <span className="text-xs">{count}</span>}
         </Badge>
       </ModalTriggerButton>
-      <FileLinkModal open={open} links={links} onSave={onSave} title={title} onOpenChange={setOpen} />
+      <FileLinkModal
+        open={open}
+        links={links}
+        onSave={onSave}
+        title={title}
+        onOpenChange={setOpen}
+        taskName={taskName}
+      />
     </>
   );
 }

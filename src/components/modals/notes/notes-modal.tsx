@@ -18,9 +18,10 @@ interface NotesModalProps {
   onChange: (notes: string | undefined) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  taskName?: string;
 }
 
-export function NotesModal({ value, onChange, open, onOpenChange }: NotesModalProps) {
+export function NotesModal({ value, onChange, open, onOpenChange, taskName }: NotesModalProps) {
   const [notes, setNotes] = useState(value || "");
 
   useEffect(() => {
@@ -49,7 +50,7 @@ export function NotesModal({ value, onChange, open, onOpenChange }: NotesModalPr
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Notes</DialogTitle>
-          <DialogDescription>Add a note for this task</DialogDescription>
+          <DialogDescription>{taskName || "Add a note for this task"}</DialogDescription>
         </DialogHeader>
         <div className="py-4">
           <Textarea
@@ -78,9 +79,10 @@ interface NotesTriggerProps {
   value?: string;
   onChange: (notes: string | undefined) => void;
   className?: string;
+  taskName?: string;
 }
 
-export function NotesTrigger({ value, onChange, className }: NotesTriggerProps) {
+export function NotesTrigger({ value, onChange, className, taskName }: NotesTriggerProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -88,7 +90,7 @@ export function NotesTrigger({ value, onChange, className }: NotesTriggerProps) 
       <ModalTriggerButton hasValue={!!value} className={className} setOpen={setOpen}>
         <span className="text-sm text-ellipsis overflow-hidden">{value}</span>
       </ModalTriggerButton>
-      <NotesModal value={value} onChange={onChange} open={open} onOpenChange={setOpen} />
+      <NotesModal value={value} onChange={onChange} open={open} onOpenChange={setOpen} taskName={taskName} />
     </>
   );
 }

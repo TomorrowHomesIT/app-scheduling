@@ -12,9 +12,10 @@ interface DatePickerModalProps {
   onChange: (date: Date | undefined) => void;
   open: boolean;
   onOpenChange: (date: boolean) => void;
+  taskName?: string;
 }
 
-export function DatePickerModal({ value, onChange, open, onOpenChange }: DatePickerModalProps) {
+export function DatePickerModal({ value, onChange, open, onOpenChange, taskName }: DatePickerModalProps) {
   const [date, setDate] = useState<Date | undefined>(value);
   const [month, setMonth] = useState<Date | undefined>(value);
 
@@ -37,7 +38,7 @@ export function DatePickerModal({ value, onChange, open, onOpenChange }: DatePic
       <DialogContent className="box-border h-[400px] max-h-[90vh] overflow-y-auto flex flex-col gap-4">
         <DialogHeader>
           <DialogTitle>Select start date</DialogTitle>
-          <DialogDescription></DialogDescription>
+          <DialogDescription>{taskName}</DialogDescription>
         </DialogHeader>
         <div className="flex flex-col sm:flex-row space-y-4 ">
           <div className="flex flex-col gap-4 mt-2 border-r pr-6">
@@ -69,9 +70,10 @@ interface DatePickerTriggerProps {
   value?: Date | null;
   onChange: (date: Date | undefined) => void;
   className?: string;
+  taskName?: string;
 }
 
-export function DatePickerTrigger({ value, onChange, className }: DatePickerTriggerProps) {
+export function DatePickerTrigger({ value, onChange, className, taskName }: DatePickerTriggerProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -88,7 +90,13 @@ export function DatePickerTrigger({ value, onChange, className }: DatePickerTrig
         )}
         <span className="text-sm">{value ? format(value, "MMM d") : ""}</span>
       </Button>
-      <DatePickerModal value={value ?? undefined} onChange={onChange} open={open} onOpenChange={setOpen} />
+      <DatePickerModal
+        value={value ?? undefined}
+        onChange={onChange}
+        open={open}
+        onOpenChange={setOpen}
+        taskName={taskName}
+      />
     </>
   );
 }

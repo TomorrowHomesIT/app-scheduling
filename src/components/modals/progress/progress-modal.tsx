@@ -14,9 +14,10 @@ interface ProgressModalProps {
   onChange: (progress: EJobTaskProgress) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  taskName?: string;
 }
 
-export function ProgressModal({ value, onChange, open, onOpenChange }: ProgressModalProps) {
+export function ProgressModal({ value, onChange, open, onOpenChange, taskName }: ProgressModalProps) {
   const [selectedProgress, setSelectedProgress] = useState<EJobTaskProgress>(value);
 
   const handleProgressSelect = (progress: EJobTaskProgress) => {
@@ -39,7 +40,7 @@ export function ProgressModal({ value, onChange, open, onOpenChange }: ProgressM
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
           <DialogTitle>Set Progress</DialogTitle>
-          <DialogDescription>Select a progress to set for the task</DialogDescription>
+          <DialogDescription>{taskName || "Select a progress to set for the task"}</DialogDescription>
         </DialogHeader>
         <div className="py-4 space-y-2">
           {progressOptions.map((progress) => {
@@ -67,15 +68,16 @@ interface ProgressTriggerProps {
   value: EJobTaskProgress;
   onChange: (progress: EJobTaskProgress) => void;
   className?: string;
+  taskName?: string;
 }
 
-export function ProgressTrigger({ value, onChange, className }: ProgressTriggerProps) {
+export function ProgressTrigger({ value, onChange, className, taskName }: ProgressTriggerProps) {
   const [open, setOpen] = useState(false);
 
   return (
     <>
       <ProgressBadgeButton progress={value} onClick={() => setOpen(true)} className={className} />
-      <ProgressModal value={value} onChange={onChange} open={open} onOpenChange={setOpen} />
+      <ProgressModal value={value} onChange={onChange} open={open} onOpenChange={setOpen} taskName={taskName} />
     </>
   );
 }

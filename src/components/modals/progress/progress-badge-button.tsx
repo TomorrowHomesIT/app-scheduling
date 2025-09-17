@@ -12,7 +12,7 @@ interface ProgressBadgeButtonProps {
 
 export function ProgressBadgeButton({ progress, onClick, className }: ProgressBadgeButtonProps) {
   const config = CTaskProgressConfig[progress];
-  
+
   return (
     <ModalTriggerButton hasValue={true} className={cn("hover:bg-transparen", className)} setOpen={onClick}>
       <Badge className={cn("w-full", config.className)}>

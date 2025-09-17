@@ -117,19 +117,11 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
     handleOfflineMode();
   }, [isAuthenticated, isOfflineModeEnabled, owners, router, user?.id, loadUserJobs]);
 
-  if ((isLoading || isPreloadingRoutes) && isAuthenticated) {
+  // Show full loading screen during initial data loading
+  if (isLoading && isAuthenticated) {
     return (
       <div className="flex flex-col items-center justify-center h-full w-full space-y-4">
         <Spinner variant="default" size="xl" />
-        {!isPreloadingRoutes && <p className="text-sm text-gray-600">Loading jobs, tasks, and suppliers...</p>}
-        {isPreloadingRoutes && (
-          <div className="text-center">
-            <p className="text-sm text-gray-600">Loading offline access...</p>
-            <p className="text-xs text-gray-500">
-              {preloadingProgress.current} of {preloadingProgress.total} pages loaded
-            </p>
-          </div>
-        )}
       </div>
     );
   }
@@ -137,7 +129,18 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
   return (
     <>
       {isAuthenticated && <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />}
-      <main className="flex-1 overflow-auto flex flex-col">{children}</main>
+      <main className="flex-1 overflow-auto flex flex-col relative">{children}</main>
+      {isPreloadingRoutes && isAuthenticated && (
+        <div className="absolute inset-0 bg-background flex flex-col items-center justify-center space-y-4 z-50">
+          <Spinner variant="default" size="xl" />
+          <div className="text-center">
+            <p className="text-sm text-gray-600">Loading offline access...</p>
+            <p className="text-xs text-gray-500">
+              {preloadingProgress.current} of {preloadingProgress.total} pages loaded
+            </p>
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -12,7 +12,7 @@ import useOfflineStore from "@/store/offline-store";
 export default function SettingsPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [reloadStatus, setReloadStatus] = useState<string | null>(null);
-  const { isOfflineModeEnabled, setOfflineMode } = useOfflineStore();
+  const { isOfflineModeEnabled, setOfflineMode, clearCache } = useOfflineStore();
 
   const handleHardRefresh = () => {
     setIsRefreshing(true);
@@ -62,11 +62,7 @@ export default function SettingsPage() {
         }
       }
 
-      if ("caches" in window) {
-        const cacheNames = await caches.keys();
-        console.log("Clearing caches:", cacheNames);
-        await Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)));
-      }
+      await clearCache();
 
       setReloadStatus("All caches cleared. Refreshing...");
 

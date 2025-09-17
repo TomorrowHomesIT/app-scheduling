@@ -9,6 +9,7 @@ interface IOfflineStore {
   initializeOfflineMode: () => Promise<boolean>;
   setOfflineMode: (enabled: boolean) => Promise<void>;
   clearOfflineStores: () => Promise<void>;
+  clearCache: () => Promise<void>;
 }
 
 const useOfflineStore = create<IOfflineStore>((set, get) => ({
@@ -30,8 +31,7 @@ const useOfflineStore = create<IOfflineStore>((set, get) => ({
   setOfflineMode: async (enabled: boolean) => {
     try {
       await offlineDB.setOfflineMode(enabled);
-      set({ isOfflineModeEnabled: enabled });
-      
+
       if (typeof window !== "undefined" && "serviceWorker" in navigator) {
         navigator.serviceWorker.controller?.postMessage({
           type: "OFFLINE_MODE_CHANGED",
@@ -43,6 +43,8 @@ const useOfflineStore = create<IOfflineStore>((set, get) => ({
       if (!enabled) {
         await get().clearOfflineStores();
       }
+
+      set({ isOfflineModeEnabled: enabled });
     } catch (error) {
       console.error("Failed to set offline mode:", error);
       throw error;
@@ -52,6 +54,15 @@ const useOfflineStore = create<IOfflineStore>((set, get) => ({
   clearOfflineStores: async () => {
     await offlineQueue.clearQueue();
     await jobsDB.clearAll();
+    await get().clearCache();
+  },
+
+  clearCache: async () => {
+    if ("caches" in window) {
+      const cacheNames = await caches.keys();
+      console.log("Clearing caches:", cacheNames);
+      await Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)));
+    }
   },
 }));
 

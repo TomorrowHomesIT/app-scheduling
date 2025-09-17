@@ -3,16 +3,16 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ChevronDown, ChevronRight, Search, Folder, ListChecks } from "lucide-react";
+import { ChevronDown, ChevronRight, Search, Folder, ListChecks, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import useJobStore from "@/store/job/job-store";
 import useOwnersStore from "@/store/owners-store";
 import { UserProfileButton } from "@/components/user-profile-button";
 import { Logo } from "../ui/logo";
+import { useAuth } from "@/components/auth/auth-context";
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -21,24 +21,17 @@ interface SidebarProps {
 
 function SidebarContent({ onJobSelect }: { onJobSelect?: () => void }) {
   const pathname = usePathname();
-  const { currentJob } = useJobStore();
   const { owners } = useOwnersStore();
+  const { user } = useAuth();
   const [expandedOwners, setExpandedOwners] = useState<Set<number>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
 
-  // Auto-expand owner when current job changes
+  // Expand all owners by default
   useEffect(() => {
-    if (currentJob) {
-      // Find which owner contains this job
-      for (const owner of owners) {
-        if (owner.jobs?.some((job) => job.id === currentJob.id)) {
-          setExpandedOwners((prev) => new Set(prev).add(owner.id));
-          break;
-        }
-      }
-    }
-  }, [currentJob, owners]);
+    const allOwnerIds = new Set(owners.map((owner) => owner.id));
+    setExpandedOwners(allOwnerIds);
+  }, [owners]);
 
   const toggleOwner = (ownerId: number) => {
     const newExpanded = new Set(expandedOwners);
@@ -66,7 +59,14 @@ function SidebarContent({ onJobSelect }: { onJobSelect?: () => void }) {
       }
       return null;
     })
-    .filter((owner): owner is NonNullable<typeof owner> => owner !== null);
+    .filter((owner): owner is NonNullable<typeof owner> => owner !== null)
+    .sort((a, b) => {
+      // Sort current user's owner to the top
+      if (a.userId === user?.id) return -1;
+      if (b.userId === user?.id) return 1;
+      // Keep original order for other owners
+      return 0;
+    });
 
   return (
     <>
@@ -99,10 +99,17 @@ function SidebarContent({ onJobSelect }: { onJobSelect?: () => void }) {
                     ) : (
                       <ChevronRight className="absolute h-4 w-4 opacity-0 transition-opacity group-hover:opacity-100" />
                     )}
-                    <Folder
-                      className="absolute h-4 w-4 transition-opacity group-hover:opacity-0"
-                      style={{ color: owner.color || "#0A120A" }}
-                    />
+                    {owner.userId === user?.id ? (
+                      <User
+                        className="absolute h-4 w-4 transition-opacity group-hover:opacity-0"
+                        style={{ color: owner.color || "#0A120A" }}
+                      />
+                    ) : (
+                      <Folder
+                        className="absolute h-4 w-4 transition-opacity group-hover:opacity-0"
+                        style={{ color: owner.color || "#0A120A" }}
+                      />
+                    )}
                   </span>
                   <span className="flex-1 text-left">{owner.name}</span>
                   <span className="text-xs text-muted-foreground">{owner.jobs?.length || 0}</span>

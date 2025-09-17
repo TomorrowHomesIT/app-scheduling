@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/client";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { offlineQueue } from "@/lib/offline-queue";
 import { jobsDB } from "@/lib/jobs-db";
+import useOfflineStore from "@/store/offline-store";
 
 interface AuthContextType {
   isAuthLoading: boolean;
@@ -25,6 +26,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const { setOfflineMode } = useOfflineStore();
   const [user, setUser] = useState<IUserProfile | null>(null);
   const supabase = createClient();
 
@@ -52,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Clear offline queue and jobs data on logout
     await offlineQueue.clearQueue();
     await jobsDB.clearAll();
+    await setOfflineMode(false);
   };
 
   const login = async () => {

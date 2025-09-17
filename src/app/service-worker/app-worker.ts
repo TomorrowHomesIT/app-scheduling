@@ -3,6 +3,7 @@ import { Serwist } from "serwist";
 import { defaultCache } from "@serwist/next/worker";
 import { swStartJobSync, swStopJobSync } from "./job";
 import { swStartQueueProcessing, swStopQueueProcessing } from "./queue";
+import { swCheckOfflineMode } from "./offline";
 
 // This declares the value of `injectionPoint` to TypeScript.
 // `injectionPoint` is the string that will be replaced by the
@@ -16,6 +17,8 @@ declare global {
 declare const self: ServiceWorkerGlobalScope;
 
 const cacheVersion = "1.0.5"; // Increment this to force service worker updates
+
+let backgroundProcessesRunning = false;
 
 const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST,
@@ -152,16 +155,27 @@ self.addEventListener("install", (event: ExtendableEvent) => {
   serwist.handleInstall(event);
 });
 
-// Activate event - start background processes
+// Activate event - start background processes only if offline mode is enabled
 self.addEventListener("activate", (event: ExtendableEvent) => {
-  self.clients.claim();
-  serwist.handleActivate(event);
+  event.waitUntil(
+    (async () => {
+      self.clients.claim();
+      serwist.handleActivate(event);
 
-  // Start background processes
-  swStartQueueProcessing();
-  swStartJobSync();
+      // Check if offline mode is enabled before starting background processes
+      const offlineModeEnabled = await swCheckOfflineMode();
 
-  console.log("Service worker activated and background processes started");
+      if (offlineModeEnabled) {
+        swStartQueueProcessing();
+        swStartJobSync();
+        backgroundProcessesRunning = true;
+        console.log("Service worker activated with offline mode - background processes started");
+      } else {
+        console.log("Service worker activated without offline mode - background processes not started");
+        backgroundProcessesRunning = false;
+      }
+    })(),
+  );
 });
 
 // Handle service worker termination (cleanup)
@@ -169,6 +183,29 @@ self.addEventListener("deactivate", () => {
   console.log("Service worker terminating, stopping background processes...");
   swStopQueueProcessing();
   swStopJobSync();
+  backgroundProcessesRunning = false;
+});
+
+// Listen for messages from the app
+self.addEventListener("message", async (event: ExtendableMessageEvent) => {
+  if (event.data?.type === "OFFLINE_MODE_CHANGED") {
+    const enabled = event.data.offlineMode;
+    console.log(`Received offline mode change: ${enabled ? "enabled" : "disabled"}`);
+
+    if (enabled && !backgroundProcessesRunning) {
+      // Start background processes
+      swStartQueueProcessing();
+      swStartJobSync();
+      backgroundProcessesRunning = true;
+      console.log("Started background processes due to offline mode being enabled");
+    } else if (!enabled && backgroundProcessesRunning) {
+      // Stop background processes
+      swStopQueueProcessing();
+      swStopJobSync();
+      backgroundProcessesRunning = false;
+      console.log("Stopped background processes due to offline mode being disabled");
+    }
+  }
 });
 
 serwist.addEventListeners();

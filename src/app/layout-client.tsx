@@ -28,60 +28,69 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
   const [isPreloadingRoutes, setIsPreloadingRoutes] = useState(false);
   const [preloadingProgress, setPreloadingProgress] = useState({ current: 0, total: 0 });
 
-  // Bootstrap all data when user is authenticated
+  // Bootstrap core data when user is authenticated (runs when isAuthenticated changes)
   useEffect(() => {
     if (!isAuthenticated) return;
-    // TODO should we remove cached data?
 
-    const bootstrapData = async () => {
+    const bootstrapCoreData = async () => {
       try {
-        console.log("Bootstrapping data...");
-        const isOfflineEnabled = await initializeOfflineMode();
-        const promise = [loadOwners(), loadSuppliers(), loadTaskStages()];
-
-        if (isOfflineEnabled) {
-          promise.push(loadUserJobs());
-        }
-
-        await Promise.all(promise);
-        console.log("Data bootstrapped successfully");
+        console.log("Bootstrapping core data...");
+        await Promise.all([initializeOfflineMode(), loadOwners(), loadSuppliers(), loadTaskStages()]);
+        console.log("Core data bootstrapped successfully");
       } catch (error) {
-        console.error("Failed to bootstrap data:", error);
+        console.error("Failed to bootstrap core data:", error);
       }
     };
 
-    bootstrapData();
-  }, [isAuthenticated, loadOwners, loadSuppliers, loadUserJobs, loadTaskStages, initializeOfflineMode]);
+    bootstrapCoreData();
+  }, [isAuthenticated, loadOwners, loadSuppliers, loadTaskStages, initializeOfflineMode]);
 
-  // Navigate to all routes to preload them for offline access
+  // Handle offline mode specific operations
   useEffect(() => {
-    if (!isAuthenticated || !owners?.length || !isOfflineModeEnabled) return;
+    if (!isAuthenticated || !isOfflineModeEnabled || !owners?.length) return;
 
-    console.log("Navigating to all routes for offline preloading...");
+    const handleOfflineMode = async () => {
+      console.log("Offline mode enabled - loading user jobs and preloading routes...");
 
-    // Collect all job routes from owners
-    const jobRoutes: string[] = [];
-    owners.forEach((owner) => {
-      if (owner.jobs && owner.userId && owner.userId === user?.id) {
-        owner.jobs.forEach((job) => {
-          jobRoutes.push(`/jobs/${job.id}`);
-        });
+      // First load user jobs
+      try {
+        await loadUserJobs();
+        console.log("User jobs loaded for offline mode");
+      } catch (error) {
+        console.error("Failed to load user jobs:", error);
+        return; // Don't proceed with route preloading if jobs failed
       }
-    });
 
-    if (!jobRoutes.length) return;
-    const coreRoutes = ["/", "/jobs", "/offline"];
-    const allRoutes = [...coreRoutes, ...jobRoutes];
+      // Then navigate to all routes for offline preloading
+      console.log("Navigating to all routes for offline preloading...");
 
-    console.log(`Navigating to ${allRoutes.length} routes for preloading:`, allRoutes);
+      // Collect all job routes from owners
+      const jobRoutes: string[] = [];
+      owners.forEach((owner) => {
+        if (owner.jobs && owner.userId && owner.userId === user?.id) {
+          owner.jobs.forEach((job) => {
+            jobRoutes.push(`/jobs/${job.id}`);
+          });
+        }
+      });
 
-    // Navigate to each route sequentially to ensure full loading
-    const navigateToRoutes = async () => {
+      if (!jobRoutes.length) {
+        console.log("No job routes to preload");
+        return;
+      }
+
+      const coreRoutes = ["/", "/jobs", "/offline"];
+      const allRoutes = [...coreRoutes, ...jobRoutes];
+
+      console.log(`Navigating to ${allRoutes.length} routes for preloading:`, allRoutes);
+
+      // Navigate to each route sequentially to ensure full loading
       setIsPreloadingRoutes(true);
       setPreloadingProgress({ current: 0, total: allRoutes.length });
 
       // Check if we're offline before attempting navigation
       if (!navigator.onLine) {
+        console.log("Offline - skipping route preloading");
         setIsPreloadingRoutes(false);
         return;
       }
@@ -105,8 +114,8 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
       setIsPreloadingRoutes(false);
     };
 
-    navigateToRoutes();
-  }, [isAuthenticated, owners, router, user, isOfflineModeEnabled]);
+    handleOfflineMode();
+  }, [isAuthenticated, isOfflineModeEnabled, owners, router, user?.id, loadUserJobs]);
 
   if ((isLoading || isPreloadingRoutes) && isAuthenticated) {
     return (

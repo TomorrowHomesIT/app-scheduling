@@ -1,5 +1,6 @@
 import { QUEUE_STORE_NAME, type QueuedRequest } from "@/models/db.model";
 import { swInitIndexedDB } from "./db";
+import { swCheckOfflineMode } from "./offline";
 
 let queueProcessingInterval: NodeJS.Timeout | null = null;
 const QUEUE_PROCESSING_INTERVAL = 10000; // 10 seconds
@@ -161,6 +162,13 @@ export const swStopQueueProcessing = () => {
 // Process the request queue
 export async function swProcessQueue(): Promise<void> {
   try {
+    // Check if offline mode is enabled
+    const offlineModeEnabled = await swCheckOfflineMode();
+    if (!offlineModeEnabled) {
+      console.log("Skipping queue processing - offline mode is disabled");
+      return;
+    }
+
     console.log("Starting background sync for queued requests...");
 
     // Only process queue if we're actually online

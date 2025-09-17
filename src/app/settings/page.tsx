@@ -82,10 +82,12 @@ export default function SettingsPage() {
 
   const handleOfflineModeToggle = async () => {
     setIsRefreshing(true);
-    setReloadStatus("Toggling offline mode...");
+    const newMode = !isOfflineModeEnabled;
+    setReloadStatus(`${newMode ? "Enabling" : "Disabling"} offline mode...`);
+
     try {
-      await setOfflineMode(!isOfflineModeEnabled);
-      await handleFullRefresh();
+      // Set the offline mode and send message to service worker
+      await setOfflineMode(newMode);
     } catch (error) {
       console.error("Failed to toggle offline mode:", error);
       setReloadStatus("Failed to toggle offline mode");
@@ -128,49 +130,53 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Restarts</CardTitle>
-            <CardDescription>
-              These are designed to update and help clear issues with the app. Avoid using them unless necessary.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex flex-col sm:flex-row justify-between gap-2">
-              <Button
-                onClick={handleHardRefresh}
-                disabled={isRefreshing}
-                className="flex-1 sm:w-auto"
-                variant="outline"
-              >
-                <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
-                Restart App
-              </Button>
+        {isOfflineModeEnabled && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Restarts</CardTitle>
+              <CardDescription>
+                These are designed to update and help clear issues with the app. Avoid using them unless necessary.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-col sm:flex-row justify-between gap-2">
+                <Button
+                  onClick={handleHardRefresh}
+                  disabled={isRefreshing}
+                  className="flex-1 sm:w-auto"
+                  variant="outline"
+                >
+                  <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+                  Restart App
+                </Button>
 
-              <Button
-                onClick={handleServiceWorkerRefresh}
-                disabled={isRefreshing}
-                variant="outline"
-                className="flex-1 sm:w-auto"
-              >
-                <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
-                Restart Service Worker
-              </Button>
+                <Button
+                  onClick={handleServiceWorkerRefresh}
+                  disabled={isRefreshing}
+                  variant="outline"
+                  className="flex-1 sm:w-auto"
+                >
+                  <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+                  Restart Service Worker
+                </Button>
 
-              <Button
-                onClick={handleFullRefresh}
-                disabled={isRefreshing}
-                variant="destructive"
-                className="flex-1 sm:w-auto"
-              >
-                <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
-                Clear Cache & Reload
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+                <Button
+                  onClick={handleFullRefresh}
+                  disabled={isRefreshing}
+                  variant="destructive"
+                  className="flex-1 sm:w-auto"
+                >
+                  <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+                  Clear Cache & Reload
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-        <LogoutButton />
+        <div className="flex justify-end">
+          <LogoutButton />
+        </div>
       </div>
     </div>
   );

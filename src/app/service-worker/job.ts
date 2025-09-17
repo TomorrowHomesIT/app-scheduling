@@ -1,6 +1,7 @@
 import { JOBS_STORE_NAME, TASKS_STORE_NAME, type StoredJob, type StoredTask } from "@/models/db.model";
 import { swInitIndexedDB } from "./db";
 import type { IJob } from "@/models";
+import { swCheckOfflineMode } from "./offline";
 
 let jobSyncInterval: NodeJS.Timeout | null = null;
 
@@ -56,6 +57,13 @@ const hasPendingUpdates = async (): Promise<boolean> => {
 // Function to sync jobs from API
 const syncJobs = async (): Promise<void> => {
   try {
+    // Check if offline mode is enabled
+    const offlineModeEnabled = await swCheckOfflineMode();
+    if (!offlineModeEnabled) {
+      console.log("Skipping job sync - offline mode is disabled");
+      return;
+    }
+
     console.log("Starting job sync...");
 
     // Check if there are pending updates

@@ -34,6 +34,7 @@ const useOfflineStore = create<IOfflineStore>((set) => ({
           type: "OFFLINE_MODE_CHANGED",
           offlineMode: enabled,
         });
+        console.log(`Sent offline mode change to service worker controller: ${enabled ? "enabled" : "disabled"}`);
       }
     } catch (error) {
       console.error("Failed to set offline mode:", error);

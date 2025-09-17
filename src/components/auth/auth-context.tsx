@@ -52,8 +52,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
 
     // Clear offline queue and jobs data on logout
-    await offlineQueue.clearQueue();
-    await jobsDB.clearAll();
     await setOfflineMode(false);
   };
 

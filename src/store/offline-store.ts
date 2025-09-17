@@ -1,14 +1,17 @@
 import { create } from "zustand";
 import { offlineDB } from "@/lib/offline-db";
+import { offlineQueue } from "@/lib/offline-queue";
+import { jobsDB } from "@/lib/jobs-db";
 
 interface IOfflineStore {
   isOfflineModeEnabled: boolean;
   isInitialized: boolean;
   initializeOfflineMode: () => Promise<boolean>;
   setOfflineMode: (enabled: boolean) => Promise<void>;
+  clearOfflineStores: () => Promise<void>;
 }
 
-const useOfflineStore = create<IOfflineStore>((set) => ({
+const useOfflineStore = create<IOfflineStore>((set, get) => ({
   isOfflineModeEnabled: false,
   isInitialized: false,
 
@@ -36,10 +39,19 @@ const useOfflineStore = create<IOfflineStore>((set) => ({
         });
         console.log(`Sent offline mode change to service worker controller: ${enabled ? "enabled" : "disabled"}`);
       }
+
+      if (!enabled) {
+        await get().clearOfflineStores();
+      }
     } catch (error) {
       console.error("Failed to set offline mode:", error);
       throw error;
     }
+  },
+
+  clearOfflineStores: async () => {
+    await offlineQueue.clearQueue();
+    await jobsDB.clearAll();
   },
 }));
 

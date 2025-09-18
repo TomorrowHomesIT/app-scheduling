@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { format } from "date-fns";
 import type { IJobTask } from "@/models/job.model";
 import type { EJobTaskStatus } from "@/models/job.model";
 import type { IScheduleEmailRequest } from "@/models/email";
@@ -144,7 +145,7 @@ const useJobTaskStore = create<JobTaskStore>(() => ({
       jobLotCode: currentJob.name,
       jobLocation: currentJob.location,
       taskTitle: task.name,
-      taskStartDate: task.startDate ? new Date(task.startDate).toISOString() : null,
+      taskStartDate: task.startDate ? format(task.startDate, "yyyy-MM-dd") : null,
       taskNotes: task.notes,
       recipientName: supplier.name,
       recipientEmails,

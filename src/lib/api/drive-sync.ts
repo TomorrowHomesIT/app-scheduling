@@ -83,6 +83,30 @@ async function fetchLinksFromExternalApi(
   }
 }
 
+// Helper function to compare two arrays of DriveFile objects
+function areLinksEqual(links1: DriveFile[], links2: DriveFile[]): boolean {
+  if (links1.length !== links2.length) {
+    return false;
+  }
+
+  // Sort both arrays by googleDriveId to ensure consistent comparison
+  const sorted1 = [...links1].sort((a, b) => a.googleDriveId.localeCompare(b.googleDriveId));
+  const sorted2 = [...links2].sort((a, b) => a.googleDriveId.localeCompare(b.googleDriveId));
+
+  // Compare each item
+  for (let i = 0; i < sorted1.length; i++) {
+    if (
+      sorted1[i].googleDriveId !== sorted2[i].googleDriveId ||
+      sorted1[i].name !== sorted2[i].name ||
+      sorted1[i].docTag !== sorted2[i].docTag
+    ) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 function transformApiResponse(data: ExternalApiResponse): {
   purchaseOrderLinks: DriveFile[];
   planLinks: DriveFile[];
@@ -130,10 +154,10 @@ async function processBatch(
 
       const transformed = transformApiResponse(apiData);
 
-      // Check if we need to update
-      const needsUpdate =
-        JSON.stringify(transformed.purchaseOrderLinks) !== JSON.stringify(task.purchase_order_links || []) ||
-        JSON.stringify(transformed.planLinks) !== JSON.stringify(task.plan_links || []);
+      // Check if we need to update - compare actual values, not JSON strings
+      const poLinksChanged = !areLinksEqual(transformed.purchaseOrderLinks, task.purchase_order_links || []);
+      const planLinksChanged = !areLinksEqual(transformed.planLinks, task.plan_links || []);
+      const needsUpdate = poLinksChanged || planLinksChanged;
 
       if (needsUpdate) {
         console.log(`Task ${task.id}: Updating links`, {

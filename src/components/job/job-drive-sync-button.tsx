@@ -16,7 +16,7 @@ export function JobDriveSyncButton({ jobId, onCloseDialog }: JobDriveSyncButtonP
   const handleSync = async () => {
     onCloseDialog();
 
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     setLoading("currentJob", true, "Syncing with Google Drive. This may take a while...");
 

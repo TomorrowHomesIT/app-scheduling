@@ -63,7 +63,15 @@ function SidebarContent({ onJobSelect }: { onJobSelect?: () => void }) {
       }
       return null;
     })
-    .filter((owner): owner is NonNullable<typeof owner> => owner !== null);
+    .filter((owner): owner is NonNullable<typeof owner> => owner !== null)
+    .filter((owner) => (owner.jobs?.length || 0) > 0) // Hide owners with no jobs
+    .sort((a, b) => {
+      // Put current user's owner first
+      if (a.userId === user?.id && b.userId !== user?.id) return -1;
+      if (b.userId === user?.id && a.userId !== user?.id) return 1;
+      // Then sort alphabetically by name
+      return a.name.localeCompare(b.name);
+    });
 
   return (
     <>

@@ -27,15 +27,32 @@ function SidebarContent({ onJobSelect }: { onJobSelect?: () => void }) {
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
 
-  // Expand only the current user's owner by default
+  // Expand the current user's owner and the owner containing the current job
   useEffect(() => {
+    const ownersToExpand = new Set<number>();
+
+    // Always expand current user's owner
     if (user?.id) {
       const userOwner = owners.find((owner) => owner.userId === user.id);
       if (userOwner) {
-        setExpandedOwners(new Set([userOwner.id]));
+        ownersToExpand.add(userOwner.id);
       }
     }
-  }, [owners, user?.id]);
+
+    // Also check if we're on a job page and expand that owner
+    const jobIdMatch = pathname.match(/^\/jobs\/(\d+)$/);
+    if (jobIdMatch) {
+      const jobId = parseInt(jobIdMatch[1], 10);
+      const jobOwner = owners.find((owner) => owner.jobs?.some((job) => job.id === jobId));
+      if (jobOwner) {
+        ownersToExpand.add(jobOwner.id);
+      }
+    }
+
+    if (ownersToExpand.size > 0) {
+      setExpandedOwners(ownersToExpand);
+    }
+  }, [owners, user?.id, pathname]);
 
   const toggleOwner = (ownerId: number) => {
     const newExpanded = new Set(expandedOwners);

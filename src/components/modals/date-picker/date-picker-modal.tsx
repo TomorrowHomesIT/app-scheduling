@@ -35,7 +35,7 @@ export function DatePickerModal({ value, onChange, open, onOpenChange, taskName 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="box-border h-[400px] max-h-[90vh] overflow-y-auto flex flex-col gap-4">
+      <DialogContent className="box-border h-[560px] md:min-w-[700px] max-h-[90vh] overflow-y-auto flex flex-col gap-4">
         <DialogHeader>
           <DialogTitle>Select start date</DialogTitle>
           <DialogDescription>{taskName}</DialogDescription>

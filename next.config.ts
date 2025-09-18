@@ -3,7 +3,7 @@ import withSerwistInit from "@serwist/next";
 import { execSync } from "node:child_process";
 
 /** Turn this on/off to test Serwist in development - it's disabled by default */
-const isTestSwEnabled = true;
+const isTestSwEnabled = false;
 const disableSerwist = !isTestSwEnabled && process.env.NODE_ENV === "development";
 
 const revision = execSync("git rev-parse HEAD", { encoding: "utf8" }).trim().slice(0, 7);

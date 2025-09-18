@@ -32,6 +32,50 @@ interface JobTaskData {
   plan_links: DriveFile[] | null;
 }
 
+interface ProcessTaskResult {
+  updated: boolean;
+  apiData: ExternalApiResponse | null;
+  error?: string;
+}
+
+// Configuration
+const BATCH_SIZE = 20; // Number of parallel requests per batch
+
+// ================== HELPER FUNCTIONS ==================
+
+// Helper to check if environment is configured
+function checkEnvConfig(): { isValid: boolean; error?: string } {
+  if (!EXTERNAL_API_HOSTNAME || !SERVICE_TOKEN) {
+    return { isValid: false, error: "ENV variables are not set" };
+  }
+  return { isValid: true };
+}
+
+// Helper function to compare two arrays of DriveFile objects
+function areLinksEqual(links1: DriveFile[], links2: DriveFile[]): boolean {
+  if (links1.length !== links2.length) {
+    return false;
+  }
+
+  // Sort both arrays by googleDriveId to ensure consistent comparison
+  const sorted1 = [...links1].sort((a, b) => a.googleDriveId.localeCompare(b.googleDriveId));
+  const sorted2 = [...links2].sort((a, b) => a.googleDriveId.localeCompare(b.googleDriveId));
+
+  // Compare each item
+  for (let i = 0; i < sorted1.length; i++) {
+    if (
+      sorted1[i].googleDriveId !== sorted2[i].googleDriveId ||
+      sorted1[i].name !== sorted2[i].name ||
+      sorted1[i].docTag !== sorted2[i].docTag
+    ) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+// Fetch links from external API
 async function fetchLinksFromExternalApi(
   jobName: string,
   costCenter: number,
@@ -71,9 +115,8 @@ async function fetchLinksFromExternalApi(
     let data = await response.json();
     try {
       data = JSON.parse(data);
-    } catch (e) {
-      console.error("Failed to parse JSON response:", e);
-      return null;
+    } catch {
+      // Data is already parsed, ignore
     }
 
     return data;
@@ -83,30 +126,7 @@ async function fetchLinksFromExternalApi(
   }
 }
 
-// Helper function to compare two arrays of DriveFile objects
-function areLinksEqual(links1: DriveFile[], links2: DriveFile[]): boolean {
-  if (links1.length !== links2.length) {
-    return false;
-  }
-
-  // Sort both arrays by googleDriveId to ensure consistent comparison
-  const sorted1 = [...links1].sort((a, b) => a.googleDriveId.localeCompare(b.googleDriveId));
-  const sorted2 = [...links2].sort((a, b) => a.googleDriveId.localeCompare(b.googleDriveId));
-
-  // Compare each item
-  for (let i = 0; i < sorted1.length; i++) {
-    if (
-      sorted1[i].googleDriveId !== sorted2[i].googleDriveId ||
-      sorted1[i].name !== sorted2[i].name ||
-      sorted1[i].docTag !== sorted2[i].docTag
-    ) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
+// Transform API response to our format
 function transformApiResponse(data: ExternalApiResponse): {
   purchaseOrderLinks: DriveFile[];
   planLinks: DriveFile[];
@@ -129,8 +149,53 @@ function transformApiResponse(data: ExternalApiResponse): {
   return result;
 }
 
-const BATCH_SIZE = 20; // Number of parallel requests per batch
+// Process a single task - check and update if needed
+async function processTask(task: JobTaskData, jobName: string, supabase: SupabaseClient): Promise<ProcessTaskResult> {
+  // Skip tasks without a cost center
+  if (!task.cost_center) {
+    return { updated: false, apiData: null };
+  }
 
+  // Fetch data from external API
+  const apiData = await fetchLinksFromExternalApi(jobName, task.cost_center, task.doc_tags || []);
+  if (!apiData) {
+    return { updated: false, apiData: null };
+  }
+
+  const transformed = transformApiResponse(apiData);
+
+  // Check if we need to update - compare actual values
+  const poLinksChanged = !areLinksEqual(transformed.purchaseOrderLinks, task.purchase_order_links || []);
+  const planLinksChanged = !areLinksEqual(transformed.planLinks, task.plan_links || []);
+  const needsUpdate = poLinksChanged || planLinksChanged;
+
+  if (!needsUpdate) {
+    return { updated: false, apiData };
+  }
+
+  console.log(`Task ${task.id}: Updating links`, {
+    po: transformed.purchaseOrderLinks.length,
+    plans: transformed.planLinks.length,
+  });
+
+  // Update the task with new links
+  const { error: updateError } = await supabase
+    .from("cf_job_tasks")
+    .update({
+      purchase_order_links: transformed.purchaseOrderLinks,
+      plan_links: transformed.planLinks,
+    })
+    .eq("id", task.id);
+
+  if (updateError) {
+    console.error(`Error updating task ${task.id}:`, updateError);
+    return { updated: false, apiData, error: updateError.message };
+  }
+
+  return { updated: true, apiData };
+}
+
+// Process a batch of tasks in parallel
 async function processBatch(
   tasks: JobTaskData[],
   jobName: string,
@@ -140,50 +205,7 @@ async function processBatch(
   let updatedCount = 0;
 
   // Process all tasks in this batch in parallel
-  const results = await Promise.all(
-    tasks.map(async (task) => {
-      // Skip tasks without a cost center
-      if (!task.cost_center) {
-        return { task, updated: false, apiData: null };
-      }
-
-      const apiData = await fetchLinksFromExternalApi(jobName, task.cost_center, task.doc_tags || []);
-      if (!apiData) {
-        return { task, updated: false, apiData: null };
-      }
-
-      const transformed = transformApiResponse(apiData);
-
-      // Check if we need to update - compare actual values, not JSON strings
-      const poLinksChanged = !areLinksEqual(transformed.purchaseOrderLinks, task.purchase_order_links || []);
-      const planLinksChanged = !areLinksEqual(transformed.planLinks, task.plan_links || []);
-      const needsUpdate = poLinksChanged || planLinksChanged;
-
-      if (needsUpdate) {
-        console.log(`Task ${task.id}: Updating links`, {
-          po: transformed.purchaseOrderLinks.length,
-          plans: transformed.planLinks.length,
-        });
-
-        // Update the task with new links
-        const { error: updateError } = await supabase
-          .from("cf_job_tasks")
-          .update({
-            purchase_order_links: transformed.purchaseOrderLinks,
-            plan_links: transformed.planLinks,
-          })
-          .eq("id", task.id);
-
-        if (updateError) {
-          console.error(`Error updating task ${task.id}:`, updateError);
-          return { task, updated: false, apiData };
-        }
-        return { task, updated: true, apiData };
-      }
-
-      return { task, updated: false, apiData };
-    }),
-  );
+  const results = await Promise.all(tasks.map((task) => processTask(task, jobName, supabase)));
 
   // Process results
   for (const result of results) {
@@ -199,10 +221,15 @@ async function processBatch(
   return { updates: updatedCount, googleDriveDirId };
 }
 
+// ================== MAIN FUNCTIONS ==================
+
+// Sync all tasks for a job
 export async function syncJobWithDrive(jobId: number, jobName: string, supabase: SupabaseClient): Promise<SyncResult> {
   try {
-    if (!EXTERNAL_API_HOSTNAME || !SERVICE_TOKEN) {
-      return { success: false, error: "ENV variables are not set" };
+    // Check environment configuration
+    const envCheck = checkEnvConfig();
+    if (!envCheck.isValid) {
+      return { success: false, error: envCheck.error };
     }
 
     console.log(`Starting sync for job ${jobId} (${jobName})`);
@@ -275,6 +302,33 @@ export async function syncJobWithDrive(jobId: number, jobName: string, supabase:
     };
   } catch (error) {
     console.error("Error in syncJobWithDrive:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
+  }
+}
+
+// Sync a single task
+export async function syncTaskWithDrive(
+  task: JobTaskData,
+  jobName: string,
+  supabase: SupabaseClient,
+): Promise<{ success: boolean; error?: string; updated?: boolean; task?: JobTaskData }> {
+  try {
+    const envCheck = checkEnvConfig();
+    if (!envCheck.isValid) {
+      return { success: false, error: envCheck.error };
+    }
+
+    const result = await processTask(task, jobName, supabase);
+    if (result.error) {
+      return { success: false, error: result.error };
+    }
+
+    return { success: true, updated: result.updated };
+  } catch (error) {
+    console.error("Error in syncTaskWithDrive:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error occurred",

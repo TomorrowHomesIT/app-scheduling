@@ -7,19 +7,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { X } from "lucide-react";
+import { X, CloudDownload } from "lucide-react";
+import { toast } from "@/store/toast-store";
 import type { IJobTask } from "@/models/job.model";
 import { DOC_TAGS } from "@/models/doc-tags.const";
 import { cn } from "@/lib/utils";
 
-interface TaskDetailsModalProps {
+interface JobTaskEditModalProps {
   task: IJobTask;
   onSave: (taskId: number, updates: Partial<IJobTask>) => Promise<void>;
+  onSync: (jobId: number) => Promise<void>;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function TaskDetailsModal({ task, onSave, open, onOpenChange }: TaskDetailsModalProps) {
+export function JobTaskEditModal({ task, onSave, onSync, open, onOpenChange }: JobTaskEditModalProps) {
   const [localTask, setLocalTask] = useState<Partial<IJobTask>>({
     name: task.name,
     costCenter: task.costCenter,
@@ -56,18 +58,7 @@ export function TaskDetailsModal({ task, onSave, open, onOpenChange }: TaskDetai
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // Only send fields that have changed
-      const updates: Partial<IJobTask> = {
-        name: localTask.name,
-        docTags: localTask.docTags || null,
-      };
-
-      if (localTask.costCenter !== task.costCenter) {
-        // Ensure cost center is sent as a number (float)
-        updates.costCenter = localTask.costCenter ? parseFloat(localTask.costCenter.toString()) : null;
-      }
-
-      await onSave(task.id, updates);
+      await onSaveChanges();
       onOpenChange(false);
     } catch (error) {
       console.error("Failed to save task details:", error);
@@ -83,6 +74,73 @@ export function TaskDetailsModal({ task, onSave, open, onOpenChange }: TaskDetai
       docTags: task.docTags || [],
     });
     onOpenChange(false);
+  };
+
+  const syncRequest = async () => {
+    const response = await fetch(`/api/tasks/${task.id}/sync-drive`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(response.statusText);
+    }
+
+    return await response.json();
+  };
+
+  const handleSync = async () => {
+    const currentCostCenter = localTask.costCenter || task.costCenter;
+
+    if (!currentCostCenter) {
+      toast.warning("Cannot sync: Cost center is required");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      // Save the current changes first
+      await onSaveChanges();
+
+      // Sync with Google Drive using the saved data
+      await toast.while(syncRequest(), {
+        loading: "Syncing with Google Drive",
+        success: (data) => {
+          if (data?.updated) {
+            // Only close and reload the job if it was updated
+            onOpenChange(false);
+            onSync(task.jobId);
+
+            return { message: "Task synced with Google Drive", type: "success" };
+          } else {
+            return { message: "Task is already up to date", type: "warning" };
+          }
+        },
+        error: "Failed to sync with Google Drive",
+      });
+    } catch (error) {
+      console.error("Error saving and syncing task:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to save and sync task");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const onSaveChanges = async () => {
+    // Only send fields that have changed
+    const updates: Partial<IJobTask> = {
+      name: localTask.name,
+      docTags: localTask.docTags || null,
+    };
+
+    if (localTask.costCenter !== task.costCenter) {
+      // Ensure cost center is sent as a number (float)
+      updates.costCenter = localTask.costCenter ? parseFloat(localTask.costCenter.toString()) : null;
+    }
+
+    await onSave(task.id, updates);
   };
 
   // Get available tags (not already selected)
@@ -152,9 +210,14 @@ export function TaskDetailsModal({ task, onSave, open, onOpenChange }: TaskDetai
                 localTask.docTags.map((tag) => (
                   <Badge key={tag} variant="secondary" className="gap-1">
                     {tag}
-                    <button onClick={() => handleRemoveTag(tag)} className="ml-1 hover:text-destructive" type="button">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemoveTag(tag)}
+                      className="ml-1 h-auto w-auto p-0 hover:text-destructive"
+                    >
                       <X className="h-3 w-3" />
-                    </button>
+                    </Button>
                   </Badge>
                 ))
               ) : (
@@ -164,27 +227,41 @@ export function TaskDetailsModal({ task, onSave, open, onOpenChange }: TaskDetai
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={handleCancel}>
-            Cancel
+        <DialogFooter className="flex justify-between sm:justify-between">
+          <Button
+            variant="outline"
+            size="default"
+            onClick={handleSync}
+            disabled={isSaving || !localTask.costCenter}
+            className="sm:mr-auto"
+            title="Sync with Drive"
+          >
+            <CloudDownload className="h-4 w-4" />
+            {!localTask.costCenter ? "Cost center required" : "Sync Drive"}
           </Button>
-          <Button onClick={handleSave} disabled={isSaving || !localTask.name}>
-            {isSaving ? "Saving..." : "Save Changes"}
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleCancel}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={isSaving || !localTask.name}>
+              {isSaving ? "Saving..." : "Save"}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
 
-interface TaskDetailsTriggerProps {
+interface JobTaskEditTriggerProps {
   task: IJobTask;
   onSave: (taskId: number, updates: Partial<IJobTask>) => Promise<void>;
+  onSync: (jobId: number) => Promise<void>;
   children: React.ReactNode;
   className?: string;
 }
 
-export function TaskDetailsTrigger({ task, onSave, children, className }: TaskDetailsTriggerProps) {
+export function JobTaskEditTrigger({ task, onSave, onSync, children, className }: JobTaskEditTriggerProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -197,7 +274,7 @@ export function TaskDetailsTrigger({ task, onSave, children, className }: TaskDe
       >
         {children}
       </Button>
-      <TaskDetailsModal task={task} onSave={onSave} open={open} onOpenChange={setOpen} />
+      <JobTaskEditModal task={task} onSave={onSave} onSync={onSync} open={open} onOpenChange={setOpen} />
     </>
   );
 }

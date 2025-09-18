@@ -6,20 +6,29 @@ interface LoadingState {
   error: string | null;
 }
 
+interface CurrentJobLoadingState {
+  isLoading: boolean;
+  message: string | null;
+  error: string | null;
+}
+
 interface LoadingStore {
   // Individual loading states
   owners: LoadingState;
   suppliers: LoadingState;
   jobs: LoadingState;
 
+  // The current job is seperate from the global loading state
+  currentJob: CurrentJobLoadingState;
+
   // Global loading state
   isLoading: boolean;
   isGlobalLoaded: boolean;
 
   // Actions
-  setLoading: (key: "owners" | "suppliers" | "jobs", isLoading: boolean) => void;
-  setLoaded: (key: "owners" | "suppliers" | "jobs", isLoaded: boolean) => void;
-  setError: (key: "owners" | "suppliers" | "jobs", error: string | null) => void;
+  setLoading: (key: "owners" | "suppliers" | "jobs" | "currentJob", isLoading: boolean, message?: string) => void;
+  setLoaded: (key: "owners" | "suppliers" | "jobs" | "currentJob", isLoaded: boolean) => void;
+  setError: (key: "owners" | "suppliers" | "jobs" | "currentJob", error: string | null) => void;
   reset: () => void;
 
   // Computed getters
@@ -33,14 +42,30 @@ const useLoadingStore = create<LoadingStore>((set, get) => ({
   owners: { isLoading: false, isLoaded: false, error: null },
   suppliers: { isLoading: false, isLoaded: false, error: null },
   jobs: { isLoading: false, isLoaded: false, error: null },
+  currentJob: { isLoading: false, message: null, error: null },
   isLoading: false,
   isGlobalLoaded: false,
 
-  setLoading: (key, isLoading) => {
-    set((state) => ({
-      [key]: { ...state[key], isLoading, error: isLoading ? null : state[key].error },
-      isLoading: isLoading || state.suppliers.isLoading || state.jobs.isLoading,
-    }));
+  setLoading: (key, isLoading, message) => {
+    set((state) => {
+      const newState = {
+        ...state,
+        [key]: { ...state[key], isLoading, error: isLoading ? null : state[key].error, message },
+      };
+
+      // Update global isLoading only for states other than currentJob
+      if (key === "currentJob") {
+        return newState;
+      }
+
+      // For other states, update global isLoading
+      const globalLoading = newState.owners.isLoading || newState.suppliers.isLoading || newState.jobs.isLoading;
+
+      return {
+        ...newState,
+        isLoading: globalLoading,
+      };
+    });
   },
 
   setLoaded: (key, isLoaded) => {
@@ -72,6 +97,7 @@ const useLoadingStore = create<LoadingStore>((set, get) => ({
       owners: { isLoading: false, isLoaded: false, error: null },
       suppliers: { isLoading: false, isLoaded: false, error: null },
       jobs: { isLoading: false, isLoaded: false, error: null },
+      currentJob: { isLoading: false, message: null, error: null },
       isLoading: false,
       isGlobalLoaded: false,
     });

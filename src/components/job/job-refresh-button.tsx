@@ -4,26 +4,28 @@ import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/store/toast-store";
 import useJobStore from "@/store/job/job-store";
+import { useState } from "react";
 
 interface JobRefreshButtonProps {
   jobId: number;
 }
 
 export function JobRefreshButton({ jobId }: JobRefreshButtonProps) {
-  const { currentJobSyncStatus, isLoadingJobs, refreshJob } = useJobStore();
+  const [isLoading, setIsLoading] = useState(false);
+  const { currentJobSyncStatus, refreshJob } = useJobStore();
 
   if (!currentJobSyncStatus) {
     return null;
   }
 
   const hasPendingUpdates = currentJobSyncStatus.hasPendingUpdates;
-  const isLoading = isLoadingJobs;
   const handleRefresh = async () => {
     if (hasPendingUpdates) {
       toast.error("Cannot refresh while there are pending updates. Please sync your changes first.");
       return;
     }
 
+    setIsLoading(true);
     try {
       await toast.while(refreshJob(jobId), {
         loading: "Refreshing job...",
@@ -32,6 +34,8 @@ export function JobRefreshButton({ jobId }: JobRefreshButtonProps) {
       });
     } catch (error) {
       console.error("Refresh failed:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 

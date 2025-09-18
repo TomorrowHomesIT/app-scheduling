@@ -16,7 +16,6 @@ interface JobStore {
   jobs: IJob[]; // TODO I'm not sure this is actually uesd? We never load a list of jobs lol
   currentJob: IJob | null;
   currentJobSyncStatus: JobSyncStatus | null;
-  isLoadingJobs: boolean;
 
   loadUserJobs: () => Promise<void>;
   loadJob: (id: number) => Promise<void>;
@@ -86,7 +85,6 @@ const useJobStore = create<JobStore>((set, get) => ({
   jobs: [],
   currentJob: null,
   currentJobSyncStatus: null,
-  isLoadingJobs: false,
 
   loadUserJobs: async () => {
     const loading = useLoadingStore.getState();
@@ -108,8 +106,9 @@ const useJobStore = create<JobStore>((set, get) => ({
   },
 
   loadJob: async (id: number) => {
-    if (get().isLoadingJobs) return;
-    set({ isLoadingJobs: true });
+    const loading = useLoadingStore.getState();
+    if (loading.currentJob.isLoading) return;
+    loading.setLoading("currentJob", true);
 
     try {
       const localJob = await jobsDB.getJob(id);
@@ -125,7 +124,7 @@ const useJobStore = create<JobStore>((set, get) => ({
         set(() => ({ currentJob: job, currentJobSyncStatus: null }));
       }
     } finally {
-      set({ isLoadingJobs: false });
+      loading.setLoading("currentJob", false);
     }
   },
 
@@ -161,9 +160,6 @@ const useJobStore = create<JobStore>((set, get) => ({
   },
 
   refreshJob: async (jobId: number) => {
-    if (get().isLoadingJobs) return;
-    set({ isLoadingJobs: true });
-
     try {
       // Fetch fresh data from API
       const job = await fetchJobByIdFromApi(jobId);
@@ -182,8 +178,6 @@ const useJobStore = create<JobStore>((set, get) => ({
     } catch (error) {
       console.error("Failed to refresh job:", error);
       throw error;
-    } finally {
-      set({ isLoadingJobs: false });
     }
   },
 

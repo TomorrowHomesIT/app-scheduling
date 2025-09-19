@@ -1,28 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Spinner } from "@/components/ui/spinner";
 import { PageHeader } from "@/components/page-header";
 import { SuppliersTable } from "./suppliers-table";
 import useSupplierStore from "@/store/supplier-store";
 import { Input } from "@/components/ui/input";
 import type { ISupplier } from "@/models/supplier.model";
-import useLoadingStore from "@/store/loading-store";
 
 export default function JobsPage() {
-  const { suppliers, archivedSuppliers, loadArchivedSuppliers, isArchivedLoaded } = useSupplierStore();
-  const { isLoading } = useLoadingStore();
+  const { activeSuppliers, archivedSuppliers } = useSupplierStore();
   const [activeTab, setActiveTab] = useState("current");
   const [searchQuery, setSearchQuery] = useState("");
 
-  useEffect(() => {
-    loadArchivedSuppliers();
-  }, [loadArchivedSuppliers]);
-
   const filteredSuppliers = () => {
     if (activeTab === "current") {
-      return suppliers.filter((supplier) => isMatch(supplier));
+      return activeSuppliers.filter((supplier) => isMatch(supplier));
     }
 
     return archivedSuppliers.filter((supplier) => isMatch(supplier));
@@ -32,18 +25,10 @@ export default function JobsPage() {
     return supplier.name.toLowerCase().includes(searchQuery.toLowerCase());
   };
 
-  if (isLoading || !isArchivedLoaded) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <Spinner variant="default" size="xl" />
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col h-full bg-background">
       <div className="border-b bg-background">
-        <PageHeader title="Suppliers" backLink="/" />
+        <PageHeader title="Suppliers" backLink="/" description="Manage your contacts and suppliers" />
       </div>
 
       <div className="flex-1 overflow-auto p-4">
@@ -58,7 +43,7 @@ export default function JobsPage() {
               />
 
               <TabsList className="grid w-full max-w-md grid-cols-2">
-                <TabsTrigger value="current">Suppliers</TabsTrigger>
+                <TabsTrigger value="current">Active</TabsTrigger>
                 <TabsTrigger value="archived">Archived</TabsTrigger>
               </TabsList>
             </div>

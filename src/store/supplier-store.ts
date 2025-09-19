@@ -6,10 +6,9 @@ import useLoadingStore from "@/store/loading-store";
 
 interface SupplierStore {
   suppliers: ISupplier[];
+  activeSuppliers: ISupplier[];
   archivedSuppliers: ISupplier[];
-  isArchivedLoaded: boolean;
   loadSuppliers: () => Promise<void>;
-  loadArchivedSuppliers: () => Promise<void>;
   getSupplierById: (id: number) => ISupplier | undefined;
 }
 
@@ -25,8 +24,8 @@ const fetchSuppliers = async (active: boolean): Promise<ISupplier[]> => {
 
 const useSupplierStore = create<SupplierStore>((set, get) => ({
   suppliers: [],
+  activeSuppliers: [],
   archivedSuppliers: [],
-  isArchivedLoaded: false,
 
   loadSuppliers: async () => {
     const loading = useLoadingStore.getState();
@@ -36,7 +35,10 @@ const useSupplierStore = create<SupplierStore>((set, get) => ({
 
     try {
       const suppliers = await fetchSuppliers(true);
-      set({ suppliers });
+      const activeSuppliers = suppliers.filter((supplier) => supplier.active);
+      const archivedSuppliers = suppliers.filter((supplier) => !supplier.active);
+
+      set({ suppliers, activeSuppliers, archivedSuppliers });
       loading.setLoaded("suppliers", true);
     } catch (error) {
       const errorMessage = await getApiErrorMessage(error);
@@ -44,17 +46,6 @@ const useSupplierStore = create<SupplierStore>((set, get) => ({
       toast.error(errorMessage);
     } finally {
       loading.setLoading("suppliers", false);
-    }
-  },
-
-  loadArchivedSuppliers: async () => {
-    if (get().isArchivedLoaded) return; // Don't load if already loaded
-
-    try {
-      const suppliers = await fetchSuppliers(false);
-      set({ archivedSuppliers: suppliers, isArchivedLoaded: true });
-    } catch (error) {
-      toast.error(await getApiErrorMessage(error));
     }
   },
 

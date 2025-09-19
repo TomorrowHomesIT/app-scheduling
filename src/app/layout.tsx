@@ -49,9 +49,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <div className="flex flex-col">
+        <div className="flex flex-col basd-h-dvh">
           <OfflineIndicator />
-          <div className="flex flex-1 overflow-hidden basd-h-dvh">
+          <div className="flex flex-1 overflow-hidden">
             <AppLayoutClient>{children}</AppLayoutClient>
           </div>
         </div>

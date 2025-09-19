@@ -112,9 +112,12 @@
   }
 }
 
-html {
+.basd-h-dvh {
   height: 100vh;
-  @supports (height: 100dvh) {
+}
+
+@supports (height: 100dvh) {
+  .basd-h-dvh {
     height: 100dvh;
   }
 }

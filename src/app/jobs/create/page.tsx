@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DndContext,
   closestCenter,
@@ -29,13 +30,21 @@ import useTaskTemplateStore from "@/store/task-store";
 import type { ITask } from "@/models/task.model";
 import type { ICreateJobRequest } from "@/models/job.model";
 import { PageHeader } from "@/components/page-header";
+import { Spinner } from "@/components/ui/spinner";
 
 interface TaskWithStage extends ITask {
   taskStageId: number;
   stageName: string;
+  enabled: boolean;
 }
 
-function SortableTaskRow({ task }: { task: TaskWithStage }) {
+function SortableTaskRow({
+  task,
+  onToggleEnabled,
+}: {
+  task: TaskWithStage;
+  onToggleEnabled: (taskId: string) => void;
+}) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: `${task.taskStageId}-${task.id}`,
   });
@@ -53,9 +62,12 @@ function SortableTaskRow({ task }: { task: TaskWithStage }) {
           <GripVertical className="h-4 w-4 text-gray-400" />
         </button>
       </TableCell>
-      <TableCell>{task.name}</TableCell>
-      <TableCell>{task.costCenter}</TableCell>
-      <TableCell>{task.docTags?.join(", ") || "-"}</TableCell>
+      <TableCell className={task.enabled ? "" : "opacity-50 line-through"}>{task.name}</TableCell>
+      <TableCell className={task.enabled ? "" : "opacity-50 line-through"}>{task.costCenter}</TableCell>
+      <TableCell className={task.enabled ? "" : "opacity-50 line-through"}>{task.docTags?.join(", ") || "-"}</TableCell>
+      <TableCell className="text-right pr-4">
+        <Checkbox checked={task.enabled} onCheckedChange={() => onToggleEnabled(`${task.taskStageId}-${task.id}`)} />
+      </TableCell>
     </TableRow>
   );
 }
@@ -95,6 +107,7 @@ export default function CreateJobPage() {
             ...task,
             taskStageId: stage.id,
             stageName: stage.name,
+            enabled: true,
           }));
         tasksWithStage.push(...stageTasks);
       });
@@ -116,6 +129,12 @@ export default function CreateJobPage() {
     }
   };
 
+  const toggleTaskEnabled = (taskKey: string) => {
+    setOrderedTasks((tasks) =>
+      tasks.map((task) => (`${task.taskStageId}-${task.id}` === taskKey ? { ...task, enabled: !task.enabled } : task)),
+    );
+  };
+
   const handleSave = async () => {
     if (!jobName || !selectedOwnerId) {
       alert("Please enter a job name and select a folder");
@@ -124,8 +143,9 @@ export default function CreateJobPage() {
 
     setIsSaving(true);
     try {
-      // Prepare the tasks with updated order
-      const jobTasks = orderedTasks.map((task, index) => ({
+      // Prepare the tasks with updated order, only including enabled tasks
+      const enabledTasks = orderedTasks.filter((task) => task.enabled);
+      const jobTasks = enabledTasks.map((task, index) => ({
         taskId: task.id,
         name: task.name,
         taskStageId: task.taskStageId,
@@ -171,6 +191,14 @@ export default function CreateJobPage() {
     tasks: orderedTasks.filter((task) => task.taskStageId === stage.id),
   }));
 
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full">
+        <Spinner variant="default" size="xl" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full">
       <div className="border-b bg-background">
@@ -211,45 +239,50 @@ export default function CreateJobPage() {
             </div>
           </div>
 
-          {isLoading ? (
-            <div className="text-center py-8">Loading tasks...</div>
-          ) : (
-            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-              <div className="space-y-6">
-                {tasksByStage.map(({ stage, tasks: stageTasks }) => (
-                  <div key={stage.id} className="space-y-2">
-                    <h3 className="text-lg font-semibold">{stage.name}</h3>
-                    {stageTasks.length > 0 ? (
-                      <div className="border rounded-lg">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead className="w-10"></TableHead>
-                              <TableHead>Task Name</TableHead>
-                              <TableHead>Cost Center</TableHead>
-                              <TableHead>Doc Tags</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            <SortableContext
-                              items={stageTasks.map((t) => `${t.taskStageId}-${t.id}`)}
-                              strategy={verticalListSortingStrategy}
-                            >
-                              {stageTasks.map((task) => (
-                                <SortableTaskRow key={`${task.taskStageId}-${task.id}`} task={task} />
-                              ))}
-                            </SortableContext>
-                          </TableBody>
-                        </Table>
-                      </div>
-                    ) : (
-                      <div className="text-sm text-gray-500 p-4 border rounded-lg">No tasks in this stage</div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </DndContext>
-          )}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <div className="space-y-6">
+              {tasksByStage.map(({ stage, tasks: stageTasks }) => (
+                <div key={stage.id} className="space-y-2">
+                  <h3 className="text-lg font-semibold">{stage.name}</h3>
+                  {stageTasks.length > 0 ? (
+                    <div className="border rounded-lg">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-10"></TableHead>
+                            <TableHead>Task Name</TableHead>
+                            <TableHead>Cost Center</TableHead>
+                            <TableHead>Doc Tags</TableHead>
+                            <TableHead className="text-right pr-4">Enabled</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          <SortableContext
+                            items={stageTasks.map((t) => `${t.taskStageId}-${t.id}`)}
+                            strategy={verticalListSortingStrategy}
+                          >
+                            {stageTasks.map((task) => (
+                              <SortableTaskRow
+                                key={`${task.taskStageId}-${task.id}`}
+                                task={task}
+                                onToggleEnabled={toggleTaskEnabled}
+                              />
+                            ))}
+                          </SortableContext>
+                        </TableBody>
+                      </Table>
+                    </div>
+                  ) : (
+                    <div className="text-sm text-gray-500 p-4 border rounded-lg">No tasks in this stage</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </DndContext>
         </div>
       </div>
     </div>

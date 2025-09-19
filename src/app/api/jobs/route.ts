@@ -8,13 +8,14 @@ export const POST = withAuth(async (request) => {
 
   try {
     const body: ICreateJobRequest = await request.json();
-    const { name, ownerId, tasks } = body;
+    const { name, location, ownerId, tasks } = body;
 
     // Start a transaction by creating the job first
     const { data: jobData, error: jobError } = await supabase
       .from("cf_jobs")
       .insert({
         name,
+        location,
         owner_id: ownerId,
       })
       .select()

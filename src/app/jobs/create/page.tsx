@@ -75,6 +75,7 @@ function SortableTaskRow({
 export default function CreateJobPage() {
   const [jobName, setJobName] = useState("");
   const [selectedOwnerId, setSelectedOwnerId] = useState("");
+  const [jobLocation, setJobLocation] = useState("");
   const [orderedTasks, setOrderedTasks] = useState<TaskWithStage[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -136,8 +137,8 @@ export default function CreateJobPage() {
   };
 
   const handleSave = async () => {
-    if (!jobName || !selectedOwnerId) {
-      alert("Please enter a job name and select a folder");
+    if (!jobName || !selectedOwnerId || !jobLocation) {
+      alert("Please enter a job name, location and select a owner");
       return;
     }
 
@@ -156,7 +157,7 @@ export default function CreateJobPage() {
 
       const body: ICreateJobRequest = {
         name: jobName,
-        location: "",
+        location: jobLocation,
         ownerId: parseInt(selectedOwnerId, 10),
         tasks: jobTasks,
       };
@@ -203,7 +204,7 @@ export default function CreateJobPage() {
     <div className="flex flex-col h-full">
       <div className="border-b bg-background">
         <PageHeader title="Create" backLink="/" description="Stand up a new job">
-          <Button onClick={handleSave} disabled={isSaving || isLoading || !jobName || !selectedOwnerId}>
+          <Button onClick={handleSave} disabled={isSaving || isLoading}>
             {isSaving ? "Saving..." : "Create"}
           </Button>
         </PageHeader>
@@ -211,14 +212,24 @@ export default function CreateJobPage() {
 
       <div className="flex-1 overflow-auto p-4">
         <div className="max-w-6xl mx-auto space-y-6">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="jobName">Job Name</Label>
+              <Label htmlFor="jobName">Name</Label>
               <Input
                 id="jobName"
                 value={jobName}
                 onChange={(e) => setJobName(e.target.value)}
                 placeholder="Enter job name"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="jobName">Location</Label>
+              <Input
+                id="jobLocation"
+                value={jobLocation}
+                onChange={(e) => setJobLocation(e.target.value)}
+                placeholder="Enter job location"
               />
             </div>
 

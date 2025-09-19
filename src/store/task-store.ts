@@ -1,14 +1,16 @@
 import { create } from "zustand";
 import type { ITask } from "@/models/task.model";
 import type { IJobTaskStage } from "@/models/job.model";
+import { toast } from "./toast-store";
+import useLoadingStore from "./loading-store";
 
 interface TaskStore {
   tasks: ITask[];
   taskStages: IJobTaskStage[];
   isLoading: boolean;
 
+  loadTasks: () => Promise<void>;
   loadTaskStages: () => Promise<void>;
-  loadTasksAndStages: () => Promise<void>;
 }
 
 const useTaskStore = create<TaskStore>((set, get) => ({
@@ -16,41 +18,32 @@ const useTaskStore = create<TaskStore>((set, get) => ({
   taskStages: [],
   isLoading: false,
 
-  loadTasksAndStages: async () => {
+  loadTasks: async () => {
     // Don't fetch if already loaded or currently loading
-    if ((get().tasks.length > 0 && get().taskStages.length > 0) || get().isLoading) return;
-
+    if (get().tasks.length > 0 || get().isLoading) return;
     set({ isLoading: true });
 
     try {
       // Fetch both tasks and stages in parallel
-      const [tasksRes, stagesRes] = await Promise.all([fetch("/api/tasks"), fetch("/api/task-stages")]);
+      const tasksRes = await fetch("/api/tasks");
 
-      if (!tasksRes.ok || !stagesRes.ok) {
+      if (!tasksRes.ok) {
         throw new Error("Failed to fetch task templates");
       }
 
-      const tasksData: ITask[] = await tasksRes.json();
-      const stagesData: IJobTaskStage[] = await stagesRes.json();
-
-      // Sort stages by order
-      const sortedStages = stagesData.sort((a, b) => a.order - b.order);
-
-      set({
-        tasks: tasksData,
-        taskStages: sortedStages,
-        isLoading: false,
-      });
+      const tasks: ITask[] = await tasksRes.json();
+      set({ tasks, isLoading: false });
     } catch {
-      // TODO error
+      toast.error("Failed to fetch task templates");
     } finally {
       set({ isLoading: false });
     }
   },
 
   loadTaskStages: async () => {
-    if (get().taskStages.length > 0 || get().isLoading) return;
-    set({ isLoading: true });
+    const { taskStages, setLoading } = useLoadingStore.getState();
+    if (get().taskStages.length > 0 || taskStages.isLoading) return;
+    setLoading("taskStages", true);
 
     try {
       const stagesRes = await fetch("/api/task-stages");
@@ -59,11 +52,12 @@ const useTaskStore = create<TaskStore>((set, get) => ({
       }
 
       const stagesData: IJobTaskStage[] = await stagesRes.json();
-      set({ taskStages: stagesData, isLoading: false });
+      const sortedStages = stagesData.sort((a, b) => a.order - b.order);
+      set({ taskStages: sortedStages });
     } catch {
-      // TODO error
+      toast.error("Failed to fetch task stages");
     } finally {
-      set({ isLoading: false });
+      setLoading("taskStages", false);
     }
   },
 }));

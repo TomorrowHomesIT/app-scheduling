@@ -1,7 +1,7 @@
 "use client";
 
 import { redirect, useRouter } from "next/navigation";
-import { BookUser, House } from "lucide-react";
+import { BookUser, Hammer, House } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/components/auth/auth-context";
@@ -37,6 +37,12 @@ export default function HomePage() {
       description: "View and manage all construction jobs",
       icon: <House className="h-6 w-6 text-green-100" />,
       href: "/jobs",
+    },
+    {
+      title: "Create",
+      description: "Stand up a new job",
+      icon: <Hammer className="h-6 w-6 text-green-100" />,
+      href: "/jobs/create",
     },
     {
       title: "Suppliers",

@@ -17,6 +17,7 @@ interface LoadingStore {
   owners: LoadingState;
   suppliers: LoadingState;
   jobs: LoadingState;
+  taskStages: LoadingState;
 
   // The current job is seperate from the global loading state
   currentJob: CurrentJobLoadingState;
@@ -26,9 +27,13 @@ interface LoadingStore {
   isGlobalLoaded: boolean;
 
   // Actions
-  setLoading: (key: "owners" | "suppliers" | "jobs" | "currentJob", isLoading: boolean, message?: string) => void;
-  setLoaded: (key: "owners" | "suppliers" | "jobs" | "currentJob", isLoaded: boolean) => void;
-  setError: (key: "owners" | "suppliers" | "jobs" | "currentJob", error: string | null) => void;
+  setLoading: (
+    key: "owners" | "suppliers" | "taskStages" | "jobs" | "currentJob",
+    isLoading: boolean,
+    message?: string,
+  ) => void;
+  setLoaded: (key: "owners" | "suppliers" | "taskStages" | "jobs" | "currentJob", isLoaded: boolean) => void;
+  setError: (key: "owners" | "suppliers" | "taskStages" | "jobs" | "currentJob", error: string | null) => void;
   reset: () => void;
 
   // Computed getters
@@ -42,6 +47,7 @@ const useLoadingStore = create<LoadingStore>((set, get) => ({
   owners: { isLoading: false, isLoaded: false, error: null },
   suppliers: { isLoading: false, isLoaded: false, error: null },
   jobs: { isLoading: false, isLoaded: false, error: null },
+  taskStages: { isLoading: false, isLoaded: false, error: null },
   currentJob: { isLoading: false, message: null, error: null },
   isLoading: false,
   isGlobalLoaded: false,
@@ -59,7 +65,11 @@ const useLoadingStore = create<LoadingStore>((set, get) => ({
       }
 
       // For other states, update global isLoading
-      const globalLoading = newState.owners.isLoading || newState.suppliers.isLoading || newState.jobs.isLoading;
+      const globalLoading =
+        newState.owners.isLoading ||
+        newState.suppliers.isLoading ||
+        newState.jobs.isLoading ||
+        newState.taskStages.isLoading;
 
       return {
         ...newState,
@@ -76,12 +86,18 @@ const useLoadingStore = create<LoadingStore>((set, get) => ({
       };
 
       // Update global loaded state - all must be loaded
-      const allLoaded = newState.owners.isLoaded && newState.suppliers.isLoaded && newState.jobs.isLoaded;
+      const allLoaded =
+        newState.owners.isLoaded && newState.suppliers.isLoaded && newState.jobs.isLoaded && newState.taskStages.isLoaded;
+      const isLoading =
+        newState.owners.isLoading ||
+        newState.suppliers.isLoading ||
+        newState.jobs.isLoading ||
+        newState.taskStages.isLoading;
 
       return {
         ...newState,
         isGlobalLoaded: allLoaded,
-        isLoading: !allLoaded && (newState.owners.isLoading || newState.suppliers.isLoading || newState.jobs.isLoading),
+        isLoading: !allLoaded && isLoading,
       };
     });
   },
@@ -97,6 +113,7 @@ const useLoadingStore = create<LoadingStore>((set, get) => ({
       owners: { isLoading: false, isLoaded: false, error: null },
       suppliers: { isLoading: false, isLoaded: false, error: null },
       jobs: { isLoading: false, isLoaded: false, error: null },
+      taskStages: { isLoading: false, isLoaded: false, error: null },
       currentJob: { isLoading: false, message: null, error: null },
       isLoading: false,
       isGlobalLoaded: false,
@@ -105,17 +122,17 @@ const useLoadingStore = create<LoadingStore>((set, get) => ({
 
   getIsLoading: () => {
     const state = get();
-    return state.owners.isLoading || state.suppliers.isLoading || state.jobs.isLoading;
+    return state.owners.isLoading || state.suppliers.isLoading || state.jobs.isLoading || state.taskStages.isLoading;
   },
 
   getIsLoaded: () => {
     const state = get();
-    return state.owners.isLoaded && state.suppliers.isLoaded && state.jobs.isLoaded;
+    return state.owners.isLoaded && state.suppliers.isLoaded && state.jobs.isLoaded && state.taskStages.isLoaded;
   },
 
   getHasError: () => {
     const state = get();
-    return !!(state.owners.error || state.suppliers.error || state.jobs.error);
+    return !!(state.owners.error || state.suppliers.error || state.jobs.error || state.taskStages.error);
   },
 }));
 

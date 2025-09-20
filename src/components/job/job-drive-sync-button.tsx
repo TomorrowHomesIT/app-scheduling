@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { HardDrive } from "lucide-react";
-import { toast } from "@/store/toast-store";
 import useJobStore from "@/store/job/job-store";
 import useLoadingStore from "@/store/loading-store";
 
@@ -10,39 +9,13 @@ interface JobDriveSyncButtonProps {
 }
 
 export function JobDriveSyncButton({ jobId, onCloseDialog }: JobDriveSyncButtonProps) {
-  const { loadJob, currentJob } = useJobStore();
-  const { currentJob: jobLoadingState, setLoading } = useLoadingStore();
+  const { syncJobWithDrive, currentJob } = useJobStore();
+  const { currentJob: jobLoadingState } = useLoadingStore();
 
   const handleSync = async () => {
     onCloseDialog();
-
     await new Promise((resolve) => setTimeout(resolve, 200));
-
-    setLoading("currentJob", true, "Syncing with Google Drive. This may take a while...");
-
-    try {
-      const response = await fetch(`/api/jobs/${jobId}/sync-drive`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to sync with Google Drive");
-      }
-
-      toast.success(`Updated ${data.updatedTasks || 0} task(s) with Google Drive links`, 5000);
-      setLoading("currentJob", false);
-
-      // Reload the job to show updated data
-      await loadJob(jobId);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to sync with Google Drive");
-      setLoading("currentJob", false);
-    }
+    await syncJobWithDrive(jobId);
   };
 
   if (!currentJob?.googleDriveDirId) {

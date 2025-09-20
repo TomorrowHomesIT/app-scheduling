@@ -25,6 +25,7 @@ interface JobStore {
   updateJobLastSynced: (jobId: number) => Promise<void>;
   loadJobSyncStatus: (jobId: number) => Promise<void>;
   refreshJob: (jobId: number) => Promise<void>;
+  syncJobWithDrive: (jobId: number) => Promise<void>;
 }
 
 const fetchJobByIdFromApi = async (id: number): Promise<IJob | null> => {
@@ -278,6 +279,33 @@ const useJobStore = create<JobStore>((set, get) => ({
         currentJobSyncStatus: syncStatus,
       };
     });
+  },
+
+  syncJobWithDrive: async (jobId: number) => {
+    const { setLoading } = useLoadingStore.getState();
+    setLoading("currentJob", true, "Syncing with Google Drive. This may take a while...");
+
+    try {
+      const response = await fetch(`/api/jobs/${jobId}/sync-drive`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to sync with Google Drive");
+      }
+
+      toast.success(`Job created and synced with Google Drive. Updated ${data?.updatedTasks || 0} task(s).`, 5000);
+      await get().loadJob(jobId);
+    } catch (error) {
+      toast.error(await getApiErrorMessage(error, "Failed to sync with Google Drive"));
+    } finally {
+      setLoading("currentJob", false);
+    }
   },
 }));
 

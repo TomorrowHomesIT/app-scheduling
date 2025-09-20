@@ -27,6 +27,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
 import useOwnersStore from "@/store/owners-store";
 import useTaskTemplateStore from "@/store/task-store";
+import useJobStore from "@/store/job/job-store";
 import type { ITask } from "@/models/task.model";
 import type { ICreateJobRequest } from "@/models/job.model";
 import { PageHeader } from "@/components/page-header";
@@ -68,7 +69,9 @@ function SortableTaskRow({
         </button>
       </TableCell>
       <TableCell className={cn(task.enabled ? "" : "opacity-50 line-through", "px-0")}>
-        <TaskTemplateEditTrigger className="px-2" task={task}>{task.name}</TaskTemplateEditTrigger>
+        <TaskTemplateEditTrigger className="px-2" task={task}>
+          {task.name}
+        </TaskTemplateEditTrigger>
       </TableCell>
       <TableCell className={task.enabled ? "" : "opacity-50 line-through"}>{task.costCenter}</TableCell>
       <TableCell className={task.enabled ? "" : "opacity-50 line-through"}>{task.docTags?.join(", ") || "-"}</TableCell>
@@ -89,6 +92,7 @@ export default function CreateJobPage() {
 
   const { owners } = useOwnersStore();
   const { tasks, taskStages, isLoading, loadTasks } = useTaskTemplateStore();
+  const { syncJobWithDrive } = useJobStore();
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -185,8 +189,9 @@ export default function CreateJobPage() {
       // Refresh owners to include the new job
       const { loadOwners } = useOwnersStore.getState();
       await loadOwners();
-
+      // Navigate to the job page and sync drive - a loading screen will be shown
       router.push(`/jobs/${data.id}`);
+      await syncJobWithDrive(data.id);
     } catch (error) {
       const errorMessage = await getApiErrorMessage(error);
       toast.error(errorMessage);

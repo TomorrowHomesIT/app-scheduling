@@ -54,7 +54,7 @@ export const POST = withAuth(async (_, { params }: { params: Promise<{ id: strin
       { status: 200 },
     );
   } catch (error) {
-    console.error("Error in POST /api/tasks/[id]/sync-drive:", error);
+    console.error("Error in POST /api/jobs/tasks/[id]/sync-drive:", error);
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
 });

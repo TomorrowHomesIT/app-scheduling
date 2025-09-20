@@ -1,14 +1,16 @@
 import { create } from "zustand";
 import type { ITask } from "@/models/task.model";
 import type { IJobTaskStage } from "@/models/job.model";
-import { toast } from "./toast-store";
+import { toast, useToastStore } from "./toast-store";
 import useLoadingStore from "./loading-store";
+import { getApiErrorMessage } from "@/lib/api/error";
 
 interface TaskStore {
   tasks: ITask[];
   taskStages: IJobTaskStage[];
   isLoading: boolean;
 
+  updateTask: (taskId: number, updates: Partial<ITask>) => Promise<void>;
   loadTasks: () => Promise<void>;
   loadTaskStages: () => Promise<void>;
 }
@@ -18,13 +20,38 @@ const useTaskStore = create<TaskStore>((set, get) => ({
   taskStages: [],
   isLoading: false,
 
+  updateTask: async (taskId: number, updates: Partial<ITask>) => {
+    const loadingId = toast.loading("Updating task...");
+
+    try {
+      const tasksRes = await fetch(`/api/tasks/${taskId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updates),
+      });
+
+      if (!tasksRes.ok) {
+        throw new Error("Failed to fetch task templates");
+      }
+
+      const updatedTask: ITask = await tasksRes.json();
+      set((state) => ({ tasks: state.tasks.map((t) => (t.id === taskId ? { ...t, ...updatedTask } : t)) }));
+      toast.success("Task updated successfully");
+    } catch (error) {
+      const errorMessage = await getApiErrorMessage(error);
+      toast.error(errorMessage);
+    } finally {
+      useToastStore.getState().removeToast(loadingId);
+    }
+  },
+
   loadTasks: async () => {
-    // Don't fetch if already loaded or currently loading
-    if (get().tasks.length > 0 || get().isLoading) return;
+    if (get().isLoading) return;
     set({ isLoading: true });
 
     try {
-      // Fetch both tasks and stages in parallel
       const tasksRes = await fetch("/api/tasks");
 
       if (!tasksRes.ok) {

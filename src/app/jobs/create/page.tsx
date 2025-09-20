@@ -31,6 +31,10 @@ import type { ITask } from "@/models/task.model";
 import type { ICreateJobRequest } from "@/models/job.model";
 import { PageHeader } from "@/components/page-header";
 import { Spinner } from "@/components/ui/spinner";
+import { TaskTemplateEditTrigger } from "@/components/modals/task-edit/task-template-edit-trigger";
+import { useRouter } from "next/navigation";
+import { getApiErrorMessage } from "@/lib/api/error";
+import { toast } from "@/store/toast-store";
 
 interface TaskWithStage extends ITask {
   taskStageId: number;
@@ -62,10 +66,12 @@ function SortableTaskRow({
           <GripVertical className="h-4 w-4 text-gray-400" />
         </button>
       </TableCell>
-      <TableCell className={task.enabled ? "" : "opacity-50 line-through"}>{task.name}</TableCell>
+      <TableCell className={task.enabled ? "" : "opacity-50 line-through"}>
+        <TaskTemplateEditTrigger task={task}>{task.name}</TaskTemplateEditTrigger>
+      </TableCell>
       <TableCell className={task.enabled ? "" : "opacity-50 line-through"}>{task.costCenter}</TableCell>
       <TableCell className={task.enabled ? "" : "opacity-50 line-through"}>{task.docTags?.join(", ") || "-"}</TableCell>
-      <TableCell className="text-right pr-4">
+      <TableCell className="text-right pr-4" onClick={(e) => e.stopPropagation()}>
         <Checkbox checked={task.enabled} onCheckedChange={() => onToggleEnabled(`${task.taskStageId}-${task.id}`)} />
       </TableCell>
     </TableRow>
@@ -78,7 +84,8 @@ export default function CreateJobPage() {
   const [jobLocation, setJobLocation] = useState("");
   const [orderedTasks, setOrderedTasks] = useState<TaskWithStage[]>([]);
   const [isSaving, setIsSaving] = useState(false);
-
+  const router = useRouter();
+  
   const { owners } = useOwnersStore();
   const { tasks, taskStages, isLoading, loadTasks } = useTaskTemplateStore();
 
@@ -95,8 +102,6 @@ export default function CreateJobPage() {
 
   useEffect(() => {
     // When tasks and stages are loaded, organize them
-    console.log("tasks", tasks);
-    console.log("taskStages", taskStages);
     if (tasks.length > 0 && taskStages.length > 0) {
       const tasksWithStage: TaskWithStage[] = [];
 
@@ -175,12 +180,10 @@ export default function CreateJobPage() {
       }
 
       const data = await response.json();
-
-      // Redirect to the new job page or show success message
-      window.location.href = `/jobs/${data.id}`;
+      router.push(`/jobs/${data.id}`);
     } catch (error) {
-      console.error("Error saving job:", error);
-      alert("Failed to create job. Please try again.");
+      const errorMessage = await getApiErrorMessage(error);
+      toast.error(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -250,11 +253,7 @@ export default function CreateJobPage() {
             </div>
           </div>
 
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <div className="space-y-6">
               {tasksByStage.map(({ stage, tasks: stageTasks }) => (
                 <div key={stage.id} className="space-y-2">
@@ -268,7 +267,7 @@ export default function CreateJobPage() {
                             <TableHead>Task Name</TableHead>
                             <TableHead>Cost Center</TableHead>
                             <TableHead>Doc Tags</TableHead>
-                            <TableHead className="text-right pr-4">Enabled</TableHead>
+                            <TableHead className="text-right pr-4">Include</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>

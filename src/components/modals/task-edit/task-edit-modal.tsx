@@ -9,20 +9,33 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { X, CloudDownload } from "lucide-react";
 import { toast } from "@/store/toast-store";
-import type { IJobTask } from "@/models/job.model";
 import { DOC_TAGS } from "@/models/doc-tags.const";
-import { cn } from "@/lib/utils";
 
-interface JobTaskEditModalProps {
-  task: IJobTask;
-  onSave: (taskId: number, updates: Partial<IJobTask>) => Promise<void>;
-  onSync: (jobId: number) => Promise<void>;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+export interface ITaskEditData {
+  id: number;
+  name: string;
+  costCenter?: number | null;
+  docTags?: string[] | null;
+  jobId?: number;
 }
 
-export function JobTaskEditModal({ task, onSave, onSync, open, onOpenChange }: JobTaskEditModalProps) {
-  const [localTask, setLocalTask] = useState<Partial<IJobTask>>({
+export interface ITaskEditUpdates {
+  name?: string;
+  costCenter?: number | null;
+  docTags?: string[] | null;
+}
+
+interface TaskEditModalProps {
+  task: ITaskEditData;
+  onSave: (taskId: number, updates: ITaskEditUpdates) => Promise<void>;
+  onSync?: (jobId: number) => Promise<void>;
+  onOpenChange: (open: boolean) => void;
+  open: boolean;
+  showSyncButton?: boolean;
+}
+
+export function TaskEditModal({ task, onSave, onSync, onOpenChange, open, showSyncButton = true }: TaskEditModalProps) {
+  const [localTask, setLocalTask] = useState<ITaskEditUpdates>({
     name: task.name,
     costCenter: task.costCenter,
     docTags: task.docTags || [],
@@ -77,7 +90,8 @@ export function JobTaskEditModal({ task, onSave, onSync, open, onOpenChange }: J
   };
 
   const syncRequest = async () => {
-    const response = await fetch(`/api/tasks/${task.id}/sync-drive`, {
+    const endpoint = `/api/jobs/tasks/${task.id}/sync-drive`;
+    const response = await fetch(endpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -92,10 +106,8 @@ export function JobTaskEditModal({ task, onSave, onSync, open, onOpenChange }: J
   };
 
   const handleSync = async () => {
-    const currentCostCenter = localTask.costCenter || task.costCenter;
-
-    if (!currentCostCenter) {
-      toast.warning("Cannot sync: Cost center is required");
+    if (!onSync || !task.jobId) {
+      toast.error("Sync functionality not available");
       return;
     }
 
@@ -111,7 +123,8 @@ export function JobTaskEditModal({ task, onSave, onSync, open, onOpenChange }: J
           if (data?.updated) {
             // Only close and reload the job if it was updated
             onOpenChange(false);
-            onSync(task.jobId);
+            // biome-ignore lint/style/noNonNullAssertion: this is checked above
+            onSync(task.jobId!);
 
             return { message: "Task synced with Google Drive", type: "success" };
           } else {
@@ -129,16 +142,17 @@ export function JobTaskEditModal({ task, onSave, onSync, open, onOpenChange }: J
   };
 
   const onSaveChanges = async () => {
-    // Only send fields that have changed
-    const updates: Partial<IJobTask> = {
+    const costCenter = localTask.costCenter;
+    if (costCenter && Number.isNaN(parseFloat(costCenter.toString()))) {
+      toast.error("Cost center must be a number");
+      return;
+    }
+
+    const updates: ITaskEditUpdates = {
       name: localTask.name,
       docTags: localTask.docTags || null,
+      costCenter: localTask.costCenter || null,
     };
-
-    if (localTask.costCenter !== task.costCenter) {
-      // Ensure cost center is sent as a number (float)
-      updates.costCenter = localTask.costCenter ? parseFloat(localTask.costCenter.toString()) : null;
-    }
 
     await onSave(task.id, updates);
   };
@@ -228,18 +242,19 @@ export function JobTaskEditModal({ task, onSave, onSync, open, onOpenChange }: J
         </div>
 
         <DialogFooter className="flex justify-between sm:justify-between">
-          <Button
-            variant="outline"
-            size="default"
-            onClick={handleSync}
-            disabled={isSaving || !localTask.costCenter}
-            className="sm:mr-auto"
-            title="Sync with Drive"
-          >
-            <CloudDownload className="h-4 w-4" />
-            {!localTask.costCenter ? "Cost center required" : "Sync Drive"}
-          </Button>
-          <div className="flex gap-2">
+          {showSyncButton && (
+            <Button
+              variant="outline"
+              size="default"
+              onClick={handleSync}
+              disabled={isSaving || !localTask.costCenter || !onSync}
+              title="Sync with Drive"
+            >
+              <CloudDownload className="h-4 w-4" />
+              {!localTask.costCenter ? "Cost center required" : "Sync Drive"}
+            </Button>
+          )}
+          <div className="flex gap-2 ml-auto">
             <Button variant="outline" onClick={handleCancel}>
               Cancel
             </Button>
@@ -250,31 +265,5 @@ export function JobTaskEditModal({ task, onSave, onSync, open, onOpenChange }: J
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
-}
-
-interface JobTaskEditTriggerProps {
-  task: IJobTask;
-  onSave: (taskId: number, updates: Partial<IJobTask>) => Promise<void>;
-  onSync: (jobId: number) => Promise<void>;
-  children: React.ReactNode;
-  className?: string;
-}
-
-export function JobTaskEditTrigger({ task, onSave, onSync, children, className }: JobTaskEditTriggerProps) {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <>
-      <Button
-        variant="ghost"
-        onClick={() => setOpen(true)}
-        className={cn("text-left p-0 w-full justify-start", className)}
-        type="button"
-      >
-        {children}
-      </Button>
-      <JobTaskEditModal task={task} onSave={onSave} onSync={onSync} open={open} onOpenChange={setOpen} />
-    </>
   );
 }

@@ -9,7 +9,7 @@ import { EmailStatusTrigger } from "@/components/modals/send-email/send-email-mo
 import { ProgressTrigger } from "@/components/modals/progress/progress-modal";
 import { SupplierTrigger } from "@/components/modals/supplier/supplier-modal";
 import { FileLinkModalTrigger } from "@/components/modals/file-link/file-link-modal";
-import { JobTaskEditTrigger } from "@/components/modals/job-task-edit/job-task-edit-modal";
+import { JobTaskEditTrigger } from "./job-task-edit-trigger";
 import { CTaskProgressConfig } from "@/models/job.const";
 import useJobTaskStore from "@/store/job/job-task-store";
 import useJobStore from "@/store/job/job-store";

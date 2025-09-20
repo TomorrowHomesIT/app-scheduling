@@ -17,6 +17,7 @@ import { JobTaskStatus } from "@/components/job/job-task-status";
 import { JobTaskTableHeader } from "@/components/job/job-task-table-header";
 import { JobSyncStatus } from "@/components/job/job-sync-status";
 import { JobRefreshButton } from "@/components/job/job-refresh-button";
+import useLoadingStore from "@/store/loading-store";
 
 interface JobDetailPageProps {
   params: Promise<{ id: string }>;
@@ -28,6 +29,7 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
   const { currentJob, currentJobSyncStatus, loadJob, updateJob, loadJobSyncStatus } = useJobStore();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [lastKnownSyncStatus, setLastKnownSyncStatus] = useState<typeof currentJobSyncStatus>(null);
+  const jobLoadingState = useLoadingStore((state) => state.currentJob);
 
   const [error, setError] = useState<boolean>(false);
 
@@ -80,10 +82,13 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
 
   if (error || Number.isNaN(Number(id))) {
     return notFound();
-  } else if (!currentJob || currentJob.id !== Number(id)) {
+  } else if (!currentJob || jobLoadingState.isLoading) {
     return (
-      <div className="flex items-center justify-center h-full">
+      <div className="flex flex-col items-center justify-center h-full">
         <Spinner variant="default" size="xl" />
+        <div className="text-center mt-3">
+          <p className="text-xs text-gray-600">{jobLoadingState.message}</p>
+        </div>
       </div>
     );
   }

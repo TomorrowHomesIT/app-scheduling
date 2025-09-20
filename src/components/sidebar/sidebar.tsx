@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ChevronDown, ChevronRight, Search, Folder, ListChecks, User } from "lucide-react";
@@ -21,19 +21,37 @@ interface SidebarProps {
 
 function SidebarContent({ onJobSelect }: { onJobSelect?: () => void }) {
   const pathname = usePathname();
+  const initialPathname = useRef(pathname);
   const { owners } = useOwnersStore();
   const { user } = useAuth();
   const [expandedOwners, setExpandedOwners] = useState<Set<number>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
 
-  // Expand only the current user's owner by default
+  // Expand the current user's owner and the owner containing the current job (only on init)
   useEffect(() => {
+    const ownersToExpand = new Set<number>();
+
+    // Always expand current user's owner
     if (user?.id) {
       const userOwner = owners.find((owner) => owner.userId === user.id);
       if (userOwner) {
-        setExpandedOwners(new Set([userOwner.id]));
+        ownersToExpand.add(userOwner.id);
       }
+    }
+
+    // Also check if we're on a job page and expand that owner
+    const jobIdMatch = initialPathname.current.match(/^\/jobs\/(\d+)$/);
+    if (jobIdMatch) {
+      const jobId = parseInt(jobIdMatch[1], 10);
+      const jobOwner = owners.find((owner) => owner.jobs?.some((job) => job.id === jobId));
+      if (jobOwner) {
+        ownersToExpand.add(jobOwner.id);
+      }
+    }
+
+    if (ownersToExpand.size > 0) {
+      setExpandedOwners(ownersToExpand);
     }
   }, [owners, user?.id]);
 

@@ -2,8 +2,6 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { offlineQueue } from "@/lib/offline-queue";
-import { jobsDB } from "@/lib/jobs-db";
 import useOfflineStore from "@/store/offline-store";
 
 interface AuthContextType {

@@ -5,15 +5,27 @@ import { JobsTable } from "@/app/jobs/jobs-table";
 import useOwnersStore from "@/store/owners-store";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/page-header";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 export default function JobsPage() {
   const { owners } = useOwnersStore();
   const [activeTab, setActiveTab] = useState("current");
+  const router = useRouter();
+
+  const goToCreateJob = () => {
+    router.push("/jobs/create");
+  };
 
   return (
     <div className="flex flex-col h-full bg-background">
       <div className="border-b bg-background">
-        <PageHeader title="Jobs" backLink="/" />
+        <PageHeader title="Jobs" backLink="/">
+          <Button variant="default" size="default" onClick={() => goToCreateJob()}>
+            <Plus className="h-4 w-4" /> New Job
+          </Button>
+        </PageHeader>
       </div>
 
       <div className="flex-1 overflow-auto p-4">

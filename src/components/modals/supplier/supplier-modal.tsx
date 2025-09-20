@@ -20,7 +20,7 @@ interface SupplierModalProps {
 export function SupplierModal({ value, onChange, open, onOpenChange, taskName }: SupplierModalProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSupplierId, setSelectedSupplierId] = useState<number | undefined>(value);
-  const { suppliers } = useSupplierStore();
+  const { activeSuppliers } = useSupplierStore();
 
   // Reset selected supplier when modal opens
   useEffect(() => {
@@ -32,10 +32,10 @@ export function SupplierModal({ value, onChange, open, onOpenChange, taskName }:
 
   // Filter suppliers based on search query
   const filteredSuppliers = useMemo(() => {
-    if (!searchQuery.trim()) return suppliers;
+    if (!searchQuery.trim()) return activeSuppliers;
 
-    return suppliers.filter((supplier) => supplier.name.toLowerCase().includes(searchQuery.toLowerCase()));
-  }, [suppliers, searchQuery]);
+    return activeSuppliers.filter((supplier) => supplier.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  }, [activeSuppliers, searchQuery]);
 
   const handleSupplierSelect = (supplierId: number) => {
     onChange(supplierId);

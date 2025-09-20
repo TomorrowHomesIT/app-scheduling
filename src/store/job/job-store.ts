@@ -16,7 +16,6 @@ interface JobStore {
   jobs: IJob[]; // TODO I'm not sure this is actually uesd? We never load a list of jobs lol
   currentJob: IJob | null;
   currentJobSyncStatus: JobSyncStatus | null;
-  isLoadingJobs: boolean;
 
   loadUserJobs: () => Promise<void>;
   loadJob: (id: number) => Promise<void>;
@@ -26,6 +25,7 @@ interface JobStore {
   updateJobLastSynced: (jobId: number) => Promise<void>;
   loadJobSyncStatus: (jobId: number) => Promise<void>;
   refreshJob: (jobId: number) => Promise<void>;
+  syncJobWithDrive: (jobId: number) => Promise<void>;
 }
 
 const fetchJobByIdFromApi = async (id: number): Promise<IJob | null> => {
@@ -86,7 +86,6 @@ const useJobStore = create<JobStore>((set, get) => ({
   jobs: [],
   currentJob: null,
   currentJobSyncStatus: null,
-  isLoadingJobs: false,
 
   loadUserJobs: async () => {
     const loading = useLoadingStore.getState();
@@ -108,8 +107,9 @@ const useJobStore = create<JobStore>((set, get) => ({
   },
 
   loadJob: async (id: number) => {
-    if (get().isLoadingJobs) return;
-    set({ isLoadingJobs: true });
+    const loading = useLoadingStore.getState();
+    if (loading.currentJob.isLoading) return;
+    loading.setLoading("currentJob", true);
 
     try {
       const localJob = await jobsDB.getJob(id);
@@ -125,7 +125,7 @@ const useJobStore = create<JobStore>((set, get) => ({
         set(() => ({ currentJob: job, currentJobSyncStatus: null }));
       }
     } finally {
-      set({ isLoadingJobs: false });
+      loading.setLoading("currentJob", false);
     }
   },
 
@@ -161,9 +161,6 @@ const useJobStore = create<JobStore>((set, get) => ({
   },
 
   refreshJob: async (jobId: number) => {
-    if (get().isLoadingJobs) return;
-    set({ isLoadingJobs: true });
-
     try {
       // Fetch fresh data from API
       const job = await fetchJobByIdFromApi(jobId);
@@ -182,8 +179,6 @@ const useJobStore = create<JobStore>((set, get) => ({
     } catch (error) {
       console.error("Failed to refresh job:", error);
       throw error;
-    } finally {
-      set({ isLoadingJobs: false });
     }
   },
 
@@ -284,6 +279,33 @@ const useJobStore = create<JobStore>((set, get) => ({
         currentJobSyncStatus: syncStatus,
       };
     });
+  },
+
+  syncJobWithDrive: async (jobId: number) => {
+    const { setLoading } = useLoadingStore.getState();
+    setLoading("currentJob", true, "Syncing with Google Drive. This may take a while...");
+
+    try {
+      const response = await fetch(`/api/jobs/${jobId}/sync-drive`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to sync with Google Drive");
+      }
+
+      toast.success(`Job created and synced with Google Drive. Updated ${data?.updatedTasks || 0} task(s).`, 5000);
+      await get().loadJob(jobId);
+    } catch (error) {
+      toast.error(await getApiErrorMessage(error, "Failed to sync with Google Drive"));
+    } finally {
+      setLoading("currentJob", false);
+    }
   },
 }));
 

@@ -16,7 +16,7 @@ interface JobTaskStore {
 
 const updateTaskApi = async (taskId: number, updates: Partial<IJobTask>): Promise<IJobTask | null> => {
   try {
-    const result = await offlineQueue.queueRequest(`/api/tasks/${taskId}`, "PATCH", updates, {
+    const result = await offlineQueue.queueRequest(`/api/jobs/tasks/${taskId}`, "PATCH", updates, {
       "Content-Type": "application/json",
     });
 

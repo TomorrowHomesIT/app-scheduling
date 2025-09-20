@@ -6,3 +6,9 @@ export interface ITask {
   order: number;
   taskStageId?: number;
 }
+
+export interface ITaskEditUpdates {
+  name?: string;
+  costCenter?: number | null;
+  docTags?: string[] | null;
+}

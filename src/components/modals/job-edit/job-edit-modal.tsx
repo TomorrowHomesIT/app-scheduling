@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { IJob, IUpdateJobRequest } from "@/models/job.model";
 import useOwnersStore from "@/store/owners-store";
+import { JobDriveSyncButton } from "@/components/job/job-drive-sync-button";
 
 interface JobEditModalProps {
   job: IJob;
@@ -57,7 +58,7 @@ export function JobEditModal({ job, onSave, open, onOpenChange }: JobEditModalPr
 
   return (
     <Dialog open={open} onOpenChange={handleCancel}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[470px]">
         <DialogHeader>
           <DialogTitle>Edit Job</DialogTitle>
         </DialogHeader>
@@ -107,13 +108,16 @@ export function JobEditModal({ job, onSave, open, onOpenChange }: JobEditModalPr
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={handleCancel}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave} disabled={isSaving || !localJob.name.trim()}>
-            {isSaving ? "Saving..." : "Save"}
-          </Button>
+        <DialogFooter className="flex justify-between w-full">
+          <JobDriveSyncButton jobId={job.id} onCloseDialog={() => onOpenChange(false)} />
+          <div className="flex gap-2 ml-auto">
+            <Button variant="outline" onClick={handleCancel}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={isSaving || !localJob.name.trim()}>
+              {isSaving ? "Saving..." : "Save"}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

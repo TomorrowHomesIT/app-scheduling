@@ -16,10 +16,11 @@ export const GET = withAuth(async () => {
     return Response.json({ error: ownersError }, { status: 500 });
   }
 
-  // Fetch jobs from ck_jobs table
+  // Fetch jobs from ck_jobs table - only active jobs
   const { data: jobsData, error: jobsError } = await supabase
     .from("cf_jobs")
     .select("id, name, owner_id, location")
+    .eq("active", true)
     .order("name");
 
   if (jobsError) {

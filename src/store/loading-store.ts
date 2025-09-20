@@ -87,7 +87,10 @@ const useLoadingStore = create<LoadingStore>((set, get) => ({
 
       // Update global loaded state - all must be loaded
       const allLoaded =
-        newState.owners.isLoaded && newState.suppliers.isLoaded && newState.jobs.isLoaded && newState.taskStages.isLoaded;
+        newState.owners.isLoaded &&
+        newState.suppliers.isLoaded &&
+        newState.jobs.isLoaded &&
+        newState.taskStages.isLoaded;
       const isLoading =
         newState.owners.isLoading ||
         newState.suppliers.isLoading ||

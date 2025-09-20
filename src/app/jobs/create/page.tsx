@@ -35,6 +35,7 @@ import { TaskTemplateEditTrigger } from "@/components/modals/task-edit/task-temp
 import { useRouter } from "next/navigation";
 import { getApiErrorMessage } from "@/lib/api/error";
 import { toast } from "@/store/toast-store";
+import { cn } from "@/lib/utils";
 
 interface TaskWithStage extends ITask {
   taskStageId: number;
@@ -66,8 +67,8 @@ function SortableTaskRow({
           <GripVertical className="h-4 w-4 text-gray-400" />
         </button>
       </TableCell>
-      <TableCell className={task.enabled ? "" : "opacity-50 line-through"}>
-        <TaskTemplateEditTrigger task={task}>{task.name}</TaskTemplateEditTrigger>
+      <TableCell className={cn(task.enabled ? "" : "opacity-50 line-through", "px-0")}>
+        <TaskTemplateEditTrigger className="px-2" task={task}>{task.name}</TaskTemplateEditTrigger>
       </TableCell>
       <TableCell className={task.enabled ? "" : "opacity-50 line-through"}>{task.costCenter}</TableCell>
       <TableCell className={task.enabled ? "" : "opacity-50 line-through"}>{task.docTags?.join(", ") || "-"}</TableCell>
@@ -85,7 +86,7 @@ export default function CreateJobPage() {
   const [orderedTasks, setOrderedTasks] = useState<TaskWithStage[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
-  
+
   const { owners } = useOwnersStore();
   const { tasks, taskStages, isLoading, loadTasks } = useTaskTemplateStore();
 
@@ -180,6 +181,11 @@ export default function CreateJobPage() {
       }
 
       const data = await response.json();
+
+      // Refresh owners to include the new job
+      const { loadOwners } = useOwnersStore.getState();
+      await loadOwners();
+
       router.push(`/jobs/${data.id}`);
     } catch (error) {
       const errorMessage = await getApiErrorMessage(error);

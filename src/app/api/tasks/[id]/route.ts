@@ -4,9 +4,10 @@ import { withAuth } from "@/lib/api/auth";
 import { toCamelCase } from "@/lib/api/casing";
 import type { ITaskEditUpdates } from "@/components/modals/task-edit/task-edit-modal";
 
-export const PATCH = withAuth(async (request: NextRequest, { params }: { params: { id: string } }) => {
+export const PATCH = withAuth(async (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
   const supabase = await createClient();
-  const taskId = parseInt(params.id, 10);
+  const { id } = await params;
+  const taskId = parseInt(id, 10);
 
   if (Number.isNaN(taskId)) {
     return Response.json({ error: "Invalid task ID" }, { status: 400 });
@@ -20,12 +21,7 @@ export const PATCH = withAuth(async (request: NextRequest, { params }: { params:
     if (updates.costCenter !== undefined) dbUpdates.cost_center = updates.costCenter;
     if (updates.docTags !== undefined) dbUpdates.doc_tags = updates.docTags;
 
-    const { data, error } = await supabase
-      .from("cf_tasks")
-      .update(dbUpdates)
-      .eq("id", taskId)
-      .select()
-      .single();
+    const { data, error } = await supabase.from("cf_tasks").update(dbUpdates).eq("id", taskId).select().single();
 
     if (error) {
       console.error("Error updating task template:", error);

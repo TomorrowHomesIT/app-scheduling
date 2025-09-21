@@ -6,6 +6,7 @@ import useOwnersStore from "@/store/owners-store";
 import useLoadingStore from "@/store/loading-store";
 import { jobsDB } from "@/lib/jobs-db";
 import { getUserJobs } from "@/lib/supabase/user/jobs";
+import { getJobById, updateJob as updateJobHelper } from "@/lib/supabase/jobs";
 
 interface JobSyncStatus {
   lastUpdated: number;
@@ -31,13 +32,7 @@ interface JobStore {
 
 const fetchJobByIdFromApi = async (id: number): Promise<IJob | null> => {
   try {
-    const response = await fetch(`/api/jobs/${id}`);
-
-    if (!response.ok) {
-      throw new Error(await getApiErrorMessage(response, "Failed to fetch job"));
-    }
-
-    const job: IJob = await response.json();
+    const job = await getJobById(id);
     return job;
   } catch (error) {
     console.error("Error fetching job:", error);
@@ -57,20 +52,8 @@ const fetchUserJobsFromApi = async (): Promise<IJob[] | null> => {
 
 const updateJobApi = async (jobId: number, updates: IUpdateJobRequest): Promise<boolean | null> => {
   try {
-    const response = await fetch(`/api/jobs/${jobId}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(updates),
-    });
-
-    if (!response.ok) {
-      throw new Error(await getApiErrorMessage(response, "Failed to update job"));
-    }
-
-    const updatedJob: boolean = await response.json();
-    return updatedJob;
+    const result = await updateJobHelper(jobId, updates);
+    return result;
   } catch (error) {
     console.error("Error updating job:", error);
     throw error;

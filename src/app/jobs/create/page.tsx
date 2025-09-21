@@ -37,6 +37,7 @@ import { useRouter } from "next/navigation";
 import { getApiErrorMessage } from "@/lib/api/error";
 import { toast } from "@/store/toast-store";
 import { cn } from "@/lib/utils";
+import { createJob } from "@/lib/supabase/jobs";
 
 interface TaskWithStage extends ITask {
   taskStageId: number;
@@ -172,19 +173,7 @@ export default function CreateJobPage() {
         tasks: jobTasks,
       };
 
-      const response = await fetch("/api/jobs", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to create job");
-      }
-
-      const data = await response.json();
+      const data = await createJob(body);
 
       // Refresh owners to include the new job
       const { loadOwners } = useOwnersStore.getState();

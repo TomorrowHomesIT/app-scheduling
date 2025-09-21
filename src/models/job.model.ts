@@ -18,7 +18,7 @@ export interface IJobTask {
   jobId: number;
   name: string;
   supplierId: number | null;
-  costCenter: number | null;
+  costCenter: string | null;
   progress: EJobTaskProgress;
   status: EJobTaskStatus;
   taskStageId: number;
@@ -64,7 +64,7 @@ export interface ICreateJobRequest {
     taskStageId: number;
     docTags: string[];
     order: number;
-    costCenter: number;
+    costCenter: string | null;
   }[];
 }
 

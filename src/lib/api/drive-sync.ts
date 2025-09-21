@@ -26,7 +26,7 @@ interface JobTaskData {
   id: number;
   job_id: number;
   name: string;
-  cost_center: number | null;
+  cost_center: string | null;
   doc_tags: string[] | null;
   purchase_order_links: DriveFile[] | null;
   plan_links: DriveFile[] | null;
@@ -78,7 +78,7 @@ function areLinksEqual(links1: DriveFile[], links2: DriveFile[]): boolean {
 // Fetch links from external API
 async function fetchLinksFromExternalApi(
   jobName: string,
-  costCenter: number,
+  costCenter: string,
   docTags: string[],
 ): Promise<ExternalApiResponse | null> {
   try {

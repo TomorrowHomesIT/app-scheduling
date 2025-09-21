@@ -4,6 +4,7 @@ import type { IJobTaskStage } from "@/models/job.model";
 import { toast, useToastStore } from "./toast-store";
 import useLoadingStore from "./loading-store";
 import { getApiErrorMessage } from "@/lib/api/error";
+import { getTaskStages } from "@/lib/supabase/task-stages";
 
 interface TaskStore {
   tasks: ITask[];
@@ -73,12 +74,7 @@ const useTaskStore = create<TaskStore>((set, get) => ({
     setLoading("taskStages", true);
 
     try {
-      const stagesRes = await fetch("/api/task-stages");
-      if (!stagesRes.ok) {
-        throw new Error("Failed to fetch task stages");
-      }
-
-      const stagesData: IJobTaskStage[] = await stagesRes.json();
+      const stagesData = await getTaskStages();
       const sortedStages = stagesData.sort((a, b) => a.order - b.order);
       set({ taskStages: sortedStages });
     } catch {

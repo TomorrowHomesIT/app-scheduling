@@ -3,6 +3,7 @@ import type { ISupplier } from "@/models/supplier.model";
 import { toast } from "./toast-store";
 import { getApiErrorMessage } from "@/lib/api/error";
 import useLoadingStore from "@/store/loading-store";
+import { getSuppliers } from "@/lib/supabase/suppliers";
 
 interface SupplierStore {
   suppliers: ISupplier[];
@@ -12,15 +13,6 @@ interface SupplierStore {
   getSupplierById: (id: number) => ISupplier | undefined;
 }
 
-const fetchSuppliers = async (active: boolean): Promise<ISupplier[]> => {
-  const response = await fetch(`/api/suppliers?active=${active}`);
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch suppliers: ${response.statusText}`);
-  }
-
-  return response.json();
-};
 
 const useSupplierStore = create<SupplierStore>((set, get) => ({
   suppliers: [],
@@ -34,7 +26,7 @@ const useSupplierStore = create<SupplierStore>((set, get) => ({
     loading.setLoading("suppliers", true);
 
     try {
-      const suppliers = await fetchSuppliers(true);
+      const suppliers = await getSuppliers();
       const activeSuppliers = suppliers.filter((supplier) => supplier.active);
       const archivedSuppliers = suppliers.filter((supplier) => !supplier.active);
 

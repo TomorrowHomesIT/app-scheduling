@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { IOwner, IOwnerJob } from "@/models/owner.model";
 import { toast } from "@/store/toast-store";
 import useLoadingStore from "@/store/loading-store";
+import { getOwners } from "@/lib/supabase/owners";
 
 interface OwnersStore {
   owners: IOwner[];
@@ -20,13 +21,7 @@ const useOwnersStore = create<OwnersStore>((set) => ({
     loading.setLoading("owners", true);
 
     try {
-      const response = await fetch("/api/owners");
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch owners");
-      }
-
-      const owners: IOwner[] = await response.json();
+      const owners = await getOwners();
       set({ owners });
       loading.setLoaded("owners", true);
     } catch (error) {

@@ -10,6 +10,7 @@ import { toast } from "@/store/toast-store";
 import useSupplierStore from "@/store/supplier-store";
 import { getApiErrorMessage } from "@/lib/api/error";
 import { Archive } from "lucide-react";
+import { createSupplier, updateSupplier } from "@/lib/supabase/suppliers";
 
 interface SupplierEditDialogProps {
   open: boolean;
@@ -56,37 +57,51 @@ export function SupplierEditDialog({ open, onOpenChange, supplier }: SupplierEdi
       return;
     }
 
-    await handleSaveSupplier(true);
+    if (supplier?.id) {
+      await handleUpdateSupplier(supplier.active);
+    } else {
+      await handleCreateSupplier();
+    }
   };
 
-  const handleSaveSupplier = async (isActive = true) => {
+  const handleUpdateSupplier = async (isActive = true) => {
+    setLoading(true);
+
+    if (!supplier?.id) {
+      return;
+    }
+
+    try {
+      await updateSupplier({
+        supplierId: supplier?.id,
+        active: isActive,
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        secondaryEmail: formData.secondaryEmail?.trim(),
+      });
+
+      toast.success(`Supplier updated successfully`);
+      onOpenChange(false);
+      await loadSuppliers();
+    } catch (error) {
+      toast.error(await getApiErrorMessage(error));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateSupplier = async () => {
     setLoading(true);
 
     try {
-      const method = isEditing ? "PUT" : "POST";
-      const url = isEditing ? `/api/suppliers/${supplier?.id}` : "/api/suppliers";
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: formData.name.trim(),
-          email: formData.email.trim(),
-          secondaryEmail: formData.secondaryEmail.trim() || null,
-          active: isActive,
-        }),
+      await createSupplier({
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        secondaryEmail: formData.secondaryEmail?.trim(),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Failed to ${isEditing ? "update" : "create"} supplier`);
-      }
-
-      toast.success(`Supplier ${isEditing ? "updated" : "created"} successfully`);
+      toast.success(`Supplier created successfully`);
       onOpenChange(false);
-
       await loadSuppliers();
     } catch (error) {
       toast.error(await getApiErrorMessage(error));
@@ -100,7 +115,7 @@ export function SupplierEditDialog({ open, onOpenChange, supplier }: SupplierEdi
   };
 
   const handleArchiveSupplier = async () => {
-    await handleSaveSupplier(!supplier?.active);
+    await handleUpdateSupplier(!supplier?.active);
   };
 
   return (

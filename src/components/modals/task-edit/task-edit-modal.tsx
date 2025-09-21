@@ -14,14 +14,14 @@ import { DOC_TAGS } from "@/models/doc-tags.const";
 export interface ITaskEditData {
   id: number;
   name: string;
-  costCenter?: number | null;
+  costCenter?: string | null;
   docTags?: string[] | null;
   jobId?: number;
 }
 
 export interface ITaskEditUpdates {
   name?: string;
-  costCenter?: number | null;
+  costCenter?: string | null;
   docTags?: string[] | null;
 }
 
@@ -141,9 +141,16 @@ export function TaskEditModal({ task, onSave, onSync, onOpenChange, open, showSy
     }
   };
 
+  const onConstCenterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLocalTask((prev) => ({
+      ...prev,
+      costCenter: e.target.value ? e.target.value : null,
+    }));
+  };
+
   const onSaveChanges = async () => {
     const costCenter = localTask.costCenter;
-    if (costCenter && Number.isNaN(parseFloat(costCenter.toString()))) {
+    if (costCenter && Number.isNaN(parseFloat(costCenter))) {
       toast.error("Cost center must be a number");
       return;
     }
@@ -188,12 +195,7 @@ export function TaskEditModal({ task, onSave, onSync, onOpenChange, open, showSy
               type="number"
               step="0.01"
               value={localTask.costCenter || ""}
-              onChange={(e) =>
-                setLocalTask((prev) => ({
-                  ...prev,
-                  costCenter: e.target.value ? parseFloat(e.target.value) : 0,
-                }))
-              }
+              onChange={onConstCenterChange}
               placeholder="0.00"
             />
           </div>

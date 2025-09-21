@@ -1,7 +1,7 @@
 export interface ITask {
   id: number;
   name: string;
-  costCenter: number;
+  costCenter: string | null;
   docTags: string[];
   order: number;
   taskStageId?: number;

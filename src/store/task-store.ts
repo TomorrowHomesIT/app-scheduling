@@ -5,6 +5,7 @@ import { toast, useToastStore } from "./toast-store";
 import useLoadingStore from "./loading-store";
 import { getApiErrorMessage } from "@/lib/api/error";
 import { getTaskStages } from "@/lib/supabase/task-stages";
+import { getTasks, updateTask as updateTaskHelper } from "@/lib/supabase/tasks";
 
 interface TaskStore {
   tasks: ITask[];
@@ -25,19 +26,7 @@ const useTaskStore = create<TaskStore>((set, get) => ({
     const loadingId = toast.loading("Updating task...");
 
     try {
-      const tasksRes = await fetch(`/api/tasks/${taskId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updates),
-      });
-
-      if (!tasksRes.ok) {
-        throw new Error("Failed to fetch task templates");
-      }
-
-      const updatedTask: ITask = await tasksRes.json();
+      const updatedTask: ITask = await updateTaskHelper(taskId, updates);
       set((state) => ({ tasks: state.tasks.map((t) => (t.id === taskId ? { ...t, ...updatedTask } : t)) }));
       toast.success("Task updated successfully");
     } catch (error) {
@@ -53,13 +42,7 @@ const useTaskStore = create<TaskStore>((set, get) => ({
     set({ isLoading: true });
 
     try {
-      const tasksRes = await fetch("/api/tasks");
-
-      if (!tasksRes.ok) {
-        throw new Error("Failed to fetch task templates");
-      }
-
-      const tasks: ITask[] = await tasksRes.json();
+      const tasks = await getTasks();
       set({ tasks, isLoading: false });
     } catch {
       toast.error("Failed to fetch task templates");

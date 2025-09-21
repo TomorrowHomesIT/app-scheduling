@@ -33,7 +33,7 @@ export async function getJobById(jobId: number): Promise<IJob> {
   return completeJob;
 }
 
-export async function createJob(jobData: ICreateJobRequest) {
+export async function createJob(jobData: ICreateJobRequest): Promise<IJob> {
   const supabase = createClient();
   const { name, location, ownerId, tasks } = jobData;
 
@@ -69,7 +69,7 @@ export async function createJob(jobData: ICreateJobRequest) {
   }
 
   // Return the created job
-  const createdJob = toCamelCase(newJobData);
+  const createdJob = toCamelCase<IJob>(newJobData);
   return createdJob;
 }
 

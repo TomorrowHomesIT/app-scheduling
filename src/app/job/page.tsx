@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { EJobTaskProgress, type IUpdateJobRequest } from "@/models/job.model";
 import { Accordion, AccordionContent, AccordionHeader, AccordionItem } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
@@ -19,15 +19,10 @@ import { JobSyncStatus } from "@/components/job/job-sync-status";
 import { JobRefreshButton } from "@/components/job/job-refresh-button";
 import useLoadingStore from "@/store/loading-store";
 
-export default function JobDetailPage() {
+function JobDetailContent() {
   const router = useRouter();
-  const [jobId, setJobId] = useState<string | null>(null);
-
-  // Get jobId from URL params using native browser API
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    setJobId(urlParams.get("jobId"));
-  }, []);
+  const searchParams = useSearchParams();
+  const jobId = searchParams.get("jobId");
 
   const { taskStages } = useTaskStore();
   const { currentJob, currentJobSyncStatus, loadJob, updateJob, loadJobSyncStatus } = useJobStore();
@@ -40,6 +35,7 @@ export default function JobDetailPage() {
   // Redirect to jobs list if no jobId
   useEffect(() => {
     const parsedJobId = jobId ? parseInt(jobId, 10) : null;
+
     if (!parsedJobId || Number.isNaN(parsedJobId)) {
       router.push("/jobs");
       return;
@@ -190,5 +186,23 @@ export default function JobDetailPage() {
         onOpenChange={setIsEditModalOpen}
       />
     </div>
+  );
+}
+
+// Loading fallback component
+function JobDetailLoading() {
+  return (
+    <div className="flex flex-col items-center justify-center h-full">
+      <Spinner variant="default" size="xl" />
+    </div>
+  );
+}
+
+// Main export with Suspense boundary
+export default function JobDetailPage() {
+  return (
+    <Suspense fallback={<JobDetailLoading />}>
+      <JobDetailContent />
+    </Suspense>
   );
 }

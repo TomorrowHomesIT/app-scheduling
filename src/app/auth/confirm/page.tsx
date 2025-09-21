@@ -1,26 +1,20 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
-import type { EmailOtpType } from '@supabase/supabase-js';
+import { useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import type { EmailOtpType } from "@supabase/supabase-js";
+import { Spinner } from "@/components/ui/spinner";
 
-export default function ConfirmPage() {
+function ConfirmContent() {
   const router = useRouter();
-  const [searchParams, setSearchParams] = useState<URLSearchParams | null>(null);
-
-  // Get search params using native browser API
-  useEffect(() => {
-    setSearchParams(new URLSearchParams(window.location.search));
-  }, []);
+  const searchParams = useSearchParams();
 
   useEffect(() => {
-    if (!searchParams) return;
-
     const confirmAuth = async () => {
-      const token_hash = searchParams.get('token_hash');
-      const type = searchParams.get('type') as EmailOtpType | null;
-      const next = searchParams.get('next') ?? '/';
+      const token_hash = searchParams.get("token_hash");
+      const type = searchParams.get("type") as EmailOtpType | null;
+      const next = searchParams.get("next") ?? "/";
 
       if (token_hash && type) {
         const supabase = createClient();
@@ -36,7 +30,7 @@ export default function ConfirmPage() {
           router.push(`/auth/error?error=${encodeURIComponent(error.message)}`);
         }
       } else {
-        router.push('/auth/error?error=No token hash or type');
+        router.push("/auth/error?error=No token hash or type");
       }
     };
 
@@ -50,5 +44,19 @@ export default function ConfirmPage() {
         <p className="mt-4 text-gray-600">Confirming your account...</p>
       </div>
     </div>
+  );
+}
+
+export default function ConfirmPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex flex-col items-center justify-center h-full">
+          <Spinner variant="default" size="xl" />
+        </div>
+      }
+    >
+      <ConfirmContent />
+    </Suspense>
   );
 }

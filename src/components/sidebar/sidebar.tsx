@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ChevronDown, ChevronRight, Search, Folder, ListChecks, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -19,15 +19,10 @@ interface SidebarProps {
   onClose?: () => void;
 }
 
-function SidebarContent({ onJobSelect }: { onJobSelect?: () => void }) {
+function SidebarContentInner({ onJobSelect }: { onJobSelect?: () => void }) {
   const pathname = usePathname();
-  const [currentJobId, setCurrentJobId] = useState<string | null>(null);
-
-  // Get jobId from URL params using native browser API
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    setCurrentJobId(urlParams.get("jobId"));
-  }, []);
+  const searchParams = useSearchParams();
+  const currentJobId = searchParams.get("jobId");
   const { owners } = useOwnersStore();
   const { user } = useAuth();
   const [expandedOwners, setExpandedOwners] = useState<Set<number>>(new Set());
@@ -172,6 +167,29 @@ function SidebarContent({ onJobSelect }: { onJobSelect?: () => void }) {
         <UserProfileButton />
       </div>
     </>
+  );
+}
+
+function SidebarContent({ onJobSelect }: { onJobSelect?: () => void }) {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex flex-col h-full">
+          <div className="border-b p-4">
+            <div className="h-8 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+          <div className="flex-1 p-4">
+            <div className="space-y-2">
+              <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+              <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+              <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <SidebarContentInner onJobSelect={onJobSelect} />
+    </Suspense>
   );
 }
 

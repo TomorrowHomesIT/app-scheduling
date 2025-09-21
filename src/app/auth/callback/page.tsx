@@ -1,36 +1,30 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
+import { useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { Spinner } from "@/components/ui/spinner";
 
-export default function CallbackPage() {
+function CallbackContent() {
   const router = useRouter();
-  const [searchParams, setSearchParams] = useState<URLSearchParams | null>(null);
-
-  // Get search params using native browser API
-  useEffect(() => {
-    setSearchParams(new URLSearchParams(window.location.search));
-  }, []);
+  const searchParams = useSearchParams();
 
   useEffect(() => {
-    if (!searchParams) return;
-
     const handleCallback = async () => {
-      const code = searchParams.get('code');
-      const next = searchParams.get('next') ?? '/';
+      const code = searchParams.get("code");
+      const next = searchParams.get("next") ?? "/";
 
       if (code) {
         const supabase = createClient();
         const { error } = await supabase.auth.exchangeCodeForSession(code);
-        
+
         if (!error) {
           router.push(next);
         } else {
-          router.push('/auth/error');
+          router.push("/auth/error");
         }
       } else {
-        router.push('/auth/error');
+        router.push("/auth/error");
       }
     };
 
@@ -44,5 +38,19 @@ export default function CallbackPage() {
         <p className="mt-4 text-gray-600">Processing authentication...</p>
       </div>
     </div>
+  );
+}
+
+export default function CallbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex flex-col items-center justify-center h-full">
+          <Spinner variant="default" size="xl" />
+        </div>
+      }
+    >
+      <CallbackContent />
+    </Suspense>
   );
 }

@@ -179,7 +179,7 @@ export default function CreateJobPage() {
       const { loadOwners } = useOwnersStore.getState();
       await loadOwners();
       // Navigate to the job page and sync drive - a loading screen will be shown
-      router.push(`/jobs/${data.id}`);
+      router.push(`/jobs?jobId=${data.id}`);
       await syncJobWithDrive(data.id);
     } catch (error) {
       const errorMessage = await getApiErrorMessage(error);

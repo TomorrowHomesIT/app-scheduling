@@ -1,16 +1,13 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
 
-export default function Page() {
-  const [error, setError] = useState<string | null>(null);
-
-  // Get error from URL params using native browser API
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    setError(urlParams.get('error'));
-  }, []);
+function ErrorContent() {
+  const searchParams = useSearchParams();
+  const error = searchParams.get("error");
 
   return (
     <div className="flex flex-col gap-6">
@@ -27,5 +24,19 @@ export default function Page() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex flex-col items-center justify-center h-full">
+          <Spinner variant="default" size="xl" />
+        </div>
+      }
+    >
+      <ErrorContent />
+    </Suspense>
   );
 }

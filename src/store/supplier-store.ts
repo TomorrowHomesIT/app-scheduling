@@ -13,7 +13,6 @@ interface SupplierStore {
   getSupplierById: (id: number) => ISupplier | undefined;
 }
 
-
 const useSupplierStore = create<SupplierStore>((set, get) => ({
   suppliers: [],
   activeSuppliers: [],

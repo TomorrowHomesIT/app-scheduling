@@ -1,8 +1,8 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { notFound, useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { EJobTaskProgress, type IUpdateJobRequest } from "@/models/job.model";
 import { Accordion, AccordionContent, AccordionHeader, AccordionItem } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
@@ -20,9 +20,14 @@ import { JobRefreshButton } from "@/components/job/job-refresh-button";
 import useLoadingStore from "@/store/loading-store";
 
 export default function JobDetailPage() {
-  const searchParams = useSearchParams();
   const router = useRouter();
-  const jobId = searchParams.get("jobId");
+  const [jobId, setJobId] = useState<string | null>(null);
+
+  // Get jobId from URL params using native browser API
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    setJobId(urlParams.get("jobId"));
+  }, []);
 
   const { taskStages } = useTaskStore();
   const { currentJob, currentJobSyncStatus, loadJob, updateJob, loadJobSyncStatus } = useJobStore();

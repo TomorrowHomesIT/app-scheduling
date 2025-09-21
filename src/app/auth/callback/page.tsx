@@ -1,14 +1,21 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 export default function CallbackPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const [searchParams, setSearchParams] = useState<URLSearchParams | null>(null);
+
+  // Get search params using native browser API
+  useEffect(() => {
+    setSearchParams(new URLSearchParams(window.location.search));
+  }, []);
 
   useEffect(() => {
+    if (!searchParams) return;
+
     const handleCallback = async () => {
       const code = searchParams.get('code');
       const next = searchParams.get('next') ?? '/';

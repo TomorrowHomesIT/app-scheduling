@@ -1,15 +1,22 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import type { EmailOtpType } from '@supabase/supabase-js';
 
 export default function ConfirmPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const [searchParams, setSearchParams] = useState<URLSearchParams | null>(null);
+
+  // Get search params using native browser API
+  useEffect(() => {
+    setSearchParams(new URLSearchParams(window.location.search));
+  }, []);
 
   useEffect(() => {
+    if (!searchParams) return;
+
     const confirmAuth = async () => {
       const token_hash = searchParams.get('token_hash');
       const type = searchParams.get('type') as EmailOtpType | null;

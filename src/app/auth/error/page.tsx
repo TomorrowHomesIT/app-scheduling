@@ -1,11 +1,16 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function Page() {
-  const searchParams = useSearchParams();
-  const error = searchParams.get('error');
+  const [error, setError] = useState<string | null>(null);
+
+  // Get error from URL params using native browser API
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    setError(urlParams.get('error'));
+  }, []);
 
   return (
     <div className="flex flex-col gap-6">

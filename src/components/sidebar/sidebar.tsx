@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { ChevronDown, ChevronRight, Search, Folder, ListChecks, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -21,8 +21,13 @@ interface SidebarProps {
 
 function SidebarContent({ onJobSelect }: { onJobSelect?: () => void }) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const currentJobId = searchParams.get("jobId");
+  const [currentJobId, setCurrentJobId] = useState<string | null>(null);
+
+  // Get jobId from URL params using native browser API
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    setCurrentJobId(urlParams.get("jobId"));
+  }, []);
   const { owners } = useOwnersStore();
   const { user } = useAuth();
   const [expandedOwners, setExpandedOwners] = useState<Set<number>>(new Set());

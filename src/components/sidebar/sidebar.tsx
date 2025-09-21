@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ChevronDown, ChevronRight, Search, Folder, ListChecks, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,8 @@ interface SidebarProps {
 
 function SidebarContent({ onJobSelect }: { onJobSelect?: () => void }) {
   const pathname = usePathname();
-  const initialPathname = useRef(pathname);
+  const searchParams = useSearchParams();
+  const currentJobId = searchParams.get("jobId");
   const { owners } = useOwnersStore();
   const { user } = useAuth();
   const [expandedOwners, setExpandedOwners] = useState<Set<number>>(new Set());
@@ -41,9 +42,8 @@ function SidebarContent({ onJobSelect }: { onJobSelect?: () => void }) {
     }
 
     // Also check if we're on a job page and expand that owner
-    const jobIdMatch = initialPathname.current.match(/^\/jobs\/(\d+)$/);
-    if (jobIdMatch) {
-      const jobId = parseInt(jobIdMatch[1], 10);
+    if (pathname === "/job" && currentJobId) {
+      const jobId = parseInt(currentJobId, 10);
       const jobOwner = owners.find((owner) => owner.jobs?.some((job) => job.id === jobId));
       if (jobOwner) {
         ownersToExpand.add(jobOwner.id);
@@ -53,7 +53,11 @@ function SidebarContent({ onJobSelect }: { onJobSelect?: () => void }) {
     if (ownersToExpand.size > 0) {
       setExpandedOwners(ownersToExpand);
     }
-  }, [owners, user?.id]);
+  }, [owners, user?.id, pathname, currentJobId]);
+
+  const isJobSelected = (jobId: number) => {
+    return pathname === "/job" && currentJobId === jobId.toString();
+  };
 
   const toggleOwner = (ownerId: number) => {
     const newExpanded = new Set(expandedOwners);
@@ -142,11 +146,11 @@ function SidebarContent({ onJobSelect }: { onJobSelect?: () => void }) {
                 {owner.jobs?.map((job) => (
                   <Link
                     key={job.id}
-                    href={`/jobs/${job.id}`}
+                    href={`/job?jobId=${job.id}`}
                     onClick={onJobSelect}
                     className={cn(
                       "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground",
-                      pathname === `/jobs/${job.id}` && "bg-accent font-bold",
+                      isJobSelected(job.id) && "bg-accent font-bold",
                     )}
                   >
                     <ListChecks className="h-4 w-4 flex-shrink-0" style={{ color: owner.color || "#0A120A" }} />

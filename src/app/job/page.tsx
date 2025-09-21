@@ -2,7 +2,7 @@
 
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, useRouter, useSearchParams } from "next/navigation";
 import { EJobTaskProgress, type IUpdateJobRequest } from "@/models/job.model";
 import { Accordion, AccordionContent, AccordionHeader, AccordionItem } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
@@ -19,12 +19,11 @@ import { JobSyncStatus } from "@/components/job/job-sync-status";
 import { JobRefreshButton } from "@/components/job/job-refresh-button";
 import useLoadingStore from "@/store/loading-store";
 
-interface JobDetailPageProps {
-  params: Promise<{ id: string }>;
-}
+export default function JobDetailPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const jobId = searchParams.get("jobId");
 
-export default function JobDetailPage({ params }: JobDetailPageProps) {
-  const { id } = use(params);
   const { taskStages } = useTaskStore();
   const { currentJob, currentJobSyncStatus, loadJob, updateJob, loadJobSyncStatus } = useJobStore();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -33,18 +32,31 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
 
   const [error, setError] = useState<boolean>(false);
 
+  // Redirect to jobs list if no jobId
   useEffect(() => {
-    if (!currentJob || currentJob.id !== parseInt(id, 10)) {
+    const parsedJobId = jobId ? parseInt(jobId, 10) : null;
+    if (!parsedJobId || Number.isNaN(parsedJobId)) {
+      router.push("/jobs");
+      return;
+    }
+
+    const loadCurrentJob = async (id: number) => {
       try {
-        loadJob(parseInt(id, 10));
+        await loadJob(id);
       } catch (error) {
         setError(true);
         console.error(error);
       }
+    };
+
+    if (!currentJob || currentJob.id !== parsedJobId) {
+      loadCurrentJob(parsedJobId);
     }
 
-    if (currentJob) document.title = `${currentJob.name} | BASD Scheduling`;
-  }, [id, loadJob, currentJob]);
+    if (currentJob) {
+      document.title = `${currentJob.name} | BASD Scheduling`;
+    }
+  }, [jobId, currentJob, loadJob, router]);
 
   // Monitor sync status changes to detect service worker updates
   useEffect(() => {
@@ -56,32 +68,42 @@ export default function JobDetailPage({ params }: JobDetailPageProps) {
         lastKnownSyncStatus.lastSynced !== currentJobSyncStatus.lastSynced ||
         lastKnownSyncStatus.hasPendingUpdates !== currentJobSyncStatus.hasPendingUpdates;
 
-      if (syncStatusChanged) {
-        loadJob(parseInt(id, 10));
+      if (syncStatusChanged && jobId) {
+        loadJob(parseInt(jobId, 10));
       }
     }
 
     // Update our known sync status
     setLastKnownSyncStatus(currentJobSyncStatus);
-  }, [currentJobSyncStatus, lastKnownSyncStatus, loadJob, id]);
+  }, [currentJobSyncStatus, lastKnownSyncStatus, loadJob, jobId]);
 
   // Periodically check for sync status updates (every 30 seconds)
   useEffect(() => {
-    if (!currentJob || !currentJobSyncStatus) return;
+    if (!currentJob || !currentJobSyncStatus || !jobId) return;
 
     const interval = setInterval(async () => {
       try {
-        await loadJobSyncStatus(parseInt(id, 10));
+        await loadJobSyncStatus(parseInt(jobId, 10));
       } catch (error) {
         console.error("Failed to check sync status:", error);
       }
     }, 30000); // Check every 30 seconds
 
     return () => clearInterval(interval);
-  }, [currentJob, currentJobSyncStatus, id, loadJobSyncStatus]);
+  }, [currentJob, currentJobSyncStatus, jobId, loadJobSyncStatus]);
 
-  if (error || Number.isNaN(Number(id))) {
-    return notFound();
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full">
+        <div className="text-center mt-3">
+          <h2 className="text-2xl font-bold text-gray-900">Job not found</h2>
+          <p className="text-gray-600 mt-2">The job you're looking for doesn't exist.</p>
+          <Link href="/jobs" className="text-blue-600 hover:text-blue-800 mt-4 inline-block">
+            ← Back to Jobs
+          </Link>
+        </div>
+      </div>
+    );
   } else if (!currentJob || jobLoadingState.isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-full">

@@ -5,6 +5,7 @@ import { getApiErrorMessage } from "@/lib/api/error";
 import useOwnersStore from "@/store/owners-store";
 import useLoadingStore from "@/store/loading-store";
 import { jobsDB } from "@/lib/jobs-db";
+import { getUserJobs } from "@/lib/supabase/user/jobs";
 
 interface JobSyncStatus {
   lastUpdated: number;
@@ -46,14 +47,8 @@ const fetchJobByIdFromApi = async (id: number): Promise<IJob | null> => {
 
 const fetchUserJobsFromApi = async (): Promise<IJob[] | null> => {
   try {
-    const response = await fetch(`/api/user/jobs`);
-
-    if (!response.ok) {
-      throw new Error(await getApiErrorMessage(response, "Failed to fetch job"));
-    }
-
-    const job: IJob[] = await response.json();
-    return job;
+    const jobs = await getUserJobs();
+    return jobs;
   } catch (error) {
     console.error("Error fetching user jobs:", error);
     throw error;

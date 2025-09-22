@@ -1,7 +1,5 @@
-"use client";
-
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { LogOut } from "lucide-react";
 import { useState } from "react";
 import { ConfirmationModal } from "../modals/confirm/confirm-modal";
@@ -10,12 +8,12 @@ import { cn } from "@/lib/utils";
 
 export function LogoutButton({ className }: { className?: string }) {
   const { logout } = useAuth();
-  const router = useRouter();
+  const navigate = useNavigate();
   const [showDialog, setShowDialog] = useState(false);
 
   const onLogout = async () => {
     await logout();
-    router.push("/auth/login");
+    navigate("/auth/login");
   };
 
   return (

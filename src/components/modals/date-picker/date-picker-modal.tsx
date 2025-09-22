@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import { format, addDays } from "date-fns";
 import { CalendarPlusIcon } from "lucide-react";

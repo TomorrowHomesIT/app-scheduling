@@ -1,5 +1,3 @@
-"use client";
-
 import {
   DB_NAME,
   DB_VERSION,
@@ -9,14 +7,18 @@ import {
   type QueuedRequest,
 } from "@/models/db.model";
 import { getApiErrorMessage } from "./api/error";
+import { createClient } from "@/lib/supabase/client";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 class OfflineQueue {
   private db: IDBDatabase | null = null;
+  private supabase: SupabaseClient | null = null;
 
   constructor() {
     // Only initialize if we're in the browser
     if (typeof window !== "undefined") {
       this.initDB();
+      this.supabase = createClient();
     }
   }
 
@@ -208,6 +210,50 @@ class OfflineQueue {
       console.error("Failed to get queue status:", error);
       return 0;
     }
+  }
+
+  // Get auth header from Supabase client
+  private async getAuthHeader(): Promise<string | null> {
+    // Method 1: Try to get from Supabase client directly (if available)
+    if (this.supabase) {
+      try {
+        const {
+          data: { session },
+        } = await this.supabase.auth.getSession();
+        if (session?.access_token) {
+          return `Bearer ${session.access_token}`;
+        }
+      } catch (error) {
+        console.warn("Failed to get auth token from Supabase client:", error);
+      }
+    }
+
+    return null;
+  }
+
+  // Queue a Supabase Edge Function call
+  async queueSupabaseFunction(
+    functionName: string,
+    body: unknown,
+    maxAttempts = 10,
+  ): Promise<{ success: boolean; queued: boolean; response?: Response; error?: Error }> {
+    // Get the Supabase URL from environment or use default
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
+    const url = `${supabaseUrl}/functions/v1/${functionName}`;
+
+    // Get auth header from Supabase client
+    const authHeader = await this.getAuthHeader();
+
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+
+    if (authHeader) {
+      headers["Authorization"] = authHeader;
+    }
+
+    // Use existing queueRequest method
+    return this.queueRequest(url, "POST", body, headers, maxAttempts);
   }
 
   // Clear the queue (useful for logout)

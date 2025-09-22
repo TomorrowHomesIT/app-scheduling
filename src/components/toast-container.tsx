@@ -1,5 +1,3 @@
-"use client";
-
 import { useToastStore } from "@/store/toast-store";
 import { Toast } from "@/components/ui/toast";
 import { createPortal } from "react-dom";

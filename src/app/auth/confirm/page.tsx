@@ -1,14 +1,12 @@
-"use client";
-
 import { useEffect, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { createClient } from "@/lib/supabase/client";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { Spinner } from "@/components/ui/spinner";
 
 function ConfirmContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     const confirmAuth = async () => {
@@ -25,17 +23,17 @@ function ConfirmContent() {
         });
 
         if (!error) {
-          router.push(next);
+          navigate(next);
         } else {
-          router.push(`/auth/error?error=${encodeURIComponent(error.message)}`);
+          navigate(`/auth/error?error=${encodeURIComponent(error.message)}`);
         }
       } else {
-        router.push("/auth/error?error=No token hash or type");
+        navigate("/auth/error?error=No token hash or type");
       }
     };
 
     confirmAuth();
-  }, [router, searchParams]);
+  }, [navigate, searchParams]);
 
   return (
     <div className="flex items-center justify-center min-h-screen">

@@ -9,11 +9,7 @@ export function GoogleButton({ isSignUp }: { isSignUp: boolean }) {
     setIsLoading(true);
     const supabase = createClient();
 
-    console.log("NEXT_PUBLIC_APP_BASE_URI:", process.env.NEXT_PUBLIC_APP_BASE_URI);
-    console.log("window.location.origin:", window?.location?.origin);
-
-    const baseUri =
-      process.env.NEXT_PUBLIC_APP_BASE_URI || (typeof window !== "undefined" ? window.location.origin : "");
+    const baseUri = window.location.origin ?? "";
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",

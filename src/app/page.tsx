@@ -1,11 +1,9 @@
-"use client";
-
-import { redirect, useRouter } from "next/navigation";
 import { BookUser, Hammer, House } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/components/auth/auth-context";
 import { Spinner } from "@/components/ui/spinner";
+import { useNavigate } from "react-router-dom";
 
 interface NavigationCard {
   title: string;
@@ -15,7 +13,7 @@ interface NavigationCard {
 }
 
 export default function HomePage() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const { isAuthenticated, isAuthLoading } = useAuth();
 
   if (isAuthLoading) {
@@ -27,7 +25,7 @@ export default function HomePage() {
   }
 
   if (!isAuthenticated) {
-    redirect("/auth/login");
+    navigate("/auth/login");
     return;
   }
 
@@ -53,7 +51,7 @@ export default function HomePage() {
   ];
 
   const handleCardClick = (href: string) => {
-    router.push(href);
+    navigate(href);
   };
 
   return (

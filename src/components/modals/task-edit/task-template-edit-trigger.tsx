@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import { TaskEditModal, type ITaskEditData, type ITaskEditUpdates } from "./task-edit-modal";
 import { Button } from "@/components/ui/button";

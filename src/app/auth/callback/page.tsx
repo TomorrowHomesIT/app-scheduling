@@ -1,13 +1,11 @@
-"use client";
-
 import { useEffect, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { createClient } from "@/lib/supabase/client";
 import { Spinner } from "@/components/ui/spinner";
 
 function CallbackContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -19,17 +17,17 @@ function CallbackContent() {
         const { error } = await supabase.auth.exchangeCodeForSession(code);
 
         if (!error) {
-          router.push(next);
+          navigate(next);
         } else {
-          router.push("/auth/error");
+          navigate("/auth/error");
         }
       } else {
-        router.push("/auth/error");
+        navigate("/auth/error");
       }
     };
 
     handleCallback();
-  }, [router, searchParams]);
+  }, [navigate, searchParams]);
 
   return (
     <div className="flex items-center justify-center min-h-screen">

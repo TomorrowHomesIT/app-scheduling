@@ -1,5 +1,3 @@
-"use client";
-
 import { createClient } from "@/lib/supabase/client";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import useOfflineStore from "@/store/offline-store";

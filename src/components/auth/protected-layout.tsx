@@ -1,18 +1,16 @@
-"use client";
-
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { useAuth } from "./auth-context";
 
 export function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const { isAuthLoading, isAuthenticated } = useAuth();
-  const router = useRouter();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (isAuthLoading) return;
 
     if (!isAuthenticated) {
-      router.push("/auth/login");
+      navigate("/auth/login");
     }
   }, [isAuthLoading, isAuthenticated, router]);
 

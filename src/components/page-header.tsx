@@ -2,7 +2,7 @@ import { ChevronLeft, Menu } from "lucide-react";
 import type { ComponentProps } from "react";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { useSidebar } from "./sidebar/sidebar-context";
 
 interface PageHaderProps extends ComponentProps<"div"> {
@@ -19,7 +19,7 @@ export function PageHeader({ title, description, backLink, badge, children }: Pa
     <div className="flex items-center justify-between p-4">
       <div className="flex items-center gap-2 lg:gap-4">
         {backLink && (
-          <Link href={backLink}>
+          <Link to={backLink}>
             <Button variant="ghost" size="icon">
               <ChevronLeft className="h-4 w-4" />
             </Button>

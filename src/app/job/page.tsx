@@ -1,8 +1,5 @@
-"use client";
-
 import { useEffect, useState, Suspense } from "react";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { EJobTaskProgress, type IUpdateJobRequest } from "@/models/job.model";
 import { Accordion, AccordionContent, AccordionHeader, AccordionItem } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
@@ -18,11 +15,11 @@ import { JobTaskTableHeader } from "@/components/job/job-task-table-header";
 import { JobSyncStatus } from "@/components/job/job-sync-status";
 import { JobRefreshButton } from "@/components/job/job-refresh-button";
 import useLoadingStore from "@/store/loading-store";
+import { useParams } from "react-router-dom";
 
 function JobDetailContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const jobId = searchParams.get("jobId");
+  const navigate = useNavigate();
+  const { id } = useParams();
 
   const { taskStages } = useTaskStore();
   const { currentJob, currentJobSyncStatus, loadJob, updateJob, loadJobSyncStatus } = useJobStore();
@@ -34,10 +31,10 @@ function JobDetailContent() {
 
   // Redirect to jobs list if no jobId
   useEffect(() => {
-    const parsedJobId = jobId ? parseInt(jobId, 10) : null;
+    const parsedJobId = id ? parseInt(id, 10) : null;
 
     if (!parsedJobId || Number.isNaN(parsedJobId)) {
-      router.push("/jobs");
+      navigate("/jobs");
       return;
     }
 
@@ -55,9 +52,9 @@ function JobDetailContent() {
     }
 
     if (currentJob) {
-      document.title = `${currentJob.name} | BASD Scheduling`;
+      document.title = `${currentJob.name} | BASD On-Site`;
     }
-  }, [jobId, currentJob, loadJob, router]);
+  }, [id, currentJob, loadJob, navigate]);
 
   // Monitor sync status changes to detect service worker updates
   useEffect(() => {
@@ -69,29 +66,29 @@ function JobDetailContent() {
         lastKnownSyncStatus.lastSynced !== currentJobSyncStatus.lastSynced ||
         lastKnownSyncStatus.hasPendingUpdates !== currentJobSyncStatus.hasPendingUpdates;
 
-      if (syncStatusChanged && jobId) {
-        loadJob(parseInt(jobId, 10));
+      if (syncStatusChanged && id) {
+        loadJob(parseInt(id, 10));
       }
     }
 
     // Update our known sync status
     setLastKnownSyncStatus(currentJobSyncStatus);
-  }, [currentJobSyncStatus, lastKnownSyncStatus, loadJob, jobId]);
+  }, [currentJobSyncStatus, lastKnownSyncStatus, loadJob, id]);
 
   // Periodically check for sync status updates (every 30 seconds)
   useEffect(() => {
-    if (!currentJob || !currentJobSyncStatus || !jobId) return;
+    if (!currentJob || !currentJobSyncStatus || !id) return;
 
     const interval = setInterval(async () => {
       try {
-        await loadJobSyncStatus(parseInt(jobId, 10));
+        await loadJobSyncStatus(parseInt(id, 10));
       } catch (error) {
         console.error("Failed to check sync status:", error);
       }
     }, 30000); // Check every 30 seconds
 
     return () => clearInterval(interval);
-  }, [currentJob, currentJobSyncStatus, jobId, loadJobSyncStatus]);
+  }, [currentJob, currentJobSyncStatus, id, loadJobSyncStatus]);
 
   if (error) {
     return (
@@ -99,7 +96,7 @@ function JobDetailContent() {
         <div className="text-center mt-3">
           <h2 className="text-2xl font-bold text-gray-900">Job not found</h2>
           <p className="text-gray-600 mt-2">The job you're looking for doesn't exist.</p>
-          <Link href="/jobs" className="text-blue-600 hover:text-blue-800 mt-4 inline-block">
+          <Link to="/jobs" className="text-blue-600 hover:text-blue-800 mt-4 inline-block">
             ← Back to Jobs
           </Link>
         </div>
@@ -143,7 +140,7 @@ function JobDetailContent() {
           </div>
           {currentJob.googleDriveDirId && (
             <Link
-              href={`//drive.google.com/drive/folders/${currentJob.googleDriveDirId}`}
+              to={`//drive.google.com/drive/folders/${currentJob.googleDriveDirId}`}
               target="_blank"
               rel="noopener noreferrer"
             >

@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect } from "react";
 import { WifiOff, Wifi, Clock } from "lucide-react";
 import { useOfflineQueue } from "@/hooks/use-offline-queue";

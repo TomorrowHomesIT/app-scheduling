@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect } from "react";
 import { AuthProvider, useAuth } from "@/components/auth/auth-context";
 import { Sidebar } from "@/components/sidebar/sidebar";

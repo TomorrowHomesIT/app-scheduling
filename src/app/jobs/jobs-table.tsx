@@ -1,6 +1,4 @@
-"use client";
-
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import type { IOwner } from "@/models/owner.model";
 import { Folder, MapPin } from "lucide-react";
 import { Button } from "../../components/ui/button";
@@ -11,11 +9,11 @@ interface JobsTableProps {
 }
 
 export function JobsTable({ owners, mode }: JobsTableProps) {
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const handleJobClick = (jobId: number) => {
     if (mode === "current") {
-      router.push(`/job?jobId=${jobId}`);
+      navigate(`/jobs/${jobId}`);
     }
   };
 

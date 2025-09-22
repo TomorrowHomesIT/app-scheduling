@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import { JobsTable } from "@/app/jobs/jobs-table";
 import useOwnersStore from "@/store/owners-store";
@@ -7,15 +5,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/page-header";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 
 export default function JobsPage() {
   const { owners } = useOwnersStore();
   const [activeTab, setActiveTab] = useState("current");
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const goToCreateJob = () => {
-    router.push("/jobs/create");
+    navigate("/jobs/create");
   };
 
   return (

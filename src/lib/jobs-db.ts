@@ -1,5 +1,3 @@
-"use client";
-
 import {
   DB_NAME,
   DB_VERSION,

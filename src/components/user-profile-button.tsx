@@ -1,6 +1,4 @@
-"use client";
-
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
@@ -8,10 +6,10 @@ import { useAuth } from "./auth/auth-context";
 
 export function UserProfileButton() {
   const { user } = useAuth();
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const onClick = () => {
-    router.push("/settings");
+    navigate("/settings");
   };
 
   const getInitials = (name?: string, email?: string) => {

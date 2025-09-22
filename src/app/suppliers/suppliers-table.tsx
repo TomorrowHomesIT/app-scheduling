@@ -1,5 +1,3 @@
-"use client";
-
 import { Button } from "../../components/ui/button";
 import type { ISupplier } from "@/models/supplier.model";
 import { Archive, Mail } from "lucide-react";

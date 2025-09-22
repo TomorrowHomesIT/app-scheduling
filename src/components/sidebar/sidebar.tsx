@@ -1,8 +1,6 @@
-"use client";
-
 import { useState, useEffect, Suspense } from "react";
-import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { Link } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ChevronDown, ChevronRight, Search, Folder, ListChecks, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -20,14 +18,14 @@ interface SidebarProps {
 }
 
 function SidebarContentInner({ onJobSelect }: { onJobSelect?: () => void }) {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const currentJobId = searchParams.get("jobId");
+  const location = useLocation();
+  const pathname = location.pathname;
+  const id = location.pathname.match(/\/jobs\/(\d+)/)?.[1];
   const { owners } = useOwnersStore();
   const { user } = useAuth();
   const [expandedOwners, setExpandedOwners] = useState<Set<number>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
-  const router = useRouter();
+  const navigate = useNavigate();
 
   // Expand the current user's owner and the owner containing the current job (only on init)
   useEffect(() => {
@@ -42,8 +40,8 @@ function SidebarContentInner({ onJobSelect }: { onJobSelect?: () => void }) {
     }
 
     // Also check if we're on a job page and expand that owner
-    if (pathname === "/job" && currentJobId) {
-      const jobId = parseInt(currentJobId, 10);
+    if (pathname.includes("/jobs/") && id) {
+      const jobId = parseInt(id, 10);
       const jobOwner = owners.find((owner) => owner.jobs?.some((job) => job.id === jobId));
       if (jobOwner) {
         ownersToExpand.add(jobOwner.id);
@@ -53,10 +51,10 @@ function SidebarContentInner({ onJobSelect }: { onJobSelect?: () => void }) {
     if (ownersToExpand.size > 0) {
       setExpandedOwners(ownersToExpand);
     }
-  }, [owners, user?.id, pathname, currentJobId]);
+  }, [owners, user?.id, pathname, id]);
 
   const isJobSelected = (jobId: number) => {
-    return pathname === "/job" && currentJobId === jobId.toString();
+    return pathname.includes("/jobs/") && id === jobId.toString();
   };
 
   const toggleOwner = (ownerId: number) => {
@@ -97,7 +95,7 @@ function SidebarContentInner({ onJobSelect }: { onJobSelect?: () => void }) {
 
   return (
     <>
-      <button type="button" onClick={() => router.push("/")}>
+      <button type="button" onClick={() => navigate("/")}>
         <Logo className="border-b p-4" />
       </button>
 
@@ -146,7 +144,7 @@ function SidebarContentInner({ onJobSelect }: { onJobSelect?: () => void }) {
                 {owner.jobs?.map((job) => (
                   <Link
                     key={job.id}
-                    href={`/job?jobId=${job.id}`}
+                    to={`/jobs/${job.id}`}
                     onClick={onJobSelect}
                     className={cn(
                       "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground",

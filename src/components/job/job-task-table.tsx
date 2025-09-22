@@ -1,5 +1,3 @@
-"use client";
-
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import type { EJobTaskProgress, EJobTaskStatus, IJobTaskUrl } from "@/models/job.model";
 import type { IJobTask } from "@/models";

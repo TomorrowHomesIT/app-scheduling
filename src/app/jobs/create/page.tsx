@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,7 +31,7 @@ import type { ICreateJobRequest } from "@/models/job.model";
 import { PageHeader } from "@/components/page-header";
 import { Spinner } from "@/components/ui/spinner";
 import { TaskTemplateEditTrigger } from "@/components/modals/task-edit/task-template-edit-trigger";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { getApiErrorMessage } from "@/lib/api/error";
 import { toast } from "@/store/toast-store";
 import { cn } from "@/lib/utils";
@@ -89,7 +87,7 @@ export default function CreateJobPage() {
   const [jobLocation, setJobLocation] = useState("");
   const [orderedTasks, setOrderedTasks] = useState<TaskWithStage[]>([]);
   const [isSaving, setIsSaving] = useState(false);
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const { owners } = useOwnersStore();
   const { tasks, taskStages, isLoading, loadTasks } = useTaskTemplateStore();
@@ -179,7 +177,7 @@ export default function CreateJobPage() {
       const { loadOwners } = useOwnersStore.getState();
       await loadOwners();
       // Navigate to the job page and sync drive - a loading screen will be shown
-      router.push(`/jobs?jobId=${data.id}`);
+      navigate(`/jobs/${data.id}`);
       await syncJobWithDrive(data.id);
     } catch (error) {
       const errorMessage = await getApiErrorMessage(error);

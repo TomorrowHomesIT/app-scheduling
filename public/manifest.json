@@ -1,6 +1,6 @@
 {
-  "name": "BASD Scheduling",
-  "short_name": "BASD Scheduling",
+  "name": "BASD On-Site",
+  "short_name": "BASD On-Site",
   "description": "Manage construction jobs and tasks",
   "start_url": "/",
   "display": "standalone",
@@ -21,6 +21,6 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["business", "productivity"],
+  "categories": ["business", "productivity", "construction"],
   "prefer_related_applications": false
 }

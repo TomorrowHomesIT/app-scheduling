@@ -1,5 +1,3 @@
-"use client";
-
 import { Badge } from "@/components/ui/badge";
 import type { EJobTaskStatus } from "@/models/job.model";
 import { cn } from "@/lib/utils";

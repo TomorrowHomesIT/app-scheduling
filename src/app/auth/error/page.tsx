@@ -1,12 +1,10 @@
-"use client";
-
 import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 
 function ErrorContent() {
-  const searchParams = useSearchParams();
+  const [searchParams] = useSearchParams();
   const error = searchParams.get("error");
 
   return (

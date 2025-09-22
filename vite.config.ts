@@ -6,6 +6,7 @@ import { VitePWA } from "vite-plugin-pwa";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: "/", // This ensures absolute paths
   plugins: [
     react(),
     tailwindcss(),
@@ -63,5 +64,4 @@ export default defineConfig({
     chunkSizeWarningLimit: 10000,
     assetsInlineLimit: 0,
   },
-  base: "./", // Relative paths for static hosting
 });

@@ -18,8 +18,10 @@ export const POST = withAuth(async (request: NextRequest) => {
       return errorHandler("evn not configured", "Failed to send email");
     }
 
+
     // Parse request body
     const body: IScheduleEmailRequest = await request.json();
+    console.log("Email body", JSON.stringify(body));
     const requiredFields: (keyof IScheduleEmailRequest)[] = [
       "jobTaskId",
       "jobLotCode",

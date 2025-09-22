@@ -10,17 +10,19 @@ export const PATCH = withAuth(async (request, { params }: { params: Promise<{ id
   const taskId = parseInt(id, 10);
 
   if (Number.isNaN(taskId)) {
-    return Response.json({ error: "Invalid task ID" }, { status: 400 });
+    return handleError("Invalid task ID", 400);
   }
 
   try {
     const updates = await request.json();
 
+    console.log("Job task update data", JSON.stringify(updates));
+
     // Validate purchaseOrderLinks if provided
     if (updates.purchaseOrderLinks !== undefined) {
       const poValidationError = validateJobTaskUrls(updates.purchaseOrderLinks);
       if (poValidationError) {
-        return Response.json({ error: `Invalid purchase order links: ${poValidationError}` }, { status: 400 });
+        return handleError(`Invalid purchase order links: ${poValidationError}`, 400);
       }
     }
 
@@ -28,7 +30,7 @@ export const PATCH = withAuth(async (request, { params }: { params: Promise<{ id
     if (updates.planLinks !== undefined) {
       const planValidationError = validateJobTaskUrls(updates.planLinks);
       if (planValidationError) {
-        return Response.json({ error: `Invalid plan links: ${planValidationError}` }, { status: 400 });
+        return handleError(`Invalid plan links: ${planValidationError}`, 400);
       }
     }
 
@@ -54,8 +56,7 @@ export const PATCH = withAuth(async (request, { params }: { params: Promise<{ id
     const { data, error } = await supabase.from("cf_job_tasks").update(updateData).eq("id", taskId).select().single();
 
     if (!data || error) {
-      console.error("Error updating task:", error);
-      return Response.json({ error }, { status: 500 });
+      return handleError(error, 500);
     }
 
     const updatedTask: IJobTask = toCamelCase(data) as IJobTask;
@@ -70,7 +71,11 @@ export const PATCH = withAuth(async (request, { params }: { params: Promise<{ id
 
     return Response.json(mappedTask, { status: 200 });
   } catch (error) {
-    console.error("Error in PATCH /api/jobs/tasks/[id]:", error);
-    return Response.json({ error: "Internal server error" }, { status: 500 });
+    return handleError(error, 500);
   }
 });
+
+const handleError = (error: unknown, status: number) => {
+  console.error("Error in PATCH /api/jobs/tasks/[id]:", error);
+  return Response.json({ error: "Internal server error" }, { status });
+};

@@ -6,7 +6,7 @@ import { execSync } from "node:child_process";
 const isTestSwEnabled = true;
 const disableSerwist = !isTestSwEnabled && process.env.NODE_ENV === "development";
 
-const revision = execSync("git rev-parse HEAD", { encoding: "utf8" }).trim().slice(0, 7);
+const revision = null;
 
 const withSerwist = withSerwistInit({
   disable: disableSerwist,
@@ -27,6 +27,7 @@ const withSerwist = withSerwistInit({
     { url: "/offline", revision },
     { url: "/offline/", revision },
     { url: "/manifest.json", revision },
+    { url: "/icon-192x192.png", revision }
   ],
   // Configure to include all JS chunks
   include: [/\.(?:js|css|html|png|jpg|jpeg|svg|ico|woff|woff2|ttf|eot)$/],

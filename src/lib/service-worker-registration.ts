@@ -1,7 +1,16 @@
+/**
+ * This allows us full control over the service worker registration
+ * We need a bit of extra config for this to work in development
+ * @returns
+ */
 export async function registerServiceWorker() {
   if ("serviceWorker" in navigator) {
     try {
-      const registration = await navigator.serviceWorker.register("sw.js", { scope: "/" });
+      // In development, use the Vite PWA dev path
+      const isDev = import.meta.env.DEV;
+      const swPath = isDev ? "./dev-sw.js?dev-sw" : "./sw.js";
+
+      const registration = await navigator.serviceWorker.register(swPath, { type: isDev ? "module" : "classic" });
 
       registration.addEventListener("updatefound", () => {
         console.log("Service worker update found");

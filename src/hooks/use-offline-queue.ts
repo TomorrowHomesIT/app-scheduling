@@ -18,16 +18,15 @@ export function useOfflineQueue() {
 
     getInitialCount();
 
-    // Poll for changes every 2 seconds
+    // polling every 5 seconds for sync changes
     const pollInterval = setInterval(async () => {
       try {
         const count = await offlineQueue.getQueueCount();
         setQueueCount(count);
       } catch (error) {
         console.error("Failed to poll queue count:", error);
-        // Don't update state on polling errors to avoid flickering
       }
-    }, 1000);
+    }, 5000);
 
     return () => {
       clearInterval(pollInterval);

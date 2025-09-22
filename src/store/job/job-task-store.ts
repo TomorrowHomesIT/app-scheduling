@@ -4,10 +4,9 @@ import type { IJobTask } from "@/models/job.model";
 import type { EJobTaskStatus } from "@/models/job.model";
 import type { IScheduleEmailRequest } from "@/models/email";
 import { toast } from "@/store/toast-store";
-import { getApiErrorMessage } from "@/lib/api/error";
-import { offlineQueue } from "@/lib/offline-queue";
 import useJobStore from "./job-store";
 import useSupplierStore from "@/store/supplier-store";
+import { updateJobTask } from "@/lib/supabase/job-tasks";
 
 interface JobTaskStore {
   updateTask: (taskId: number, updates: Partial<IJobTask>) => Promise<void>;
@@ -16,19 +15,11 @@ interface JobTaskStore {
 
 const updateTaskApi = async (taskId: number, updates: Partial<IJobTask>): Promise<IJobTask | null> => {
   try {
-    const result = await offlineQueue.queueRequest(`/api/jobs/tasks/${taskId}`, "PATCH", updates, {
-      "Content-Type": "application/json",
-    });
-
-    if (result.success && result.response) {
-      if (!result.response.ok) {
-        throw new Error(await getApiErrorMessage(result.response, "Failed to update task"));
-      }
-      const updatedTask: IJobTask = await result.response.json();
+    // TODO do we need to return 0 or null if it fails at 0 response?
+    const result = await updateJobTask(taskId, updates);
+    if (result) {
+      const updatedTask: IJobTask = result;
       return updatedTask;
-    } else if (result.queued) {
-      // Request was queued for offline processing - return null to indicate no immediate response
-      return null;
     } else {
       throw new Error("Failed to update task");
     }
@@ -39,21 +30,21 @@ const updateTaskApi = async (taskId: number, updates: Partial<IJobTask>): Promis
 };
 
 const sendEmailApi = async (emailRequest: IScheduleEmailRequest): Promise<{ success: boolean; queued: boolean }> => {
-  const result = await offlineQueue.queueRequest("/api/email/schedule", "POST", emailRequest, {
-    "Content-Type": "application/json",
-  });
+  // TODO edge function
+  return Promise.resolve({ success: true, queued: false });
 
-  if (result.success && result.response) {
-    const data = await result.response.json();
-    if (!result.response.ok) {
-      throw new Error(data.error || "Failed to send email");
-    }
-    return { success: true, queued: false };
-  } else if (result.queued) {
-    return { success: true, queued: true };
-  } else {
-    throw new Error("Failed to send email");
-  }
+  // const result = await offlineQueue.queueSupabaseFunction("schedule-email", emailRequest);
+  // if (result.success && result.response) {
+  //   const data = await result.response.json();
+  //   if (!result.response.ok) {
+  //     throw new Error(data.error || "Failed to send email");
+  //   }
+  //   return { success: true, queued: false };
+  // } else if (result.queued) {
+  //   return { success: true, queued: true };
+  // } else {
+  //   throw new Error("Failed to send email");
+  // }
 };
 
 const useJobTaskStore = create<JobTaskStore>(() => ({

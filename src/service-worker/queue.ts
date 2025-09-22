@@ -237,3 +237,39 @@ export async function swProcessQueue(): Promise<void> {
     console.error("Background sync failed:", error);
   }
 }
+
+// Helper function to add request to queue
+export const swAddRequestToQueue = async (request: Request): Promise<void> => {
+  try {
+    const db = await swInitIndexedDB();
+    const queuedRequest: QueuedRequest = {
+      id: `${Date.now()}-${Math.random()}`,
+      url: request.url,
+      method: request.method as "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
+      body: request.method !== "GET" ? await request.clone().text() : undefined,
+      headers: Object.fromEntries(request.headers),
+      timestamp: Date.now(),
+      attempts: 0,
+      maxAttempts: 10,
+    };
+
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction([QUEUE_STORE_NAME], "readwrite");
+      const store = transaction.objectStore(QUEUE_STORE_NAME);
+      const addRequest = store.add(queuedRequest);
+
+      addRequest.onsuccess = () => {
+        console.log(`Added request ${queuedRequest.id} to queue: ${request.method} ${request.url}`);
+        resolve();
+      };
+
+      addRequest.onerror = () => {
+        console.error("Failed to add request to queue:", addRequest.error);
+        reject(addRequest.error);
+      };
+    });
+  } catch (error) {
+    console.error("Failed to queue request:", error);
+    throw error;
+  }
+};

@@ -6,19 +6,14 @@ import {
   TASKS_STORE_NAME,
   type QueuedRequest,
 } from "@/models/db.model";
-import { getApiErrorMessage } from "./api/error";
-import { createClient } from "@/lib/supabase/client";
-import type { SupabaseClient } from "@supabase/supabase-js";
 
 class OfflineQueue {
   private db: IDBDatabase | null = null;
-  private supabase: SupabaseClient | null = null;
 
   constructor() {
     // Only initialize if we're in the browser
     if (typeof window !== "undefined") {
       this.initDB();
-      this.supabase = createClient();
     }
   }
 
@@ -42,14 +37,14 @@ class OfflineQueue {
 
         // Create queue store if it doesn't exist
         if (!db.objectStoreNames.contains(QUEUE_STORE_NAME)) {
-          console.log("Service Worker: Creating queue store:", QUEUE_STORE_NAME);
+          console.log("Creating queue store:", QUEUE_STORE_NAME);
           const store = db.createObjectStore(QUEUE_STORE_NAME, { keyPath: "id" });
           store.createIndex("timestamp", "timestamp", { unique: false });
         }
 
         // Create jobs store if it doesn't exist
         if (!db.objectStoreNames.contains(JOBS_STORE_NAME)) {
-          console.log("Service Worker: Creating jobs store:", JOBS_STORE_NAME);
+          console.log("Creating jobs store:", JOBS_STORE_NAME);
           const jobsStore = db.createObjectStore(JOBS_STORE_NAME, { keyPath: "id" });
           jobsStore.createIndex("lastUpdated", "lastUpdated", { unique: false });
           jobsStore.createIndex("lastSynced", "lastSynced", { unique: false });
@@ -57,7 +52,7 @@ class OfflineQueue {
 
         // Create tasks store if it doesn't exist
         if (!db.objectStoreNames.contains(TASKS_STORE_NAME)) {
-          console.log("Service Worker: Creating tasks store:", TASKS_STORE_NAME);
+          console.log("Creating tasks store:", TASKS_STORE_NAME);
           const tasksStore = db.createObjectStore(TASKS_STORE_NAME, { keyPath: "id" });
           tasksStore.createIndex("jobId", "jobId", { unique: false });
           tasksStore.createIndex("lastUpdated", "lastUpdated", { unique: false });
@@ -67,101 +62,10 @@ class OfflineQueue {
     });
   }
 
-  // Add a request to the queue
-  async queueRequest(
-    url: string,
-    method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
-    body?: unknown,
-    headers?: Record<string, string>,
-    maxAttempts = 10,
-  ): Promise<{ success: boolean; queued: boolean; response?: Response; error?: Error }> {
-    const queuedRequest: QueuedRequest = {
-      id: `${Date.now()}-${Math.random()}`,
-      url,
-      method,
-      body,
-      headers: { "Content-Type": "application/json", ...headers },
-      timestamp: Date.now(),
-      attempts: 0,
-      maxAttempts,
-    };
-
-    // Try to make the request immediately if online
-    if (typeof navigator !== "undefined" && navigator.onLine) {
-      try {
-        const response = await this.makeRequest(queuedRequest);
-        if (response.ok) {
-          return { success: true, queued: false, response };
-        } else {
-          // Check if this is a retryable error
-          if (this.isRetryableError(response.status)) {
-            console.log(`Request failed with retryable error ${response.status}, queuing for retry`);
-            // Fall through to queue the request
-          } else {
-            // Non-retryable error (404, 403, etc.) - don't queue, return error
-            const errorMessage = await getApiErrorMessage(response, "Failed to make request");
-            console.log(`Request failed with non-retryable error ${response.status}:`, errorMessage);
-            return { success: false, queued: false, error: new Error(errorMessage) };
-          }
-        }
-      } catch (error) {
-        // Network error or other exception, fall through to queue
-        console.log("Request failed with network error, queuing for retry:", error);
-      }
-    }
-
-    // Queue the request for later processing by service worker
-    await this.addToQueue(queuedRequest);
-    return { success: false, queued: true };
-  }
-
   private async ensureDBInitialized(): Promise<void> {
     if (!this.db) {
       await this.initDB();
     }
-  }
-
-  private isRetryableError(status: number): boolean {
-    // Retryable errors are typically:
-    // - 408 Request Timeout
-    // - 429 Too Many Requests
-    // - Network errors (handled separately)
-
-    // Non-retryable errors:
-    // - 4xx client errors (400, 403, 404, etc.) - these won't succeed on retry
-    // - 3xx redirects - these are handled by the browser
-    // - 5xx server errors (500, 502, 503, 504, etc.)
-
-    if (status === 408 || status === 429 || status === 401) {
-      return true; // Timeout and rate limiting are retryable
-    }
-
-    return false; // All other errors (4xx, 3xx) are not retryable
-  }
-
-  private async addToQueue(request: QueuedRequest): Promise<void> {
-    await this.ensureDBInitialized();
-
-    return new Promise((resolve, reject) => {
-      if (!this.db) {
-        reject(new Error("Database not initialized"));
-        return;
-      }
-
-      const transaction = this.db.transaction([QUEUE_STORE_NAME], "readwrite");
-      const store = transaction.objectStore(QUEUE_STORE_NAME);
-      const addRequest = store.add(request);
-
-      addRequest.onsuccess = () => {
-        console.log(`Added request ${request.id} to queue`);
-        resolve();
-      };
-
-      addRequest.onerror = () => {
-        console.error("Failed to add request to queue:", addRequest.error);
-        reject(addRequest.error);
-      };
-    });
   }
 
   private async getQueue(): Promise<QueuedRequest[]> {
@@ -188,20 +92,8 @@ class OfflineQueue {
     });
   }
 
-  private async makeRequest(request: QueuedRequest): Promise<Response> {
-    const options: RequestInit = {
-      method: request.method,
-      headers: request.headers,
-    };
-
-    if (request.body && request.method !== "GET") {
-      options.body = typeof request.body === "string" ? request.body : JSON.stringify(request.body);
-    }
-
-    return fetch(request.url, options);
-  }
-
-  async getQueueCount() {
+  // Get queue count for UI display
+  async getQueueCount(): Promise<number> {
     try {
       await this.ensureDBInitialized();
       const queue = await this.getQueue();
@@ -212,48 +104,15 @@ class OfflineQueue {
     }
   }
 
-  // Get auth header from Supabase client
-  private async getAuthHeader(): Promise<string | null> {
-    // Method 1: Try to get from Supabase client directly (if available)
-    if (this.supabase) {
-      try {
-        const {
-          data: { session },
-        } = await this.supabase.auth.getSession();
-        if (session?.access_token) {
-          return `Bearer ${session.access_token}`;
-        }
-      } catch (error) {
-        console.warn("Failed to get auth token from Supabase client:", error);
-      }
+  // Get full queue for UI display
+  async getQueueItems(): Promise<QueuedRequest[]> {
+    try {
+      await this.ensureDBInitialized();
+      return await this.getQueue();
+    } catch (error) {
+      console.error("Failed to get queue items:", error);
+      return [];
     }
-
-    return null;
-  }
-
-  // Queue a Supabase Edge Function call
-  async queueSupabaseFunction(
-    functionName: string,
-    body: unknown,
-    maxAttempts = 10,
-  ): Promise<{ success: boolean; queued: boolean; response?: Response; error?: Error }> {
-    // Get the Supabase URL from environment or use default
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
-    const url = `${supabaseUrl}/functions/v1/${functionName}`;
-
-    // Get auth header from Supabase client
-    const authHeader = await this.getAuthHeader();
-
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    };
-
-    if (authHeader) {
-      headers["Authorization"] = authHeader;
-    }
-
-    // Use existing queueRequest method
-    return this.queueRequest(url, "POST", body, headers, maxAttempts);
   }
 
   // Clear the queue (useful for logout)

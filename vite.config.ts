@@ -13,7 +13,7 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       srcDir: "src/service-worker",
-      filename: "worker.ts",
+      filename: "sw.ts",
       strategies: "injectManifest",
       injectRegister: false, // We'll register manually for better control
       workbox: {

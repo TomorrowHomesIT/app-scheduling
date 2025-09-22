@@ -22,7 +22,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
-  const { setOfflineMode } = useOfflineStore();
+  const { clearOfflineStores } = useOfflineStore();
   const [user, setUser] = useState<IUserProfile | null>(null);
   const supabase = createClient();
 
@@ -46,9 +46,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
     setIsAuthenticated(false);
     setUser(null);
-
     // Clear offline queue and jobs data on logout
-    await setOfflineMode(false);
+    await clearOfflineStores();
   };
 
   const login = async () => {

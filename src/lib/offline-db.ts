@@ -84,17 +84,6 @@ class OfflineDB {
       };
     });
   }
-
-  async setOfflineMode(enabled: boolean): Promise<void> {
-    const settings = await this.getSettings();
-    settings.offlineMode = enabled;
-    await this.setSettings(settings);
-  }
-
-  async getOfflineMode(): Promise<boolean> {
-    const settings = await this.getSettings();
-    return settings.offlineMode;
-  }
 }
 
 export const offlineDB = new OfflineDB();

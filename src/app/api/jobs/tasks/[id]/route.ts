@@ -16,7 +16,7 @@ export const PATCH = withAuth(async (request, { params }: { params: Promise<{ id
   try {
     const updates = await request.json();
 
-    console.log("Job task update body", JSON.stringify(request.body));
+    console.log("Job task update data", JSON.stringify(updates));
 
     // Validate purchaseOrderLinks if provided
     if (updates.purchaseOrderLinks !== undefined) {

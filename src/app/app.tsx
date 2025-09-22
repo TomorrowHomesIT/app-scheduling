@@ -64,7 +64,7 @@ const router = createBrowserRouter([
         ],
       },
 
-      // 404 fallback
+      // TODO 404 fallback
       { path: "*", element: <HomePage /> },
     ],
   },
@@ -72,7 +72,7 @@ const router = createBrowserRouter([
 
 function AppLayout() {
   return (
-    <div className="flex flex-col min-h-dvh">
+    <div className="flex flex-col basd-h-dvh">
       <OfflineIndicator />
       <div className="flex flex-1 overflow-hidden">
         <AppLayoutClient>

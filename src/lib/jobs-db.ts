@@ -7,7 +7,6 @@ import {
   type StoredTask,
 } from "@/models/db.model";
 import type { IJob, IJobTask } from "@/models/job.model";
-import useOfflineStore from "@/store/offline-store";
 
 class JobsDB {
   private db: IDBDatabase | null = null;
@@ -17,10 +16,6 @@ class JobsDB {
       // Don't await in constructor, but ensure DB is ready before operations
       this.initDB().catch(console.error);
     }
-  }
-
-  private isOfflineModeEnabled(): boolean {
-    return useOfflineStore.getState().isOfflineModeEnabled;
   }
 
   private async initDB(): Promise<void> {
@@ -49,9 +44,6 @@ class JobsDB {
 
   // Job operations
   async saveJob(job: IJob): Promise<void> {
-    if (!this.isOfflineModeEnabled()) {
-      return;
-    }
     await this.ensureDBReady();
 
     return new Promise((resolve, reject) => {
@@ -84,9 +76,6 @@ class JobsDB {
   }
 
   async getJob(id: number): Promise<IJob | null> {
-    if (!this.isOfflineModeEnabled()) {
-      return null;
-    }
     await this.ensureDBReady();
 
     return new Promise((resolve, reject) => {
@@ -109,9 +98,6 @@ class JobsDB {
   }
 
   async getAllJobs(): Promise<IJob[]> {
-    if (!this.isOfflineModeEnabled()) {
-      return [];
-    }
     await this.ensureDBReady();
 
     return new Promise((resolve, reject) => {
@@ -135,9 +121,6 @@ class JobsDB {
   }
 
   async updateJobLastUpdated(id: number): Promise<void> {
-    if (!this.isOfflineModeEnabled()) {
-      return;
-    }
     await this.ensureDBReady();
 
     return new Promise((resolve, reject) => {
@@ -167,9 +150,6 @@ class JobsDB {
   }
 
   async updateJobLastSynced(id: number): Promise<void> {
-    if (!this.isOfflineModeEnabled()) {
-      return;
-    }
     await this.ensureDBReady();
 
     return new Promise((resolve, reject) => {
@@ -201,9 +181,6 @@ class JobsDB {
   async getJobSyncStatus(
     id: number,
   ): Promise<{ lastUpdated: number; lastSynced: number; hasPendingUpdates: boolean } | null> {
-    if (!this.isOfflineModeEnabled()) {
-      return null;
-    }
     await this.ensureDBReady();
 
     return new Promise((resolve, reject) => {
@@ -235,9 +212,6 @@ class JobsDB {
 
   // Task operations
   async saveTask(jobId: number, task: IJobTask): Promise<void> {
-    if (!this.isOfflineModeEnabled()) {
-      return;
-    }
     await this.ensureDBReady();
 
     return new Promise((resolve, reject) => {
@@ -264,9 +238,6 @@ class JobsDB {
   }
 
   async updateTaskLastUpdated(jobId: number, taskId: number): Promise<void> {
-    if (!this.isOfflineModeEnabled()) {
-      return;
-    }
     await this.ensureDBReady();
 
     return new Promise((resolve, reject) => {
@@ -297,9 +268,6 @@ class JobsDB {
 
   // Check if there are pending updates (local changes not yet synced)
   async hasPendingUpdates(): Promise<boolean> {
-    if (!this.isOfflineModeEnabled()) {
-      return false;
-    }
     await this.ensureDBReady();
 
     return new Promise((resolve, reject) => {

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { RefreshCw, AlertCircle, Wifi } from "lucide-react";
+import { RefreshCw, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { PageHeader } from "@/components/page-header";
@@ -13,7 +13,7 @@ export default function SettingsPage() {
   const [showFullRefreshDialog, setShowFullRefreshDialog] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [reloadStatus, setReloadStatus] = useState<string | null>(null);
-  const { isOfflineModeEnabled, setOfflineMode, clearCache } = useOfflineStore();
+  const { clearCache } = useOfflineStore();
 
   const handleHardRefresh = () => {
     setIsRefreshing(true);
@@ -77,23 +77,6 @@ export default function SettingsPage() {
     }
   };
 
-  const handleOfflineModeToggle = async () => {
-    setIsRefreshing(true);
-    const newMode = !isOfflineModeEnabled;
-    setReloadStatus(`${newMode ? "Enabling" : "Disabling"} offline mode...`);
-
-    try {
-      // Set the offline mode and send message to service worker
-      await setOfflineMode(newMode);
-    } catch (error) {
-      console.error("Failed to toggle offline mode:", error);
-      setReloadStatus("Failed to toggle offline mode");
-    } finally {
-      setIsRefreshing(false);
-      setReloadStatus(null);
-    }
-  };
-
   return (
     <div className="flex flex-col h-full bg-background">
       <div className="border-b bg-background">
@@ -107,25 +90,6 @@ export default function SettingsPage() {
             <AlertDescription>{reloadStatus}</AlertDescription>
           </Alert>
         )}
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Offline Mode</CardTitle>
-            <CardDescription>
-              Pre-loads your jobs and enables background sync. Data will sync when reconnected.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button
-              onClick={handleOfflineModeToggle}
-              disabled={isRefreshing}
-              variant={isOfflineModeEnabled ? "destructive" : "default"}
-            >
-              <Wifi className="h-4 w-4" />
-              {isOfflineModeEnabled ? "Disable" : "Enable"}
-            </Button>
-          </CardContent>
-        </Card>
 
         <Card>
           <CardHeader>

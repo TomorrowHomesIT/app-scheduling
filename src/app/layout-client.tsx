@@ -9,7 +9,6 @@ import useJobStore from "@/store/job/job-store";
 import useTaskStore from "@/store/task-store";
 import useLoadingStore from "@/store/loading-store";
 import { Spinner } from "@/components/ui/spinner";
-import useOfflineStore from "@/store/offline-store";
 import { registerServiceWorker, unregisterServiceWorker } from "@/lib/service-worker-registration";
 
 /** Function is required so that useSidebar is used within the context */
@@ -21,7 +20,6 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
   const { loadUserJobs } = useJobStore();
   const { loadTaskStages } = useTaskStore();
   const { isLoading } = useLoadingStore();
-  const { initializeOfflineMode } = useOfflineStore();
   const serviceWorkerRegistered = useRef(false);
 
   // Bootstrap core data when user is authenticated (runs when isAuthenticated changes)
@@ -31,14 +29,7 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
     const bootstrapCoreData = async () => {
       try {
         console.log("Bootstrapping core data...");
-        const promises = [loadOwners(), loadSuppliers(), loadTaskStages()];
-
-        const isOfflineModeEnabled = await initializeOfflineMode();
-        if (isOfflineModeEnabled) {
-          promises.push(loadUserJobs());
-        }
-
-        await Promise.all(promises);
+        await Promise.all([loadOwners(), loadUserJobs(), loadSuppliers(), loadTaskStages()]);
         console.log("Core data bootstrapped successfully");
       } catch (error) {
         console.error("Failed to bootstrap core data:", error);
@@ -46,7 +37,7 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
     };
 
     bootstrapCoreData();
-  }, [isAuthenticated, loadOwners, loadSuppliers, loadTaskStages, initializeOfflineMode, loadUserJobs]);
+  }, [isAuthenticated, loadOwners, loadSuppliers, loadTaskStages, loadUserJobs]);
 
   // Register/unregister service worker based on authentication
   useEffect(() => {

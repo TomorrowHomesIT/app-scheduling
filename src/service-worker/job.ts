@@ -57,13 +57,6 @@ const hasPendingUpdates = async (): Promise<boolean> => {
 // Function to sync jobs from API
 const syncJobs = async (): Promise<void> => {
   try {
-    // Check if offline mode is enabled
-    const offlineModeEnabled = await swCheckOfflineMode();
-    if (!offlineModeEnabled) {
-      console.log("Skipping job sync - offline mode is disabled");
-      return;
-    }
-
     console.log("Starting job sync...");
 
     // Check if there are pending updates

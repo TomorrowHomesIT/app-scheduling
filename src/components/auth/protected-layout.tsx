@@ -1,24 +1,20 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { useEffect } from "react";
+import { useAuth } from "./auth-context";
 
 export function ProtectedLayout({ children }: { children: React.ReactNode }) {
-  const supabase = createClient();
+  const { isAuthLoading, isAuthenticated } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    const checkClaims = async () => {
-      // TODO - FIX THIS ASPA IT MAKES A CALL TO THE SERVER USER EVERY TIME
-      const { data, error } = await supabase.auth.getClaims();
-      if (error || !data?.claims) {
-        router.push("/auth/login");
-      }
-    };
+    if (isAuthLoading) return;
 
-    checkClaims();
-  }, [supabase.auth.getClaims, router]);
+    if (!isAuthenticated) {
+      router.push("/auth/login");
+    }
+  }, [isAuthLoading, isAuthenticated, router]);
 
   return <>{children}</>;
 }

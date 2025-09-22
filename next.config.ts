@@ -3,7 +3,7 @@ import withSerwistInit from "@serwist/next";
 import { execSync } from "node:child_process";
 
 /** Turn this on/off to test Serwist in development - it's disabled by default */
-const isTestSwEnabled = false;
+const isTestSwEnabled = true;
 const disableSerwist = !isTestSwEnabled && process.env.NODE_ENV === "development";
 
 const revision = execSync("git rev-parse HEAD", { encoding: "utf8" }).trim().slice(0, 7);
@@ -15,20 +15,30 @@ const withSerwist = withSerwistInit({
   /** We disable this as we handle sync manually - it triggers location.reload() which doesn't suit our use case. */
   reloadOnOnline: false,
   cacheOnNavigation: true,
+  // Preload ALL static assets and routes
   additionalPrecacheEntries: [
+    // All your static routes
     { url: "/", revision },
+    { url: "/auth/login", revision },
+    { url: "/404", revision },
+    { url: "/job", revision },
     { url: "/jobs", revision },
-    { url: "/offline", revision },
     { url: "/suppliers", revision },
+    { url: "/offline", revision },
     { url: "/manifest.json", revision },
   ],
+  // Configure to include all JS chunks
+  include: [/\.(?:js|css|html|png|jpg|jpeg|svg|ico|woff|woff2|ttf|eot)$/],
+  // Exclude source maps and other dev files
+  exclude: [/\.map$/, /manifest$/, /\.DS_Store$/, /^.*\.d\.ts$/],
 });
 
 const nextConfig: NextConfig = {
   devIndicators: false,
   output: "export",
+  trailingSlash: true,
   images: {
-    unoptimized: true,
+    unoptimized: true, // Required for static export
   },
 };
 

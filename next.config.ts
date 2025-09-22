@@ -19,12 +19,13 @@ const withSerwist = withSerwistInit({
   additionalPrecacheEntries: [
     // All your static routes
     { url: "/", revision },
-    { url: "/auth/login", revision },
-    { url: "/404", revision },
-    { url: "/job", revision },
-    { url: "/jobs", revision },
-    { url: "/suppliers", revision },
+    { url: "/auth/login/", revision },
+    { url: "/404/", revision },
+    { url: "/job/", revision },
+    { url: "/jobs/", revision },
+    { url: "/suppliers/", revision },
     { url: "/offline", revision },
+    { url: "/offline/", revision },
     { url: "/manifest.json", revision },
   ],
   // Configure to include all JS chunks

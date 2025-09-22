@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import type { IOwner } from "@/models/owner.model";
 import { Folder, MapPin } from "lucide-react";
 import { Button } from "../../components/ui/button";

@@ -1,6 +1,6 @@
 import { useState, useEffect, Suspense } from "react";
-import { Link } from "react-router-dom";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { ChevronDown, ChevronRight, Search, Folder, ListChecks, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";

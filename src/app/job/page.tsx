@@ -1,5 +1,5 @@
 import { useEffect, useState, Suspense } from "react";
-import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router";
 import { EJobTaskProgress, type IUpdateJobRequest } from "@/models/job.model";
 import { Accordion, AccordionContent, AccordionHeader, AccordionItem } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,7 @@ import { JobTaskTableHeader } from "@/components/job/job-task-table-header";
 import { JobSyncStatus } from "@/components/job/job-sync-status";
 import { JobRefreshButton } from "@/components/job/job-refresh-button";
 import useLoadingStore from "@/store/loading-store";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 
 function JobDetailContent() {
   const navigate = useNavigate();

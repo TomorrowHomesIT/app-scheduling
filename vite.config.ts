@@ -16,8 +16,11 @@ export default defineConfig({
       strategies: "injectManifest",
       injectRegister: false, // We'll register manually for better control
       workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,png,jpg,jpeg,svg,woff,woff2,ttf,eot}"],
-        navigateFallback: "/index.html",
+        globPatterns: [
+          "**/*.{html,ico,png}", // Just the shell HTML and favicon
+          // Optionally include the main JS/CSS bundles if you want offline support
+          "**/assets/*.{js,css}",
+        ],
         cleanupOutdatedCaches: true,
       },
       includeAssets: ["favicon.ico", "icon-192x192.png", "icon-512x512.png"],

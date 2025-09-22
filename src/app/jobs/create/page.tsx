@@ -31,7 +31,7 @@ import type { ICreateJobRequest } from "@/models/job.model";
 import { PageHeader } from "@/components/page-header";
 import { Spinner } from "@/components/ui/spinner";
 import { TaskTemplateEditTrigger } from "@/components/modals/task-edit/task-template-edit-trigger";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { getApiErrorMessage } from "@/lib/api/error";
 import { toast } from "@/store/toast-store";
 import { cn } from "@/lib/utils";

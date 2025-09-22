@@ -1,15 +1,12 @@
 import { Logo } from "@/components/ui/logo";
+import { Outlet } from "react-router";
 
-export default async function AuthLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function AuthLayout() {
   return (
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
       <div className="w-full max-w-sm flex flex-col gap-6">
         <Logo />
-        {children}
+        <Outlet />
       </div>
     </div>
   );

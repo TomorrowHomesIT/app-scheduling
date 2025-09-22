@@ -43,17 +43,19 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (isAuthenticated && !serviceWorkerRegistered.current) {
       // Register service worker when user logs in
-      registerServiceWorker().then(() => {
-        serviceWorkerRegistered.current = true;
-        console.log('Service worker registered after login');
-      }).catch((error) => {
-        console.error('Failed to register service worker:', error);
-      });
+      registerServiceWorker()
+        .then(() => {
+          serviceWorkerRegistered.current = true;
+          console.log("Service worker registered after login");
+        })
+        .catch((error) => {
+          console.error("Failed to register service worker:", error);
+        });
     } else if (!isAuthenticated && serviceWorkerRegistered.current) {
       // Unregister service worker when user logs out
       unregisterServiceWorker();
       serviceWorkerRegistered.current = false;
-      console.log('Service worker unregistered after logout');
+      console.log("Service worker unregistered after logout");
     }
   }, [isAuthenticated]);
 

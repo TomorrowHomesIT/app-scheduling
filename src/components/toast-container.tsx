@@ -29,11 +29,11 @@ export function ToastContainer() {
           </div>
         ))}
       </div>
-      <style jsx>{`
-				@keyframes slideInLeft {
-					from {
-						transform: translateX(-100%);
-						opacity: 0;
+      <style>{`
+        @keyframes slideInLeft {
+          from {
+            transform: translateX(-100%);
+            opacity: 0;
 					}
 					to {
 						transform: translateX(0);

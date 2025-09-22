@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { AuthProvider, useAuth } from "@/components/auth/auth-context";
 import { Sidebar } from "@/components/sidebar/sidebar";
 import { SidebarProvider, useSidebar } from "@/components/sidebar/sidebar-context";
@@ -10,6 +10,7 @@ import useTaskStore from "@/store/task-store";
 import useLoadingStore from "@/store/loading-store";
 import { Spinner } from "@/components/ui/spinner";
 import useOfflineStore from "@/store/offline-store";
+import { registerServiceWorker, unregisterServiceWorker } from "@/lib/service-worker-registration";
 
 /** Function is required so that useSidebar is used within the context */
 function AppLayoutContent({ children }: { children: ReactNode }) {
@@ -21,6 +22,7 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
   const { loadTaskStages } = useTaskStore();
   const { isLoading } = useLoadingStore();
   const { initializeOfflineMode } = useOfflineStore();
+  const serviceWorkerRegistered = useRef(false);
 
   // Bootstrap core data when user is authenticated (runs when isAuthenticated changes)
   useEffect(() => {
@@ -45,6 +47,24 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
 
     bootstrapCoreData();
   }, [isAuthenticated, loadOwners, loadSuppliers, loadTaskStages, initializeOfflineMode, loadUserJobs]);
+
+  // Register/unregister service worker based on authentication
+  useEffect(() => {
+    if (isAuthenticated && !serviceWorkerRegistered.current) {
+      // Register service worker when user logs in
+      registerServiceWorker().then(() => {
+        serviceWorkerRegistered.current = true;
+        console.log('Service worker registered after login');
+      }).catch((error) => {
+        console.error('Failed to register service worker:', error);
+      });
+    } else if (!isAuthenticated && serviceWorkerRegistered.current) {
+      // Unregister service worker when user logs out
+      unregisterServiceWorker();
+      serviceWorkerRegistered.current = false;
+      console.log('Service worker unregistered after logout');
+    }
+  }, [isAuthenticated]);
 
   // Show full loading screen during initial data loading
   if (isLoading && isAuthenticated) {

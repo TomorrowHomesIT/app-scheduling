@@ -11,25 +11,16 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: "autoUpdate",
-      //   workbox: {
-      //     globPatterns: ["**/*.{js,css,html,ico,png,jpg,jpeg,svg,woff,woff2,ttf,eot}"],
-      //     // Cache all routes for true offline support
-      //     navigateFallback: "/index.html",
-      //     runtimeCaching: [
-      //       {
-      //         urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-      //         handler: "CacheFirst",
-      //         options: {
-      //           cacheName: "google-fonts-cache",
-      //           expiration: {
-      //             maxEntries: 10,
-      //             maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
-      //           },
-      //         },
-      //       },
-      //     ],
-      //   },
-      //   includeAssets: ["favicon.ico", "apple-touch-icon.png", "masked-icon.svg"],
+      srcDir: "src/service-worker",
+      filename: "worker.ts",
+      strategies: "injectManifest",
+      injectRegister: false, // We'll register manually for better control
+      workbox: {
+        globPatterns: ["**/*.{js,css,html,ico,png,jpg,jpeg,svg,woff,woff2,ttf,eot}"],
+        navigateFallback: "/index.html",
+        cleanupOutdatedCaches: true,
+      },
+      includeAssets: ["favicon.ico", "icon-192x192.png", "icon-512x512.png"],
       manifest: {
         name: "BASD On-Site",
         short_name: "On-Site",

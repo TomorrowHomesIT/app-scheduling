@@ -7,6 +7,10 @@
 
 import useJobStore from "@/store/job/job-store";
 import { isUserAuthenticated } from "@/lib/supabase/client";
+import { jobsDB } from "@/lib/jobs-db";
+import { offlineQueue } from "@/lib/offline-queue";
+import api from "@/lib/api/api";
+import type { IJob } from "@/models";
 
 interface SyncConfig {
   syncIntervalMs: number;
@@ -139,9 +143,15 @@ class SyncManager {
     this.notifySyncCallbacks(true);
 
     try {
-      // Use the existing job store method to sync user jobs
-      const jobStore = useJobStore.getState();
-      await jobStore.loadUserJobs(false);
+      // Check for queued requests - if any exist, abort full sync
+      const queueCount = await offlineQueue.getQueueCount();
+      if (queueCount > 0) {
+        console.log(`Found ${queueCount} queued requests - aborting sync to prevent conflicts`);
+        return;
+      }
+
+      // Perform job-level sync with conflict detection
+      await this.performJobLevelSync();
 
       // Update last sync timestamp
       this.setStoredLastSync(Date.now());
@@ -151,6 +161,55 @@ class SyncManager {
     } finally {
       this.state.isSyncing = false;
       this.notifySyncCallbacks(false);
+    }
+  }
+
+  private async performJobLevelSync(): Promise<void> {
+    const { fetchUserJobsFromApi } = useJobStore.getState();
+
+    try {
+      const userJobs: IJob[] = await fetchUserJobsFromApi();
+      const localJobs = await jobsDB.getAllJobs();
+      const localJobsMap = new Map(localJobs.map((job) => [job.id, job]));
+
+      const safeJobsToUpdate: IJob[] = [];
+      const conflictedJobs: string[] = [];
+
+      // Check each job for conflicts
+      for (const freshJob of userJobs) {
+        const localJob = localJobsMap.get(freshJob.id);
+
+        if (!localJob) {
+          // New job, safe to add
+          safeJobsToUpdate.push(freshJob);
+          await jobsDB.saveJob(freshJob);
+          continue;
+        }
+
+        // Check if local job has unsaved changes
+        const hasLocalChanges =
+          localJob.lastUpdated && localJob.lastSynced && localJob.lastUpdated > localJob.lastSynced;
+
+        if (hasLocalChanges) {
+          console.log(`Job ${freshJob.id} has local changes - skipping sync to prevent overwrite`);
+          conflictedJobs.push(`Job ${freshJob.name || freshJob.id}`);
+          // Keep the local version
+          safeJobsToUpdate.push(localJob);
+        } else {
+          // No local changes, safe to update with fresh data
+          safeJobsToUpdate.push(freshJob);
+          await jobsDB.saveJob(freshJob);
+        }
+      }
+
+      if (conflictedJobs.length > 0) {
+        console.log(`Sync completed with conflicts. ${conflictedJobs.length} jobs preserved locally:`, conflictedJobs);
+      } else {
+        console.log(`Job-level sync completed successfully. Updated ${safeJobsToUpdate.length} jobs.`);
+      }
+    } catch (error) {
+      console.error("Failed to fetch jobs for sync:", error);
+      throw error;
     }
   }
 

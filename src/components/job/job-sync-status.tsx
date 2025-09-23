@@ -1,7 +1,8 @@
-import { Clock } from "lucide-react";
+import { Clock, Cloud, CloudOff, RotateCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import useJobStore from "@/store/job/job-store";
 import useJobSyncStore from "@/store/job/job-sync-store";
+import { Badge } from "../ui/badge";
 
 export function JobSyncStatus() {
   const { currentJob } = useJobStore();
@@ -18,11 +19,13 @@ export function JobSyncStatus() {
   }, []);
 
   // Only show if we have a job with sync status (from local DB)
-  if (!currentJob || !currentJob.lastUpdated) {
+  if (!currentJob || !currentJob.lastSynced) {
     return;
   }
 
-  const lastUpdated = currentJob.lastUpdated;
+  const lastSynced = currentJob.lastSynced || 0;
+  const hasPendingUpdates = (currentJob.lastUpdated || 0) > lastSynced;
+
   const formatTime = (timestamp: number) => {
     const date = new Date(timestamp);
     const now = new Date(currentTime);
@@ -44,18 +47,42 @@ export function JobSyncStatus() {
     }
   };
 
+  const getStatusIcon = () => {
+    if (syncState.isSyncing) {
+      return <RotateCw className="h-4 w-4 animate-spin" />;
+    } else if (hasPendingUpdates) {
+      return <CloudOff className="h-4 w-4" />;
+    }
+    return <Cloud className="h-4 w-4" />;
+  };
+
+  const getStatusVariant = () => {
+    if (syncState.isSyncing) {
+      return "default" as const;
+    } else if (hasPendingUpdates) {
+      return "destructive" as const;
+    }
+    return "secondary" as const;
+  };
+
   const getStatusText = () => {
     if (syncState.isSyncing) {
       return "Syncing";
+    } else if (hasPendingUpdates) {
+      return "Pending sync";
     }
-    return `Updated ${formatTime(lastUpdated)}`;
+    return "Synced";
   };
 
   return (
     <div className="flex flex-col items-end gap-1">
+      <Badge variant={getStatusVariant()} className="flex items-center gap-1">
+        {getStatusIcon()}
+        <span className="hidden sm:inline">{getStatusText()}</span>
+      </Badge>
       <div className="text-xs text-muted-foreground flex items-center gap-1">
         <Clock className="h-3 w-3" />
-        <span>{getStatusText()}</span>
+        <span>{`Updated ${formatTime(lastSynced)}`}</span>
       </div>
     </div>
   );

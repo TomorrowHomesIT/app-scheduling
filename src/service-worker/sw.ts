@@ -19,12 +19,13 @@ const isRetryableError = (status: number): boolean => {
 self.addEventListener("fetch", (event: FetchEvent) => {
   const url = new URL(event.request.url);
 
-  // Handle both /api requests and Supabase requests
-  const isApiRequest = url.pathname.startsWith("/api/") && !url.pathname.includes("/auth/");
-
+  const isApiRequest = url.pathname.includes("/api/") && !url.pathname.includes("/auth/");
   if (!isApiRequest) {
+    console.log(`Not an API request, skipping: ${event.request.method} ${event.request.url}`);
     return;
   }
+
+  console.log(`Intercepting API request: ${event.request.method} ${event.request.url}`);
 
   event.respondWith(
     (async () => {

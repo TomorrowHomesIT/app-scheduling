@@ -8,9 +8,9 @@ import { jobsDB } from "@/lib/jobs-db";
 import api from "@/lib/api/api";
 
 interface JobStore {
-  userJobs: IJob[];
   currentJob: IJob | null;
 
+  fetchUserJobsFromApi: () => Promise<IJob[]>;
   loadUserJobs: (withLoading?: boolean) => Promise<void>;
   loadJob: (id: number, withLoading?: boolean) => Promise<void>;
   setCurrentJob: (job: IJob | null) => void;
@@ -31,17 +31,6 @@ const fetchJobByIdFromApi = async (id: number): Promise<IJob | null> => {
   }
 };
 
-const fetchUserJobsFromApi = async (): Promise<IJob[]> => {
-  try {
-    const response = await api.get(`/user/jobs`);
-    const job: IJob[] = response.data;
-    return job;
-  } catch (error) {
-    console.error("Error fetching user jobs:", error);
-    throw error;
-  }
-};
-
 const updateJobApi = async (jobId: number, updates: IUpdateJobRequest): Promise<boolean | null> => {
   try {
     const response = await api.patch(`/jobs/${jobId}`, updates);
@@ -58,6 +47,17 @@ const useJobStore = create<JobStore>((set, get) => ({
   userJobs: [],
   currentJob: null,
 
+  fetchUserJobsFromApi: async (): Promise<IJob[]> => {
+    try {
+      const response = await api.get(`/user/jobs`);
+      const job: IJob[] = response.data;
+      return job;
+    } catch (error) {
+      console.error("Error fetching user jobs:", error);
+      throw error;
+    }
+  },
+
   loadUserJobs: async (withLoading = true) => {
     const loading = useLoadingStore.getState();
     // TODO: this is probably not a ideal solution, we should just call loading where we need with load jobs etc.
@@ -66,11 +66,10 @@ const useJobStore = create<JobStore>((set, get) => ({
     }
 
     try {
-      const userJobs = await fetchUserJobsFromApi();
+      const userJobs = await get().fetchUserJobsFromApi();
       for (const job of userJobs) {
         await jobsDB.saveJob(job);
       }
-      set({ userJobs });
       loading.setLoaded("jobs", true);
     } catch (error) {
       const errorMessage = await getApiErrorMessage(error);
@@ -150,11 +149,9 @@ const useJobStore = create<JobStore>((set, get) => ({
 
     // Update the store state
     set((state) => {
-      const updatedUserJobs = state.userJobs.map((job) => (job.id === jobId ? { ...job, ...updates } : job));
       const updatedCurrentJob = state.currentJob?.id === jobId ? { ...state.currentJob, ...updates } : state.currentJob;
 
       return {
-        userJobs: updatedUserJobs,
         currentJob: updatedCurrentJob,
       };
     });
@@ -170,16 +167,6 @@ const useJobStore = create<JobStore>((set, get) => ({
 
   // Sync the job with the updated task
   updateJobTask: async (jobId: number, jobTaskId: number, updates: Partial<IJobTask>) => {
-    const updatedUserJobs = get().userJobs.map((job) => {
-      if (job.id === jobId) {
-        return {
-          ...job,
-          tasks: job.tasks.map((task) => (task.id === jobTaskId ? { ...task, ...updates } : task)),
-        };
-      }
-      return job;
-    });
-
     let updatedCurrentJob = get().currentJob;
     if (updatedCurrentJob?.id === jobId) {
       updatedCurrentJob = {
@@ -196,12 +183,7 @@ const useJobStore = create<JobStore>((set, get) => ({
       jobsDB.updateTaskLastUpdated(jobId, jobTaskId);
     }
 
-    set(() => {
-      return {
-        userJobs: updatedUserJobs,
-        currentJob: updatedCurrentJob,
-      };
-    });
+    set(() => ({ currentJob: updatedCurrentJob }));
   },
 
   syncJobWithDrive: async (jobId: number) => {

@@ -90,7 +90,6 @@ const useJobStore = create<JobStore>((set, get) => ({
   loadJob: async (id: number) => {
     const loading = useLoadingStore.getState();
     if (loading.currentJob.isLoading) return;
-    loading.setLoading("currentJob", true);
 
     try {
       const localJob = await jobsDB.getJob(id);
@@ -100,6 +99,7 @@ const useJobStore = create<JobStore>((set, get) => ({
         return;
       }
 
+      loading.setLoading("currentJob", true);
       // This likely isn't a users job, so always load from API
       const job = await fetchJobByIdFromApi(id);
       if (job) {

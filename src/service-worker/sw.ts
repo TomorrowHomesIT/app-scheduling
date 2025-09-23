@@ -6,6 +6,10 @@ declare const self: ServiceWorkerGlobalScope;
 
 const cacheVersion = "1.0.6";
 
+// Import shared auth state
+import { getAuthToken, setAuthToken, isAuthenticated } from "./auth-state";
+import { setApiBaseUrl } from "./sw-api";
+
 // Clean up old caches
 cleanupOutdatedCaches();
 
@@ -45,7 +49,17 @@ self.addEventListener("fetch", (event: FetchEvent) => {
 
             // Update cache in background if online
             if (navigator.onLine) {
-              fetch(event.request.clone())
+              // Add auth header for background update if we have a token
+              const authToken = getAuthToken();
+              const updateRequest = authToken && !event.request.headers.has('Authorization') ? 
+                new Request(event.request, { 
+                  headers: { 
+                    ...Object.fromEntries(event.request.headers),
+                    'Authorization': `Bearer ${authToken}` 
+                  }
+                }) : event.request.clone();
+                
+              fetch(updateRequest)
                 .then((response) => {
                   if (response.ok) {
                     cache.put(event.request, response.clone());
@@ -60,8 +74,17 @@ self.addEventListener("fetch", (event: FetchEvent) => {
           }
         }
 
-        // Try network first
-        const networkResponse = await fetch(event.request.clone());
+        // Try network first - add auth if not present and we have token
+        const authToken = getAuthToken();
+        const requestWithAuth = authToken && !event.request.headers.has('Authorization') ? 
+          new Request(event.request, { 
+            headers: { 
+              ...Object.fromEntries(event.request.headers),
+              'Authorization': `Bearer ${authToken}` 
+            }
+          }) : event.request.clone();
+        
+        const networkResponse = await fetch(requestWithAuth);
 
         if (networkResponse.ok) {
           // Cache successful GET responses
@@ -107,16 +130,16 @@ self.addEventListener("install", (_: ExtendableEvent) => {
   self.skipWaiting();
 });
 
-// Activate event - always start background processes
+// Activate event - start but don't run background processes without auth
 self.addEventListener("activate", (event: ExtendableEvent) => {
   event.waitUntil(
     (async () => {
       await self.clients.claim();
 
-      // Always start background processes
+      // Start background processes - they will check for auth token before doing work
       swStartQueueProcessing();
       swStartJobSync();
-      console.log("Service worker activated - background processes started");
+      console.log("Service worker activated - background processes initialized");
     })(),
   );
 });
@@ -128,7 +151,31 @@ self.addEventListener("beforeunload", () => {
   swStopJobSync();
 });
 
-// Listen for messages from the app (reserved for future use)
+// Listen for messages from the app
 self.addEventListener("message", async (event: ExtendableMessageEvent) => {
   console.log("Service worker received message:", event.data);
+
+  if (event.data.type === "AUTH_TOKEN_UPDATE") {
+    const wasUnauthenticated = !isAuthenticated();
+    setAuthToken(event.data.token);
+    console.log("Service worker: Auth token updated");
+
+    // If we were previously unauthenticated, restart background processes
+    if (wasUnauthenticated) {
+      swStartQueueProcessing();
+      swStartJobSync();
+      console.log("Service worker: Background processes restarted after auth");
+    }
+  } else if (event.data.type === "AUTH_TOKEN_CLEAR") {
+    setAuthToken(null);
+    console.log("Service worker: Auth token cleared - background processes will idle");
+  } else if (event.data.type === "API_URL_UPDATE") {
+    setApiBaseUrl(event.data.url);
+    console.log("Service worker: API base URL updated to", event.data.url);
+  } else if (event.data.type === "REQUEST_AUTH_TOKEN") {
+    // Request token from main thread if we don't have one
+    if (!isAuthenticated()) {
+      event.ports[0]?.postMessage({ type: "AUTH_TOKEN_NEEDED" });
+    }
+  }
 });

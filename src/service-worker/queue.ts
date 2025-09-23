@@ -1,5 +1,6 @@
 import { QUEUE_STORE_NAME, type QueuedRequest } from "@/models/db.model";
 import { swInitIndexedDB } from "./db";
+import { getAuthToken, isAuthenticated } from "./auth-state";
 
 let queueProcessingInterval: NodeJS.Timeout | null = null;
 const QUEUE_PROCESSING_INTERVAL = 10000; // 10 seconds
@@ -7,9 +8,16 @@ const QUEUE_PROCESSING_INTERVAL = 10000; // 10 seconds
 // Function to process queued request
 const processRequest = async (queuedRequest: QueuedRequest): Promise<boolean> => {
   try {
+    // Add auth token to headers if available and not already present
+    const headers = { ...queuedRequest.headers };
+    const authToken = getAuthToken();
+    if (authToken && !headers['Authorization']) {
+      headers['Authorization'] = `Bearer ${authToken}`;
+    }
+    
     const options: RequestInit = {
       method: queuedRequest.method,
-      headers: queuedRequest.headers,
+      headers,
     };
 
     if (queuedRequest.body && queuedRequest.method !== "GET") {
@@ -161,6 +169,12 @@ export const swStopQueueProcessing = () => {
 // Process the request queue
 export async function swProcessQueue(): Promise<void> {
   try {
+    // Short-circuit if not authenticated
+    if (!isAuthenticated()) {
+      console.log("Skipping queue processing - no auth token");
+      return;
+    }
+
     console.log("Starting background sync for queued requests...");
 
     // Only process queue if we're actually online

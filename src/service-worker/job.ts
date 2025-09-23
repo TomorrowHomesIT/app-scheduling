@@ -1,7 +1,8 @@
 import { JOBS_STORE_NAME, TASKS_STORE_NAME, type StoredJob, type StoredTask } from "@/models/db.model";
 import { swInitIndexedDB } from "./db";
 import type { IJob } from "@/models";
-import { swCheckOfflineMode } from "./offline";
+import { isAuthenticated } from "./auth-state";
+import { swApi } from "./sw-api";
 
 let jobSyncInterval: NodeJS.Timeout | null = null;
 
@@ -57,6 +58,12 @@ const hasPendingUpdates = async (): Promise<boolean> => {
 // Function to sync jobs from API
 const syncJobs = async (): Promise<void> => {
   try {
+    // Short-circuit if not authenticated
+    if (!isAuthenticated()) {
+      console.log("Skipping job sync - no auth token");
+      return;
+    }
+
     console.log("Starting job sync...");
 
     // Check if there are pending updates
@@ -71,9 +78,9 @@ const syncJobs = async (): Promise<void> => {
       console.log("Skipping job sync - offline");
       return;
     }
-
-    // Fetch user jobs from API
-    const response = await fetch("/api/user/jobs");
+    
+    // Fetch user jobs from API using sw-api helper
+    const response = await swApi.get("/user/jobs");
     if (!response.ok) {
       console.warn("Failed to fetch jobs from API:", response.status);
       return;

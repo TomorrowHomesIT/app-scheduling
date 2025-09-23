@@ -8,6 +8,7 @@ interface AuthContextType {
   user: IUserProfile | null;
   logout: () => Promise<void>;
   login: () => void;
+  getAccessToken: () => Promise<string | null>;
 }
 
 interface IUserProfile {
@@ -35,6 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         name: data?.claims?.full_name || data?.claims?.name,
         avatar_url: data?.claims?.avatar_url,
       });
+
       setIsAuthenticated(!error && !!data?.claims);
       setIsAuthLoading(false);
     };
@@ -55,7 +57,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsAuthLoading(false);
 
     const { data } = await supabase.auth.getClaims();
-
     setUser({
       id: data?.claims?.sub,
       email: data?.claims?.email,
@@ -64,8 +65,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const getAccessToken = async (): Promise<string | null> => {
+    if (!isAuthenticated) return null;
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    return session?.access_token || null;
+  };
+
   return (
-    <AuthContext.Provider value={{ isAuthenticated, isAuthLoading, logout, login, user }}>
+    <AuthContext.Provider value={{ isAuthenticated, isAuthLoading, logout, login, user, getAccessToken }}>
       {children}
     </AuthContext.Provider>
   );

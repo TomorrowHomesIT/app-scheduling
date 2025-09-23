@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { AuthProvider, useAuth } from "@/components/auth/auth-context";
 import { Sidebar } from "@/components/sidebar/sidebar";
 import { SidebarProvider, useSidebar } from "@/components/sidebar/sidebar-context";
@@ -9,19 +9,17 @@ import useJobStore from "@/store/job/job-store";
 import useTaskStore from "@/store/task-store";
 import useLoadingStore from "@/store/loading-store";
 import { Spinner } from "@/components/ui/spinner";
-import { registerServiceWorker, unregisterServiceWorker } from "@/lib/service-worker-registration";
+import { setupServiceWorkerAuth, clearServiceWorkerAuth } from "@/lib/service-worker-auth";
 
 /** Function is required so that useSidebar is used within the context */
 function AppLayoutContent({ children }: { children: ReactNode }) {
   const { isSidebarOpen, setIsSidebarOpen } = useSidebar();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, getAccessToken, isAuthLoading } = useAuth();
   const { loadOwners } = useOwnersStore();
   const { loadSuppliers } = useSupplierStore();
   const { loadUserJobs } = useJobStore();
   const { loadTaskStages } = useTaskStore();
   const { isLoading } = useLoadingStore();
-  const serviceWorkerRegistered = useRef(false);
-
   // Bootstrap core data when user is authenticated (runs when isAuthenticated changes)
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -39,25 +37,26 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
     bootstrapCoreData();
   }, [isAuthenticated, loadOwners, loadSuppliers, loadTaskStages, loadUserJobs]);
 
-  // Register/unregister service worker based on authentication
+  // Handle service worker auth - setup on login, clear on logout
   useEffect(() => {
-    if (isAuthenticated && !serviceWorkerRegistered.current) {
-      // Register service worker when user logs in
-      registerServiceWorker()
-        .then(() => {
-          serviceWorkerRegistered.current = true;
-          console.log("Service worker registered after login");
-        })
-        .catch((error) => {
-          console.error("Failed to register service worker:", error);
-        });
-    } else if (!isAuthenticated && serviceWorkerRegistered.current) {
-      // Unregister service worker when user logs out
-      unregisterServiceWorker();
-      serviceWorkerRegistered.current = false;
-      console.log("Service worker unregistered after logout");
-    }
-  }, [isAuthenticated]);
+    const handleServiceWorkerAuth = async () => {
+      if (isAuthLoading) return;
+
+      if (isAuthenticated) {
+        const accessToken = await getAccessToken();
+        if (accessToken) {
+          await setupServiceWorkerAuth(accessToken);
+          console.log("Service worker auth setup complete");
+        }
+      } else {
+        // Clear auth when user logs out
+        clearServiceWorkerAuth();
+        console.log("Service worker auth cleared");
+      }
+    };
+
+    handleServiceWorkerAuth();
+  }, [isAuthenticated, getAccessToken, isAuthLoading]);
 
   // Show full loading screen during initial data loading
   if (isLoading && isAuthenticated) {

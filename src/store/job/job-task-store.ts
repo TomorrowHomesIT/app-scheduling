@@ -4,9 +4,10 @@ import type { IJobTask } from "@/models/job.model";
 import type { EJobTaskStatus } from "@/models/job.model";
 import type { IScheduleEmailRequest } from "@/models/email";
 import { toast } from "@/store/toast-store";
+import { isRetryableError } from "@/lib/api/error";
 import useJobStore from "./job-store";
 import useSupplierStore from "@/store/supplier-store";
-import { updateJobTask } from "@/lib/supabase/job-tasks";
+import api from "@/lib/api/api";
 
 interface JobTaskStore {
   updateTask: (taskId: number, updates: Partial<IJobTask>) => Promise<void>;
@@ -15,36 +16,31 @@ interface JobTaskStore {
 
 const updateTaskApi = async (taskId: number, updates: Partial<IJobTask>): Promise<IJobTask | null> => {
   try {
-    // TODO do we need to return 0 or null if it fails at 0 response?
-    const result = await updateJobTask(taskId, updates);
-    if (result) {
-      const updatedTask: IJobTask = result;
-      return updatedTask;
-    } else {
-      throw new Error("Failed to update task");
-    }
+    const result = await api.patch(`/jobs/tasks/${taskId}`, updates);
+    const updatedTask: IJobTask = result.data;
+    return updatedTask;
   } catch (error) {
+    if (isRetryableError(error)) {
+      return null; // Request was queued for offline processing
+    }
+
     console.error("Error updating task:", error);
     throw error;
   }
 };
 
-const sendEmailApi = async (emailRequest: IScheduleEmailRequest): Promise<{ success: boolean; queued: boolean }> => {
-  // TODO edge function
-  return Promise.resolve({ success: true, queued: false });
+const sendEmailApi = async (emailRequest: IScheduleEmailRequest): Promise<boolean | null> => {
+  try {
+    await api.post("/email/schedule", emailRequest);
+    return true;
+  } catch (error) {
+    if (isRetryableError(error)) {
+      return null; // Request was queued for offline processing
+    }
 
-  // const result = await offlineQueue.queueSupabaseFunction("schedule-email", emailRequest);
-  // if (result.success && result.response) {
-  //   const data = await result.response.json();
-  //   if (!result.response.ok) {
-  //     throw new Error(data.error || "Failed to send email");
-  //   }
-  //   return { success: true, queued: false };
-  // } else if (result.queued) {
-  //   return { success: true, queued: true };
-  // } else {
-  //   throw new Error("Failed to send email");
-  // }
+    console.error("Error sending email:", error);
+    throw error;
+  }
 };
 
 const useJobTaskStore = create<JobTaskStore>(() => ({

@@ -2,7 +2,7 @@ import { create } from "zustand";
 import type { IOwner, IOwnerJob } from "@/models/owner.model";
 import { toast } from "@/store/toast-store";
 import useLoadingStore from "@/store/loading-store";
-import { getOwners } from "@/lib/supabase/owners";
+import api from "@/lib/api/api";
 
 interface OwnersStore {
   owners: IOwner[];
@@ -21,7 +21,8 @@ const useOwnersStore = create<OwnersStore>((set) => ({
     loading.setLoading("owners", true);
 
     try {
-      const owners = await getOwners();
+      const response = await api.get("/owners");
+      const owners: IOwner[] = response.data;
       set({ owners });
       loading.setLoaded("owners", true);
     } catch (error) {

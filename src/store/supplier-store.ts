@@ -3,7 +3,7 @@ import type { ISupplier } from "@/models/supplier.model";
 import { toast } from "./toast-store";
 import { getApiErrorMessage } from "@/lib/api/error";
 import useLoadingStore from "@/store/loading-store";
-import { getSuppliers } from "@/lib/supabase/suppliers";
+import api from "@/lib/api/api";
 
 interface SupplierStore {
   suppliers: ISupplier[];
@@ -25,7 +25,9 @@ const useSupplierStore = create<SupplierStore>((set, get) => ({
     loading.setLoading("suppliers", true);
 
     try {
-      const suppliers = await getSuppliers();
+      const response = await api.get(`/suppliers`);
+      const suppliers: ISupplier[] = response.data;
+
       const activeSuppliers = suppliers.filter((supplier) => supplier.active);
       const archivedSuppliers = suppliers.filter((supplier) => !supplier.active);
 

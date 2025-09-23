@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { X, CloudDownload } from "lucide-react";
 import { toast } from "@/store/toast-store";
 import { DOC_TAGS } from "@/models/doc-tags.const";
+import api from "@/lib/api/api";
 
 export interface ITaskEditData {
   id: number;
@@ -88,19 +89,8 @@ export function TaskEditModal({ task, onSave, onSync, onOpenChange, open, showSy
   };
 
   const syncRequest = async () => {
-    const endpoint = `/api/jobs/tasks/${task.id}/sync-drive`;
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(response.statusText);
-    }
-
-    return await response.json();
+    const response = await api.post(`/jobs/tasks/${task.id}/sync-drive`);
+    return response.data;
   };
 
   const handleSync = async () => {

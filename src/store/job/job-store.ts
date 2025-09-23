@@ -5,8 +5,7 @@ import { getApiErrorMessage } from "@/lib/api/error";
 import useOwnersStore from "@/store/owners-store";
 import useLoadingStore from "@/store/loading-store";
 import { jobsDB } from "@/lib/jobs-db";
-import { getUserJobs } from "@/lib/supabase/user/jobs";
-import { getJobById, updateJob as updateJobHelper } from "@/lib/supabase/jobs";
+import api from "@/lib/api/api";
 
 interface JobSyncStatus {
   lastUpdated: number;
@@ -32,7 +31,8 @@ interface JobStore {
 
 const fetchJobByIdFromApi = async (id: number): Promise<IJob | null> => {
   try {
-    const job = await getJobById(id);
+    const response = await api.get(`/jobs/${id}`);
+    const job: IJob = response.data;
     return job;
   } catch (error) {
     console.error("Error fetching job:", error);
@@ -42,8 +42,9 @@ const fetchJobByIdFromApi = async (id: number): Promise<IJob | null> => {
 
 const fetchUserJobsFromApi = async (): Promise<IJob[] | null> => {
   try {
-    const jobs = await getUserJobs();
-    return jobs;
+    const response = await api.get(`/user/jobs`);
+    const job: IJob[] = response.data;
+    return job;
   } catch (error) {
     console.error("Error fetching user jobs:", error);
     throw error;
@@ -52,8 +53,10 @@ const fetchUserJobsFromApi = async (): Promise<IJob[] | null> => {
 
 const updateJobApi = async (jobId: number, updates: IUpdateJobRequest): Promise<boolean | null> => {
   try {
-    const result = await updateJobHelper(jobId, updates);
-    return result;
+    const response = await api.patch(`/jobs/${jobId}`, updates);
+    const updatedJob: boolean = response.data;
+
+    return updatedJob;
   } catch (error) {
     console.error("Error updating job:", error);
     throw error;
@@ -77,7 +80,7 @@ const useJobStore = create<JobStore>((set, get) => ({
       }
       loading.setLoaded("jobs", true);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to load jobs";
+      const errorMessage = await getApiErrorMessage(error);
       loading.setError("jobs", errorMessage);
     } finally {
       loading.setLoading("jobs", false);
@@ -264,18 +267,8 @@ const useJobStore = create<JobStore>((set, get) => ({
     setLoading("currentJob", true, "Syncing with Google Drive. This may take a while...");
 
     try {
-      const response = await fetch(`/api/jobs/${jobId}/sync-drive`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to sync with Google Drive");
-      }
+      const response = await api.post(`/jobs/${jobId}/sync-drive`);
+      const data = response.data;
 
       toast.success(`Job created and synced with Google Drive. Updated ${data?.updatedTasks || 0} task(s).`, 5000);
       await get().loadJob(jobId);

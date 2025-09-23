@@ -7,7 +7,7 @@ interface IOfflineStore {
   clearCache: () => Promise<void>;
 }
 
-const useOfflineStore = create<IOfflineStore>((set, get) => ({
+const useOfflineStore = create<IOfflineStore>((_, get) => ({
   clearOfflineStores: async () => {
     await offlineQueue.clearQueue();
     await jobsDB.clearAll();

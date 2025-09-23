@@ -52,7 +52,7 @@ export function SyncStatus() {
 
   return (
     <Button
-      variant={syncState.isSyncing ? "default" : "ghost"}
+      variant={syncState.isSyncing ? "outline" : "ghost"}
       size="sm"
       className="w-full justify-between px-2"
       onClick={handleManualSync}

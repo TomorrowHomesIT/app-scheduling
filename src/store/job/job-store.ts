@@ -8,7 +8,7 @@ import { jobsDB } from "@/lib/jobs-db";
 import api from "@/lib/api/api";
 
 interface JobStore {
-  jobs: IJob[]; // TODO I'm not sure this is actually uesd? We never load a list of jobs lol
+  userJobs: IJob[];
   currentJob: IJob | null;
 
   loadUserJobs: (withLoading?: boolean) => Promise<void>;
@@ -31,7 +31,7 @@ const fetchJobByIdFromApi = async (id: number): Promise<IJob | null> => {
   }
 };
 
-const fetchUserJobsFromApi = async (): Promise<IJob[] | null> => {
+const fetchUserJobsFromApi = async (): Promise<IJob[]> => {
   try {
     const response = await api.get(`/user/jobs`);
     const job: IJob[] = response.data;
@@ -55,7 +55,7 @@ const updateJobApi = async (jobId: number, updates: IUpdateJobRequest): Promise<
 };
 
 const useJobStore = create<JobStore>((set, get) => ({
-  jobs: [],
+  userJobs: [],
   currentJob: null,
 
   loadUserJobs: async (withLoading = true) => {
@@ -66,14 +66,16 @@ const useJobStore = create<JobStore>((set, get) => ({
     }
 
     try {
-      const jobs = await fetchUserJobsFromApi();
-      for (const job of jobs || []) {
+      const userJobs = await fetchUserJobsFromApi();
+      for (const job of userJobs) {
         await jobsDB.saveJob(job);
       }
+      set({ userJobs });
       loading.setLoaded("jobs", true);
     } catch (error) {
       const errorMessage = await getApiErrorMessage(error);
       loading.setError("jobs", errorMessage);
+      throw error;
     } finally {
       if (withLoading) {
         loading.setLoading("jobs", false);
@@ -88,6 +90,7 @@ const useJobStore = create<JobStore>((set, get) => ({
     }
 
     try {
+      /** Load the job from the DB, it may have been updated by sync */
       const localJob = await jobsDB.getJob(id);
       if (localJob) {
         set(() => ({ currentJob: localJob }));
@@ -131,16 +134,10 @@ const useJobStore = create<JobStore>((set, get) => ({
   },
 
   updateJob: async (jobId: number, updates: IUpdateJobRequest) => {
-    // Store the current state in case we need to rollback
-    const previousState = get();
-
     await toast.while(updateJobApi(jobId, updates), {
       loading: "Updating job...",
       success: "Job updated",
-      error: () => {
-        set({ jobs: previousState.jobs, currentJob: previousState.currentJob });
-        return "Failed to update job";
-      },
+      error: "Failed to update job",
     });
 
     const ownersStore = useOwnersStore.getState();
@@ -153,11 +150,11 @@ const useJobStore = create<JobStore>((set, get) => ({
 
     // Update the store state
     set((state) => {
-      const updatedJobs = state.jobs.map((job) => (job.id === jobId ? { ...job, ...updates } : job));
+      const updatedUserJobs = state.userJobs.map((job) => (job.id === jobId ? { ...job, ...updates } : job));
       const updatedCurrentJob = state.currentJob?.id === jobId ? { ...state.currentJob, ...updates } : state.currentJob;
 
       return {
-        jobs: updatedJobs,
+        userJobs: updatedUserJobs,
         currentJob: updatedCurrentJob,
       };
     });
@@ -173,7 +170,7 @@ const useJobStore = create<JobStore>((set, get) => ({
 
   // Sync the job with the updated task
   updateJobTask: async (jobId: number, jobTaskId: number, updates: Partial<IJobTask>) => {
-    const updatedJobs = get().jobs.map((job) => {
+    const updatedUserJobs = get().userJobs.map((job) => {
       if (job.id === jobId) {
         return {
           ...job,
@@ -201,7 +198,7 @@ const useJobStore = create<JobStore>((set, get) => ({
 
     set(() => {
       return {
-        jobs: updatedJobs,
+        userJobs: updatedUserJobs,
         currentJob: updatedCurrentJob,
       };
     });

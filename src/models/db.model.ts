@@ -1,3 +1,5 @@
+import type { IJob, IJobTask } from "./job.model";
+
 // IndexedDB configuration
 export const DB_NAME = "AppSchedulingDB";
 export const DB_VERSION = 3; // Incremented to add jobs and tasks stores
@@ -20,7 +22,7 @@ export interface QueuedRequest {
 
 export interface StoredJob {
   id: number;
-  data: any; // IJob data
+  data: IJob; // IJob data
   lastUpdated: number;
   lastSynced: number;
 }
@@ -28,7 +30,7 @@ export interface StoredJob {
 export interface StoredTask {
   id: number;
   jobId: number;
-  data: any; // IJobTask data
+  data: IJobTask; // IJobTask data
   lastUpdated: number;
   lastSynced: number;
 }

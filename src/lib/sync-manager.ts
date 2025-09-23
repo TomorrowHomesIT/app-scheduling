@@ -27,7 +27,7 @@ class SyncManager {
 
   constructor(config: Partial<SyncConfig> = {}) {
     this.config = {
-      syncIntervalMs: 5 * 60 * 1000, // 5 minutes
+      syncIntervalMs: 30 * 60 * 1000, // 30 minutes
       storageKey: "app-sync-state",
       ...config,
     };

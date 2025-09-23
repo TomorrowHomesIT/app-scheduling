@@ -11,11 +11,15 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: "autoUpdate",
       srcDir: "src/service-worker",
       filename: "sw.ts",
+      registerType: "prompt",
       strategies: "injectManifest",
       injectRegister: "auto", // Auto-register service worker
+      devOptions: {
+        enabled: true,
+        type: "module",
+      },
       workbox: {
         // We cache pretty much all static assets
         globPatterns: ["**/*.{html,ico,png,svg}", "**/assets/*.{js,css}"],

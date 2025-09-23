@@ -5,7 +5,6 @@ import { RefreshCw, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { PageHeader } from "@/components/page-header";
-import useOfflineStore from "@/store/offline-store";
 import { ConfirmationModal } from "@/components/modals/confirm/confirm-modal";
 
 export default function SettingsPage() {
@@ -13,7 +12,6 @@ export default function SettingsPage() {
   const [showFullRefreshDialog, setShowFullRefreshDialog] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [reloadStatus, setReloadStatus] = useState<string | null>(null);
-  const { clearCache } = useOfflineStore();
 
   const handleHardRefresh = () => {
     setIsRefreshing(true);
@@ -63,7 +61,11 @@ export default function SettingsPage() {
         }
       }
 
-      await clearCache();
+      if ("caches" in window) {
+        const cacheNames = await caches.keys();
+        console.log("Clearing caches:", cacheNames);
+        await Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)));
+      }
 
       setReloadStatus("All caches cleared. Refreshing...");
 

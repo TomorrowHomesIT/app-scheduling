@@ -1,13 +1,8 @@
 import { precacheAndRoute, cleanupOutdatedCaches } from "workbox-precaching";
-import { swAddRequestToQueue } from "./queue";
+import { swAddRequestToQueue, swProcessQueue, swStartQueueProcessing } from "./queue";
+import { setAuthToken, isAuthenticated } from "./auth-state";
 
 declare const self: ServiceWorkerGlobalScope;
-
-const cacheVersion = "1.0.6";
-
-// Import shared auth state
-import { getAuthToken, setAuthToken, isAuthenticated } from "./auth-state";
-import { setApiBaseUrl } from "./sw-api";
 
 // Clean up old caches
 cleanupOutdatedCaches();
@@ -20,80 +15,26 @@ const isRetryableError = (status: number): boolean => {
   return status === 0 || status === 408 || status === 429 || status === 401 || status >= 500;
 };
 
-// Cache-first fetch handler for Supabase requests
+// Fetch handler for API requests with automatic retry queueing
 self.addEventListener("fetch", (event: FetchEvent) => {
   const url = new URL(event.request.url);
 
-  // Only handle Supabase requests
-  if (!url.hostname.includes("supabase")) {
-    return;
-  }
+  // Handle both /api requests and Supabase requests
+  const isApiRequest = url.pathname.startsWith("/api/") && !url.pathname.includes("/auth/");
 
-  // Don't cache auth requests
-  if (url.pathname.includes("/auth/")) {
+  if (!isApiRequest) {
     return;
   }
 
   event.respondWith(
     (async () => {
-      const cacheName = `supabase-cache-${cacheVersion}`;
-      const cache = await caches.open(cacheName);
-
       try {
-        // For GET requests, try cache first
-        if (event.request.method === "GET") {
-          const cachedResponse = await cache.match(event.request);
-          if (cachedResponse) {
-            console.log(`Cache hit: ${event.request.url}`);
-
-            // Update cache in background if online
-            if (navigator.onLine) {
-              // Add auth header for background update if we have a token
-              const authToken = getAuthToken();
-              const updateRequest = authToken && !event.request.headers.has('Authorization') ? 
-                new Request(event.request, { 
-                  headers: { 
-                    ...Object.fromEntries(event.request.headers),
-                    'Authorization': `Bearer ${authToken}` 
-                  }
-                }) : event.request.clone();
-                
-              fetch(updateRequest)
-                .then((response) => {
-                  if (response.ok) {
-                    cache.put(event.request, response.clone());
-                  }
-                })
-                .catch(() => {
-                  // Silently fail background update
-                });
-            }
-
-            return cachedResponse;
-          }
-        }
-
-        // Try network first - add auth if not present and we have token
-        const authToken = getAuthToken();
-        const requestWithAuth = authToken && !event.request.headers.has('Authorization') ? 
-          new Request(event.request, { 
-            headers: { 
-              ...Object.fromEntries(event.request.headers),
-              'Authorization': `Bearer ${authToken}` 
-            }
-          }) : event.request.clone();
-        
-        const networkResponse = await fetch(requestWithAuth);
-
+        const networkResponse = await fetch(event.request.clone());
         if (networkResponse.ok) {
-          // Cache successful GET responses
-          if (event.request.method === "GET") {
-            cache.put(event.request, networkResponse.clone());
-          }
           return networkResponse;
         } else {
-          // Check if this is a retryable error for non-GET requests
-          if (event.request.method !== "GET" && isRetryableError(networkResponse.status)) {
+          // Queue failed requests that are retryable
+          if (isRetryableError(networkResponse.status)) {
             console.log(
               `Request failed with retryable error ${networkResponse.status}, queuing: ${event.request.method} ${event.request.url}`,
             );
@@ -102,21 +43,10 @@ self.addEventListener("fetch", (event: FetchEvent) => {
           return networkResponse;
         }
       } catch (error) {
-        console.log(`Network error for ${event.request.method} ${event.request.url}, queuing if applicable`);
-
-        // For GET requests, try to serve from cache
-        if (event.request.method === "GET") {
-          const cachedResponse = await cache.match(event.request);
-          if (cachedResponse) {
-            console.log(`Serving cached response for failed request: ${event.request.url}`);
-            return cachedResponse;
-          }
-        } else {
-          // Queue non-GET requests that failed due to network errors
-          await swAddRequestToQueue(event.request);
-        }
-
-        // Re-throw error if no cache available
+        console.log(`Network error for ${event.request.method} ${event.request.url}`);
+        // Queue all failed requests (network errors)
+        await swAddRequestToQueue(event.request);
+        // Re-throw error
         throw error;
       }
     })(),
@@ -129,14 +59,27 @@ self.addEventListener("install", (_: ExtendableEvent) => {
   self.skipWaiting();
 });
 
-// Activate event
+// Activate event - start background queue processing
 self.addEventListener("activate", (event: ExtendableEvent) => {
   event.waitUntil(
     (async () => {
       await self.clients.claim();
-      console.log("Service worker activated");
+
+      // Start background queue processing
+      swStartQueueProcessing();
+      console.log("Service worker activated - background queue processing started");
     })(),
   );
+});
+
+// Background sync event - for browsers that support it
+self.addEventListener("sync", (event: Event) => {
+  const syncEvent = event as ExtendableEvent & { tag?: string };
+  console.log("Background sync event triggered:", syncEvent.tag);
+
+  if (syncEvent.tag === "queue-processing") {
+    syncEvent.waitUntil(swProcessQueue());
+  }
 });
 
 // Listen for messages from the app
@@ -157,12 +100,13 @@ self.addEventListener("message", async (event: ExtendableMessageEvent) => {
     setAuthToken(null);
     console.log("Service worker: Auth token cleared - background processes will idle");
   } else if (event.data.type === "API_URL_UPDATE") {
-    setApiBaseUrl(event.data.url);
+    // TODO probably not needed with request clone and the que
     console.log("Service worker: API base URL updated to", event.data.url);
-  } else if (event.data.type === "REQUEST_AUTH_TOKEN") {
-    // Request token from main thread if we don't have one
-    if (!isAuthenticated()) {
-      event.ports[0]?.postMessage({ type: "AUTH_TOKEN_NEEDED" });
-    }
+  } else if (event.data.type === "VISIBILITY_CHANGE" && event.data.visible) {
+    console.log("App became visible - processing queue");
+    await swProcessQueue();
+  } else if (event.data.type === "ONLINE_CHANGE" && event.data.online) {
+    console.log("App came online - processing queue");
+    await swProcessQueue();
   }
 });

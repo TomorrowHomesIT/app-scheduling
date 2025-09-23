@@ -10,6 +10,7 @@ import useLoadingStore from "@/store/loading-store";
 import { Spinner } from "@/components/ui/spinner";
 import { setupServiceWorkerAuth, clearServiceWorkerAuth } from "@/lib/service-worker-auth";
 import useJobSyncStore from "@/store/job/job-sync-store";
+import { swVisibilityNotifier } from "@/lib/sw-visibility-notifier";
 
 /** Function is required so that useSidebar is used within the context */
 function AppLayoutContent({ children }: { children: ReactNode }) {
@@ -46,11 +47,13 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
         const accessToken = await getAccessToken();
         if (accessToken) {
           await setupServiceWorkerAuth(accessToken);
+          swVisibilityNotifier.initialize();
           console.log("Service worker auth setup complete");
         }
       } else {
         // Clear auth when user logs out
         clearServiceWorkerAuth();
+        swVisibilityNotifier.destroy();
         console.log("Service worker auth cleared");
       }
     };
@@ -75,7 +78,7 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
   );
 }
 
-export function AppLayoutClient({
+export function AppLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;

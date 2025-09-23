@@ -1,23 +1,19 @@
 import { QUEUE_STORE_NAME, type QueuedRequest } from "@/models/db.model";
 import { swInitIndexedDB } from "./db";
-import { getAuthToken, isAuthenticated } from "./auth-state";
+import { isAuthenticated } from "./auth-state";
 
+declare const self: ServiceWorkerGlobalScope;
+
+const QUEUE_SYNC_TAG = "queue-processing";
 let queueProcessingInterval: NodeJS.Timeout | null = null;
 const QUEUE_PROCESSING_INTERVAL = 10000; // 10 seconds
 
 // Function to process queued request
 const processRequest = async (queuedRequest: QueuedRequest): Promise<boolean> => {
   try {
-    // Add auth token to headers if available and not already present
-    const headers = { ...queuedRequest.headers };
-    const authToken = getAuthToken();
-    if (authToken && !headers['Authorization']) {
-      headers['Authorization'] = `Bearer ${authToken}`;
-    }
-    
     const options: RequestInit = {
       method: queuedRequest.method,
-      headers,
+      headers: queuedRequest.headers,
     };
 
     if (queuedRequest.body && queuedRequest.method !== "GET") {
@@ -264,8 +260,21 @@ export const swAddRequestToQueue = async (request: Request): Promise<void> => {
       const store = transaction.objectStore(QUEUE_STORE_NAME);
       const addRequest = store.add(queuedRequest);
 
-      addRequest.onsuccess = () => {
+      addRequest.onsuccess = async () => {
         console.log(`Added request ${queuedRequest.id} to queue: ${request.method} ${request.url}`);
+
+        // Trigger background sync immediately after adding to queue
+        try {
+          // In service worker context, use self.registration
+          if (self.registration && "sync" in self.registration) {
+            const syncManager = self.registration.sync as { register: (tag: string) => Promise<void> };
+            await syncManager.register(QUEUE_SYNC_TAG);
+            console.log("Background sync registered for queue processing");
+          }
+        } catch (error) {
+          console.warn("Failed to trigger background sync:", error);
+        }
+
         resolve();
       };
 

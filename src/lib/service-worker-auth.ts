@@ -1,33 +1,33 @@
 /**
  * Service Worker Authentication Utilities
- * 
+ *
  * Handles passing auth tokens to service workers for API calls
  */
 
 // Function to send token to service worker
 export const broadcastToken = async (token: string): Promise<void> => {
-  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+  if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
     navigator.serviceWorker.controller.postMessage({
-      type: 'AUTH_TOKEN_UPDATE',
-      token
+      type: "AUTH_TOKEN_UPDATE",
+      token,
     });
   }
 };
 
 // Send API URL to service worker
 export const broadcastApiUrl = async (apiUrl: string): Promise<void> => {
-  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+  if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
     navigator.serviceWorker.controller.postMessage({
-      type: 'API_URL_UPDATE',
-      url: apiUrl
+      type: "API_URL_UPDATE",
+      url: apiUrl,
     });
   }
 };
 
 // Setup service worker auth - call this after successful login/registration
 export const setupServiceWorkerAuth = async (token: string): Promise<void> => {
-  if (!('serviceWorker' in navigator)) {
-    console.warn('Service Worker not supported');
+  if (!("serviceWorker" in navigator)) {
+    console.warn("Service Worker not supported");
     return;
   }
 
@@ -52,28 +52,17 @@ export const setupServiceWorkerAuth = async (token: string): Promise<void> => {
   };
 
   // Remove any existing listener to avoid duplicates
-  navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
-  
-  // Add the listener
-  navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
+  navigator.serviceWorker.removeEventListener("controllerchange", handleControllerChange);
 
-  // Also handle service worker updates
-  navigator.serviceWorker.addEventListener('message', (event) => {
-    if (event.data.type === 'REQUEST_AUTH_TOKEN') {
-      // Re-send API URL and token when requested
-      if (import.meta.env.VITE_PUBLIC_API_URL) {
-        broadcastApiUrl(import.meta.env.VITE_PUBLIC_API_URL);
-      }
-      broadcastToken(token);
-    }
-  });
+  // Add the listener
+  navigator.serviceWorker.addEventListener("controllerchange", handleControllerChange);
 };
 
 // Call this when user logs out to clear token from service worker
 export const clearServiceWorkerAuth = async (): Promise<void> => {
-  if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+  if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
     navigator.serviceWorker.controller.postMessage({
-      type: 'AUTH_TOKEN_CLEAR'
+      type: "AUTH_TOKEN_CLEAR",
     });
   }
 };

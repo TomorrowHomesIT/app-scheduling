@@ -1,5 +1,5 @@
 import { createBrowserRouter, Outlet, RouterProvider } from "react-router";
-import { AppLayoutClient } from "./layout-client";
+import { AppLayout } from "./layout";
 import { ToastContainer } from "@/components/toast-container";
 import { StatusIndicator } from "@/components/status-indicator";
 import { PWAInstaller } from "@/components/pwa-installer";
@@ -30,7 +30,7 @@ import { ProtectedLayout } from "@/components/auth/protected-layout";
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <AppLayout />,
+    element: <Root />,
     children: [
       { index: true, element: <HomePage /> },
       { path: "offline", element: <OfflinePage /> },
@@ -70,14 +70,14 @@ const router = createBrowserRouter([
   },
 ]);
 
-function AppLayout() {
+function Root() {
   return (
     <div className="flex flex-col basd-h-dvh">
       <StatusIndicator />
       <div className="flex flex-1 overflow-hidden">
-        <AppLayoutClient>
+        <AppLayout>
           <Outlet />
-        </AppLayoutClient>
+        </AppLayout>
       </div>
       <PWAInstaller />
       <ToastContainer />

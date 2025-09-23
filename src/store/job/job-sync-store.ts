@@ -1,12 +1,13 @@
 import { create } from "zustand";
 import { syncManager } from "@/lib/sync-manager";
 import type { SyncState } from "@/lib/sync-manager";
+import useJobStore from "./job-store";
 
 interface JobSyncStore {
   // State
   syncState: SyncState;
   lastSyncTime: number;
-  
+
   // Actions
   syncUserJobs: () => Promise<void>;
   getSyncState: () => SyncState;
@@ -20,10 +21,17 @@ const useJobSyncStore = create<JobSyncStore>((set, get) => {
   const initialLastSyncTime = syncManager.getLastSyncTime();
 
   // Subscribe to sync manager changes and update store
+  // Update current job from the background sync change
   syncManager.onSyncStatusChange(() => {
+    console.log("Sync status changed in job sync store");
+    const { currentJob, loadJob } = useJobStore.getState();
+    if (currentJob) {
+      loadJob(currentJob.id, false);
+    }
+
     set({
       syncState: syncManager.getSyncState(),
-      lastSyncTime: syncManager.getLastSyncTime()
+      lastSyncTime: syncManager.getLastSyncTime(),
     });
   });
 
@@ -48,7 +56,7 @@ const useJobSyncStore = create<JobSyncStore>((set, get) => {
 
     isSyncingNow: () => {
       return get().syncState.isSyncing;
-    }
+    },
   };
 });
 

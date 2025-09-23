@@ -5,6 +5,10 @@ export interface IJob {
   googleDriveDirId: string | null;
   ownerId: number;
   tasks: IJobTask[];
+
+  // Optional sync status properties - only present when loaded from local DB
+  lastUpdated?: number;
+  lastSynced?: number;
 }
 
 export interface IJobTaskUrl {

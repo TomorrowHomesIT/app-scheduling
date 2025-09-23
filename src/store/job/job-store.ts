@@ -7,24 +7,15 @@ import useLoadingStore from "@/store/loading-store";
 import { jobsDB } from "@/lib/jobs-db";
 import api from "@/lib/api/api";
 
-interface JobSyncStatus {
-  lastUpdated: number;
-  lastSynced: number;
-  hasPendingUpdates: boolean;
-}
-
 interface JobStore {
   jobs: IJob[]; // TODO I'm not sure this is actually uesd? We never load a list of jobs lol
   currentJob: IJob | null;
-  currentJobSyncStatus: JobSyncStatus | null;
 
   loadUserJobs: (withLoading?: boolean) => Promise<void>;
   loadJob: (id: number, withLoading?: boolean) => Promise<void>;
   setCurrentJob: (job: IJob | null) => void;
   updateJob: (jobId: number, updates: IUpdateJobRequest) => Promise<void>;
   updateJobTask: (jobId: number, jobTaskId: number, updates: Partial<IJobTask>) => Promise<void>;
-  updateJobLastSynced: (jobId: number) => Promise<void>;
-  loadJobSyncStatus: (jobId: number) => Promise<void>;
   refreshJob: (jobId: number) => Promise<void>;
   syncJobWithDrive: (jobId: number) => Promise<void>;
 }
@@ -66,7 +57,6 @@ const updateJobApi = async (jobId: number, updates: IUpdateJobRequest): Promise<
 const useJobStore = create<JobStore>((set, get) => ({
   jobs: [],
   currentJob: null,
-  currentJobSyncStatus: null,
 
   loadUserJobs: async (withLoading = true) => {
     const loading = useLoadingStore.getState();
@@ -100,15 +90,14 @@ const useJobStore = create<JobStore>((set, get) => ({
     try {
       const localJob = await jobsDB.getJob(id);
       if (localJob) {
-        const syncStatus = await jobsDB.getJobSyncStatus(id);
-        set(() => ({ currentJob: localJob, currentJobSyncStatus: syncStatus }));
+        set(() => ({ currentJob: localJob }));
         return;
       }
 
       // This likely isn't a users job, so always load from API
       const job = await fetchJobByIdFromApi(id);
       if (job) {
-        set(() => ({ currentJob: job, currentJobSyncStatus: null }));
+        set(() => ({ currentJob: job }));
       }
     } catch (error) {
       toast.error(await getApiErrorMessage(error, "Failed to load job"));
@@ -123,33 +112,6 @@ const useJobStore = create<JobStore>((set, get) => ({
     set({ currentJob: job });
   },
 
-  updateJobLastSynced: async (jobId: number) => {
-    // Update the database
-    await jobsDB.updateJobLastSynced(jobId);
-
-    // Update the store's sync status in memory (avoid extra DB call)
-    const currentStatus = get().currentJobSyncStatus;
-    if (currentStatus) {
-      const now = Date.now();
-      set({
-        currentJobSyncStatus: {
-          ...currentStatus,
-          lastSynced: now,
-          hasPendingUpdates: false,
-        },
-      });
-    }
-  },
-
-  loadJobSyncStatus: async (jobId: number) => {
-    try {
-      const syncStatus = await jobsDB.getJobSyncStatus(jobId);
-      set({ currentJobSyncStatus: syncStatus });
-    } catch (error) {
-      console.error("Failed to load job sync status:", error);
-    }
-  },
-
   refreshJob: async (jobId: number) => {
     try {
       // Fetch fresh data from API
@@ -157,14 +119,10 @@ const useJobStore = create<JobStore>((set, get) => ({
       if (job) {
         // Save to IndexedDB and mark as synced
         await jobsDB.saveJob(job);
-        await jobsDB.updateJobLastSynced(jobId);
 
-        // Update store
-        set({ currentJob: job });
-
-        // Refresh sync status
-        const syncStatus = await jobsDB.getJobSyncStatus(jobId);
-        set({ currentJobSyncStatus: syncStatus });
+        // Load job with sync status from DB and update store
+        const jobWithSyncStatus = await jobsDB.getJob(jobId);
+        set({ currentJob: jobWithSyncStatus });
       }
     } catch (error) {
       console.error("Failed to refresh job:", error);
@@ -209,18 +167,7 @@ const useJobStore = create<JobStore>((set, get) => ({
     if (currentJob?.id === jobId) {
       await jobsDB.saveJob(currentJob);
       await jobsDB.updateJobLastUpdated(jobId);
-
-      // Update sync status in memory (avoid extra DB call)
-      const currentStatus = get().currentJobSyncStatus;
-      if (currentStatus) {
-        set({
-          currentJobSyncStatus: {
-            ...currentStatus,
-            lastUpdated: Date.now(),
-            hasPendingUpdates: true,
-          },
-        });
-      }
+      set({ currentJob });
     }
   },
 
@@ -237,11 +184,11 @@ const useJobStore = create<JobStore>((set, get) => ({
     });
 
     let updatedCurrentJob = get().currentJob;
-    let syncStatus = get().currentJobSyncStatus;
     if (updatedCurrentJob?.id === jobId) {
       updatedCurrentJob = {
         ...updatedCurrentJob,
         tasks: updatedCurrentJob.tasks.map((task) => (task.id === jobTaskId ? { ...task, ...updates } : task)),
+        lastUpdated: Date.now(),
       };
     }
 
@@ -250,23 +197,12 @@ const useJobStore = create<JobStore>((set, get) => ({
       jobsDB.saveJob(updatedCurrentJob);
       jobsDB.updateJobLastUpdated(jobId);
       jobsDB.updateTaskLastUpdated(jobId, jobTaskId);
-
-      // Update sync status in memory (avoid extra DB call)
-      const currentStatus = get().currentJobSyncStatus;
-      if (currentStatus) {
-        syncStatus = {
-          ...currentStatus,
-          lastUpdated: Date.now(),
-          hasPendingUpdates: true,
-        };
-      }
     }
 
     set(() => {
       return {
         jobs: updatedJobs,
         currentJob: updatedCurrentJob,
-        currentJobSyncStatus: syncStatus,
       };
     });
   },

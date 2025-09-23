@@ -90,7 +90,17 @@ class JobsDB {
 
       getRequest.onsuccess = () => {
         const storedJob = getRequest.result as StoredJob | undefined;
-        resolve(storedJob ? storedJob.data : null);
+        if (storedJob) {
+          // Include sync status in the job data
+          const jobWithSyncStatus: IJob = {
+            ...storedJob.data,
+            lastUpdated: storedJob.lastUpdated,
+            lastSynced: storedJob.lastSynced,
+          };
+          resolve(jobWithSyncStatus);
+        } else {
+          resolve(null);
+        }
       };
 
       getRequest.onerror = () => reject(getRequest.error);
@@ -112,7 +122,11 @@ class JobsDB {
 
       getAllRequest.onsuccess = () => {
         const storedJobs = (getAllRequest.result as StoredJob[]) || [];
-        const jobs = storedJobs.map((storedJob) => storedJob.data);
+        const jobs = storedJobs.map((storedJob) => ({
+          ...storedJob.data,
+          lastUpdated: storedJob.lastUpdated,
+          lastSynced: storedJob.lastSynced,
+        }));
         resolve(jobs);
       };
 
@@ -142,67 +156,6 @@ class JobsDB {
           putRequest.onerror = () => reject(putRequest.error);
         } else {
           resolve();
-        }
-      };
-
-      getRequest.onerror = () => reject(getRequest.error);
-    });
-  }
-
-  async updateJobLastSynced(id: number): Promise<void> {
-    await this.ensureDBReady();
-
-    return new Promise((resolve, reject) => {
-      if (!this.db) {
-        reject(new Error("Database not initialized"));
-        return;
-      }
-
-      const transaction = this.db.transaction([JOBS_STORE_NAME], "readwrite");
-      const store = transaction.objectStore(JOBS_STORE_NAME);
-      const getRequest = store.get(id);
-
-      getRequest.onsuccess = () => {
-        const storedJob = getRequest.result as StoredJob;
-        if (storedJob) {
-          storedJob.lastSynced = Date.now();
-          const putRequest = store.put(storedJob);
-          putRequest.onsuccess = () => resolve();
-          putRequest.onerror = () => reject(putRequest.error);
-        } else {
-          resolve();
-        }
-      };
-
-      getRequest.onerror = () => reject(getRequest.error);
-    });
-  }
-
-  async getJobSyncStatus(
-    id: number,
-  ): Promise<{ lastUpdated: number; lastSynced: number; hasPendingUpdates: boolean } | null> {
-    await this.ensureDBReady();
-
-    return new Promise((resolve, reject) => {
-      if (!this.db) {
-        reject(new Error("Database not initialized"));
-        return;
-      }
-
-      const transaction = this.db.transaction([JOBS_STORE_NAME], "readonly");
-      const store = transaction.objectStore(JOBS_STORE_NAME);
-      const getRequest = store.get(id);
-
-      getRequest.onsuccess = () => {
-        const storedJob = getRequest.result as StoredJob | undefined;
-        if (storedJob) {
-          resolve({
-            lastUpdated: storedJob.lastUpdated,
-            lastSynced: storedJob.lastSynced,
-            hasPendingUpdates: storedJob.lastUpdated > storedJob.lastSynced,
-          });
-        } else {
-          resolve(null);
         }
       };
 

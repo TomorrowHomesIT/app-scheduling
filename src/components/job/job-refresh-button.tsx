@@ -10,13 +10,13 @@ interface JobRefreshButtonProps {
 
 export function JobRefreshButton({ jobId }: JobRefreshButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const { currentJobSyncStatus, refreshJob } = useJobStore();
+  const { currentJob, refreshJob } = useJobStore();
 
-  if (!currentJobSyncStatus) {
+  if (!currentJob?.lastSynced || !currentJob.lastUpdated) {
     return null;
   }
 
-  const hasPendingUpdates = currentJobSyncStatus.hasPendingUpdates;
+  const hasPendingUpdates = currentJob.lastUpdated > currentJob.lastSynced;
   const handleRefresh = async () => {
     if (hasPendingUpdates) {
       toast.error("Cannot refresh while there are pending updates. Please sync your changes first.");

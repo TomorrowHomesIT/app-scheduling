@@ -46,7 +46,7 @@ const sendEmailApi = async (emailRequest: IScheduleEmailRequest): Promise<boolea
 const useJobTaskStore = create<JobTaskStore>(() => ({
   updateTask: async (taskId: number, updates: Partial<IJobTask>) => {
     const jobStore = useJobStore.getState();
-    const { updateJobTask, updateJobLastSynced } = jobStore;
+    const { updateJobTask } = jobStore;
 
     // Find which job contains this task
     const task = jobStore.currentJob?.tasks.find((task) => task.id === taskId);
@@ -82,13 +82,10 @@ const useJobTaskStore = create<JobTaskStore>(() => ({
             return { message: `${updateType} will be saved when online`, type: "warning" };
           }
 
-          // Mark the job as synced if it goes through the API
-          updateJobLastSynced(previousTask.jobId);
           return { message: `Updated ${updateType}`, type: "success" };
         },
         error: (error) => {
           updateJobTask(previousTask.jobId, taskId, previousTask);
-          updateJobLastSynced(previousTask.jobId);
           return `${error}`;
         },
       });
@@ -100,7 +97,7 @@ const useJobTaskStore = create<JobTaskStore>(() => ({
   sendTaskEmail: async (taskId: number, status: EJobTaskStatus) => {
     const jobStore = useJobStore.getState();
     const supplierStore = useSupplierStore.getState();
-    const { currentJob, updateJobTask, updateJobLastSynced } = jobStore;
+    const { currentJob, updateJobTask } = jobStore;
     const task = currentJob?.tasks.find((task) => task.id === taskId);
 
     if (!currentJob || !task) {
@@ -152,13 +149,10 @@ const useJobTaskStore = create<JobTaskStore>(() => ({
             return { message: "Email will be sent when online", type: "warning" };
           }
 
-          // Mark the job as synced if it goes through the API
-          updateJobLastSynced(currentJob.id);
           return { message: "Email sent successfully", type: "success" };
         },
         error: (e) => {
           updateJobTask(currentJob.id, task.id, { status: previousStatus });
-          updateJobLastSynced(currentJob.id);
           return `Failed to send email: ${e instanceof Error ? e.message : "Unknown error"}`;
         },
       });

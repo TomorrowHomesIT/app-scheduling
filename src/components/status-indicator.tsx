@@ -1,12 +1,10 @@
 import { useState, useEffect } from "react";
-import { WifiOff, Wifi, Clock, RotateCw } from "lucide-react";
+import { WifiOff, Wifi, Clock } from "lucide-react";
 import { useOfflineQueue } from "@/hooks/use-offline-queue";
-import useJobSyncStore from "@/store/job/job-sync-store";
 
 export function StatusIndicator() {
   const [isOnline, setIsOnline] = useState(true);
   const [showReconnected, setShowReconnected] = useState(false);
-  const { syncState } = useJobSyncStore();
   const { hasQueuedItems, queueCount } = useOfflineQueue();
 
   useEffect(() => {
@@ -36,7 +34,7 @@ export function StatusIndicator() {
   }, [isOnline]);
 
   // Show if offline, reconnected, has queued items, or syncing
-  if (isOnline && !showReconnected && !hasQueuedItems && !syncState.isSyncing) {
+  if (isOnline && !showReconnected && !hasQueuedItems) {
     return null;
   }
 
@@ -61,15 +59,6 @@ export function StatusIndicator() {
       );
     }
 
-    if (syncState.isSyncing) {
-      return (
-        <>
-          <RotateCw className="w-4 h-4 animate-spin" />
-          <span>Syncing user data...</span>
-        </>
-      );
-    }
-
     if (hasQueuedItems) {
       return (
         <>
@@ -87,7 +76,6 @@ export function StatusIndicator() {
   const getBgColor = () => {
     if (!isOnline) return "bg-orange-500";
     if (showReconnected) return "bg-green-500";
-    if (syncState.isSyncing) return "bg-blue-500";
     if (hasQueuedItems) return "bg-blue-500";
     return "bg-green-500";
   };

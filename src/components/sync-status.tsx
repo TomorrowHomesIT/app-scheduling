@@ -52,20 +52,18 @@ export function SyncStatus() {
 
   return (
     <Button
-      variant="ghost"
+      variant={syncState.isSyncing ? "default" : "ghost"}
       size="sm"
-      className="w-full justify-between hover:bg-gray-100 px-2"
+      className="w-full justify-between px-2"
       onClick={handleManualSync}
       title={`${getStatusText()} - Last sync: ${formatLastSync(lastSyncTime)}. Click to sync now.`}
-      disabled={syncState.isSyncing || !syncState.isOnline}
+      disabled={!syncState.isOnline}
     >
       <div className="flex items-center gap-2 overflow-hidden">
-        <Clock className="w-4 h-4 text-muted-foreground " />
-        <div className="text-xs text-muted-foreground hidden lg:block">
-          {syncState.isSyncing ? "Syncing..." : formatLastSync(lastSyncTime)}
-        </div>
+        <Clock className="w-4 h-4 hidden lg:block " />
+        <div className="text-xs">{syncState.isSyncing ? "Syncing..." : formatLastSync(lastSyncTime)}</div>
       </div>
-      {!syncState.isSyncing && <RotateCcw className="h-4 w-4 text-muted-foreground shrink-0" />}
+      {!syncState.isSyncing && <RotateCcw className="h-4 w-4 shrink-0" />}
     </Button>
   );
 }

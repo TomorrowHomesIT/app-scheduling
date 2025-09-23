@@ -1,7 +1,7 @@
 import { createBrowserRouter, Outlet, RouterProvider } from "react-router";
 import { AppLayoutClient } from "./layout-client";
 import { ToastContainer } from "@/components/toast-container";
-import { OfflineIndicator } from "@/components/offline-indicator";
+import { StatusIndicator } from "@/components/status-indicator";
 import { PWAInstaller } from "@/components/pwa-installer";
 
 // Import all your pages (hard loaded, not lazy)
@@ -73,7 +73,7 @@ const router = createBrowserRouter([
 function AppLayout() {
   return (
     <div className="flex flex-col basd-h-dvh">
-      <OfflineIndicator />
+      <StatusIndicator />
       <div className="flex flex-1 overflow-hidden">
         <AppLayoutClient>
           <Outlet />

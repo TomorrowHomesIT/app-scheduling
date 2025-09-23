@@ -1,11 +1,10 @@
-import { Clock, Cloud, CloudOff, RotateCw } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Clock } from "lucide-react";
 import { useEffect, useState } from "react";
 import useJobStore from "@/store/job/job-store";
 import useJobSyncStore from "@/store/job/job-sync-store";
 
 export function JobSyncStatus() {
-  const { currentJobSyncStatus } = useJobStore();
+  const { currentJob } = useJobStore();
   const { syncState } = useJobSyncStore();
   const [currentTime, setCurrentTime] = useState(Date.now());
 
@@ -18,14 +17,12 @@ export function JobSyncStatus() {
     return () => clearInterval(interval);
   }, []);
 
-  if (!currentJobSyncStatus) {
+  // Only show if we have a job with sync status (from local DB)
+  if (!currentJob || !currentJob.lastUpdated) {
     return;
   }
 
-  // Use current time for calculations if no sync status available
-  const lastUpdated = currentJobSyncStatus.lastUpdated;
-  const hasPendingUpdates = currentJobSyncStatus.hasPendingUpdates;
-
+  const lastUpdated = currentJob.lastUpdated;
   const formatTime = (timestamp: number) => {
     const date = new Date(timestamp);
     const now = new Date(currentTime);
@@ -47,42 +44,18 @@ export function JobSyncStatus() {
     }
   };
 
-  const getStatusIcon = () => {
-    if (syncState.isSyncing) {
-      return <RotateCw className="h-4 w-4 animate-spin" />;
-    } else if (hasPendingUpdates) {
-      return <CloudOff className="h-4 w-4" />;
-    }
-    return <Cloud className="h-4 w-4" />;
-  };
-
-  const getStatusVariant = () => {
-    if (syncState.isSyncing) {
-      return "default" as const;
-    } else if (hasPendingUpdates) {
-      return "destructive" as const;
-    }
-    return "secondary" as const;
-  };
-
   const getStatusText = () => {
     if (syncState.isSyncing) {
       return "Syncing";
-    } else if (hasPendingUpdates) {
-      return "Pending sync";
     }
-    return "Synced";
+    return `Updated ${formatTime(lastUpdated)}`;
   };
 
   return (
     <div className="flex flex-col items-end gap-1">
-      <Badge variant={getStatusVariant()} className="flex items-center gap-1">
-        {getStatusIcon()}
-        <span className="hidden sm:inline">{getStatusText()}</span>
-      </Badge>
-      <div className="text-xs text-muted-foreground hidden lg:flex items-center gap-1">
+      <div className="text-xs text-muted-foreground flex items-center gap-1">
         <Clock className="h-3 w-3" />
-        <span>Updated {formatTime(lastUpdated)}</span>
+        <span>{getStatusText()}</span>
       </div>
     </div>
   );

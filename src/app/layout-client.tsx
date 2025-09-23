@@ -52,9 +52,6 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
         // Clear auth when user logs out
         clearServiceWorkerAuth();
         console.log("Service worker auth cleared");
-
-        // The sync manager will naturally stop syncing since there's no auth token
-        // but we could add explicit cleanup here if needed
       }
     };
 

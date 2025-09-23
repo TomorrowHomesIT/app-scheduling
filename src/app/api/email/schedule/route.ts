@@ -70,10 +70,10 @@ export const POST = withAuth(async (request: NextRequest) => {
 
       if (!emailResponse.ok) {
         const errorText = await emailResponse.text();
-        return errorHandler(errorText, "Failed to send email");
+        return errorHandler(errorText, `Email response not ok from ${endpoint}`);
       }
     } catch (emailError) {
-      return errorHandler(emailError, "Failed to send email");
+      return errorHandler(emailError, `Email failed to send to ${endpoint}`);
     }
 
     try {

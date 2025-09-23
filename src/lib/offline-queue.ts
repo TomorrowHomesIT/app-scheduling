@@ -104,17 +104,6 @@ class OfflineQueue {
     }
   }
 
-  // Get full queue for UI display
-  async getQueueItems(): Promise<QueuedRequest[]> {
-    try {
-      await this.ensureDBInitialized();
-      return await this.getQueue();
-    } catch (error) {
-      console.error("Failed to get queue items:", error);
-      return [];
-    }
-  }
-
   // Clear the queue (useful for logout)
   async clearQueue(): Promise<void> {
     await this.ensureDBInitialized();

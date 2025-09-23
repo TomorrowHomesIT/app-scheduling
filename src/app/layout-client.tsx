@@ -5,11 +5,11 @@ import { SidebarProvider, useSidebar } from "@/components/sidebar/sidebar-contex
 import useOwnersStore from "@/store/owners-store";
 import useSupplierStore from "@/store/supplier-store";
 import type { ReactNode } from "react";
-import useJobStore from "@/store/job/job-store";
 import useTaskStore from "@/store/task-store";
 import useLoadingStore from "@/store/loading-store";
 import { Spinner } from "@/components/ui/spinner";
 import { setupServiceWorkerAuth, clearServiceWorkerAuth } from "@/lib/service-worker-auth";
+import useJobSyncStore from "@/store/job/job-sync-store";
 
 /** Function is required so that useSidebar is used within the context */
 function AppLayoutContent({ children }: { children: ReactNode }) {
@@ -17,9 +17,9 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
   const { isAuthenticated, getAccessToken, isAuthLoading } = useAuth();
   const { loadOwners } = useOwnersStore();
   const { loadSuppliers } = useSupplierStore();
-  const { loadUserJobs } = useJobStore();
   const { loadTaskStages } = useTaskStore();
   const { isLoading } = useLoadingStore();
+  const { syncUserJobs } = useJobSyncStore();
   // Bootstrap core data when user is authenticated (runs when isAuthenticated changes)
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -27,7 +27,7 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
     const bootstrapCoreData = async () => {
       try {
         console.log("Bootstrapping core data...");
-        await Promise.all([loadOwners(), loadUserJobs(), loadSuppliers(), loadTaskStages()]);
+        await Promise.all([loadOwners(), syncUserJobs(), loadSuppliers(), loadTaskStages()]);
         console.log("Core data bootstrapped successfully");
       } catch (error) {
         console.error("Failed to bootstrap core data:", error);
@@ -35,7 +35,7 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
     };
 
     bootstrapCoreData();
-  }, [isAuthenticated, loadOwners, loadSuppliers, loadTaskStages, loadUserJobs]);
+  }, [isAuthenticated, loadOwners, loadSuppliers, loadTaskStages, syncUserJobs]);
 
   // Handle service worker auth - setup on login, clear on logout
   useEffect(() => {
@@ -52,6 +52,9 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
         // Clear auth when user logs out
         clearServiceWorkerAuth();
         console.log("Service worker auth cleared");
+
+        // The sync manager will naturally stop syncing since there's no auth token
+        // but we could add explicit cleanup here if needed
       }
     };
 

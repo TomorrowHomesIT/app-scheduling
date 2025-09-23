@@ -1,6 +1,5 @@
 import { precacheAndRoute, cleanupOutdatedCaches } from "workbox-precaching";
-import { swStartJobSync, swStopJobSync } from "./job";
-import { swAddRequestToQueue, swStartQueueProcessing, swStopQueueProcessing } from "./queue";
+import { swAddRequestToQueue } from "./queue";
 
 declare const self: ServiceWorkerGlobalScope;
 
@@ -130,25 +129,14 @@ self.addEventListener("install", (_: ExtendableEvent) => {
   self.skipWaiting();
 });
 
-// Activate event - start but don't run background processes without auth
+// Activate event
 self.addEventListener("activate", (event: ExtendableEvent) => {
   event.waitUntil(
     (async () => {
       await self.clients.claim();
-
-      // Start background processes - they will check for auth token before doing work
-      swStartQueueProcessing();
-      swStartJobSync();
-      console.log("Service worker activated - background processes initialized");
+      console.log("Service worker activated");
     })(),
   );
-});
-
-// Handle service worker termination (cleanup)
-self.addEventListener("beforeunload", () => {
-  console.log("Service worker terminating, stopping background processes...");
-  swStopQueueProcessing();
-  swStopJobSync();
 });
 
 // Listen for messages from the app
@@ -160,11 +148,10 @@ self.addEventListener("message", async (event: ExtendableMessageEvent) => {
     setAuthToken(event.data.token);
     console.log("Service worker: Auth token updated");
 
-    // If we were previously unauthenticated, restart background processes
+    // Re-register queue processing if we were previously unauthenticated
     if (wasUnauthenticated) {
-      swStartQueueProcessing();
-      swStartJobSync();
-      console.log("Service worker: Background processes restarted after auth");
+      // Queue processing will be handled automatically when requests are queued
+      console.log("Service worker: Auth token restored");
     }
   } else if (event.data.type === "AUTH_TOKEN_CLEAR") {
     setAuthToken(null);

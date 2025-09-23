@@ -1,5 +1,5 @@
 import { useEffect, useState, Suspense } from "react";
-import { useNavigate, useSearchParams, Link } from "react-router";
+import { useNavigate, Link } from "react-router";
 import { EJobTaskProgress, type IUpdateJobRequest } from "@/models/job.model";
 import { Accordion, AccordionContent, AccordionHeader, AccordionItem } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
@@ -67,7 +67,7 @@ function JobDetailContent() {
         lastKnownSyncStatus.hasPendingUpdates !== currentJobSyncStatus.hasPendingUpdates;
 
       if (syncStatusChanged && id) {
-        loadJob(parseInt(id, 10));
+        loadJob(parseInt(id, 10), false);
       }
     }
 
@@ -75,7 +75,7 @@ function JobDetailContent() {
     setLastKnownSyncStatus(currentJobSyncStatus);
   }, [currentJobSyncStatus, lastKnownSyncStatus, loadJob, id]);
 
-  // Periodically check for sync status updates (every 30 seconds)
+  // Periodically check for sync status updates (every 20 seconds)
   useEffect(() => {
     if (!currentJob || !currentJobSyncStatus || !id) return;
 
@@ -85,7 +85,7 @@ function JobDetailContent() {
       } catch (error) {
         console.error("Failed to check sync status:", error);
       }
-    }, 30000); // Check every 30 seconds
+    }, 20000); // Check every 20 seconds
 
     return () => clearInterval(interval);
   }, [currentJob, currentJobSyncStatus, id, loadJobSyncStatus]);

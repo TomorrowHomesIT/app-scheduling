@@ -9,7 +9,7 @@ import { getAuthToken } from "./auth-state";
 let apiBaseUrl: string | null = null;
 
 export const setApiBaseUrl = (url: string): void => {
-  apiBaseUrl = url + '/api';
+  apiBaseUrl = `${url}/api`;
 };
 
 export const getApiBaseUrl = (): string => {
@@ -39,7 +39,7 @@ export async function swApiFetch(endpoint: string, options: SwApiOptions = {}): 
   
   // Add auth token if available
   if (authToken) {
-    headers['Authorization'] = `Bearer ${authToken}`;
+    headers.Authorization = `Bearer ${authToken}`;
   }
   
   // Prepare request options

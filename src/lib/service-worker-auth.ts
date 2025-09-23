@@ -77,8 +77,3 @@ export const clearServiceWorkerAuth = async (): Promise<void> => {
     });
   }
 };
-
-// Call this whenever the token changes (token refresh)
-export const updateServiceWorkerToken = async (newToken: string): Promise<void> => {
-  await broadcastToken(newToken);
-};

@@ -1,10 +1,12 @@
-import { Clock, Cloud, CloudOff } from "lucide-react";
+import { Clock, Cloud, CloudOff, RotateCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
 import useJobStore from "@/store/job/job-store";
+import useJobSyncStore from "@/store/job/job-sync-store";
 
 export function JobSyncStatus() {
   const { currentJobSyncStatus } = useJobStore();
+  const { syncState } = useJobSyncStore();
   const [currentTime, setCurrentTime] = useState(Date.now());
 
   // Update current time every minute to refresh the "time ago" display
@@ -46,21 +48,27 @@ export function JobSyncStatus() {
   };
 
   const getStatusIcon = () => {
-    if (hasPendingUpdates) {
+    if (syncState.isSyncing) {
+      return <RotateCw className="h-4 w-4 animate-spin" />;
+    } else if (hasPendingUpdates) {
       return <CloudOff className="h-4 w-4" />;
     }
     return <Cloud className="h-4 w-4" />;
   };
 
   const getStatusVariant = () => {
-    if (hasPendingUpdates) {
+    if (syncState.isSyncing) {
+      return "default" as const;
+    } else if (hasPendingUpdates) {
       return "destructive" as const;
     }
     return "secondary" as const;
   };
 
   const getStatusText = () => {
-    if (hasPendingUpdates) {
+    if (syncState.isSyncing) {
+      return "Syncing";
+    } else if (hasPendingUpdates) {
       return "Pending sync";
     }
     return "Synced";

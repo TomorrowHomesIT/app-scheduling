@@ -18,8 +18,8 @@ interface JobStore {
   currentJob: IJob | null;
   currentJobSyncStatus: JobSyncStatus | null;
 
-  loadUserJobs: () => Promise<void>;
-  loadJob: (id: number) => Promise<void>;
+  loadUserJobs: (withLoading?: boolean) => Promise<void>;
+  loadJob: (id: number, withLoading?: boolean) => Promise<void>;
   setCurrentJob: (job: IJob | null) => void;
   updateJob: (jobId: number, updates: IUpdateJobRequest) => Promise<void>;
   updateJobTask: (jobId: number, jobTaskId: number, updates: Partial<IJobTask>) => Promise<void>;
@@ -68,10 +68,12 @@ const useJobStore = create<JobStore>((set, get) => ({
   currentJob: null,
   currentJobSyncStatus: null,
 
-  loadUserJobs: async () => {
+  loadUserJobs: async (withLoading = true) => {
     const loading = useLoadingStore.getState();
-    if (loading.jobs.isLoading) return;
-    loading.setLoading("jobs", true);
+    // TODO: this is probably not a ideal solution, we should just call loading where we need with load jobs etc.
+    if (withLoading) {
+      loading.setLoading("jobs", true);
+    }
 
     try {
       const jobs = await fetchUserJobsFromApi();
@@ -83,13 +85,17 @@ const useJobStore = create<JobStore>((set, get) => ({
       const errorMessage = await getApiErrorMessage(error);
       loading.setError("jobs", errorMessage);
     } finally {
-      loading.setLoading("jobs", false);
+      if (withLoading) {
+        loading.setLoading("jobs", false);
+      }
     }
   },
 
-  loadJob: async (id: number) => {
+  loadJob: async (id: number, withLoading = true) => {
     const loading = useLoadingStore.getState();
-    if (loading.currentJob.isLoading) return;
+    if (withLoading) {
+      loading.setLoading("currentJob", true);
+    }
 
     try {
       const localJob = await jobsDB.getJob(id);
@@ -99,14 +105,17 @@ const useJobStore = create<JobStore>((set, get) => ({
         return;
       }
 
-      loading.setLoading("currentJob", true);
       // This likely isn't a users job, so always load from API
       const job = await fetchJobByIdFromApi(id);
       if (job) {
         set(() => ({ currentJob: job, currentJobSyncStatus: null }));
       }
+    } catch (error) {
+      toast.error(await getApiErrorMessage(error, "Failed to load job"));
     } finally {
-      loading.setLoading("currentJob", false);
+      if (withLoading) {
+        loading.setLoading("currentJob", false);
+      }
     }
   },
 

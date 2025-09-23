@@ -11,6 +11,7 @@ import useOwnersStore from "@/store/owners-store";
 import { UserProfileButton } from "@/components/user-profile-button";
 import { Logo } from "../ui/logo";
 import { useAuth } from "@/components/auth/auth-context";
+import { SyncStatus } from "@/components/sync-status";
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -161,8 +162,13 @@ function SidebarContentInner({ onJobSelect }: { onJobSelect?: () => void }) {
         </div>
       </div>
 
-      <div className="border-t p-2">
-        <UserProfileButton />
+      <div>
+        <div className="border-t p-2 space-y-2">
+          <SyncStatus />
+        </div>
+        <div className="border-t p-2 space-y-2">
+          <UserProfileButton />
+        </div>
       </div>
     </>
   );

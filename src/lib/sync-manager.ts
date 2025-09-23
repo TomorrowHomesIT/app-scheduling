@@ -6,6 +6,7 @@
  */
 
 import useJobStore from "@/store/job/job-store";
+import { isUserAuthenticated } from "@/lib/supabase/client";
 
 interface SyncConfig {
   syncIntervalMs: number;
@@ -126,6 +127,12 @@ class SyncManager {
 
   private async performUserJobsSync(): Promise<void> {
     if (this.state.isSyncing) return;
+
+    const isAuthenticated = await isUserAuthenticated();
+    if (!isAuthenticated) {
+      console.log("User not authenticated - aborting sync");
+      return;
+    }
 
     console.log("Starting user jobs sync...");
     this.state.isSyncing = true;

@@ -1,6 +1,6 @@
 import { QUEUE_STORE_NAME, type QueuedRequest } from "@/models/db.model";
 import { swInitIndexedDB } from "./db";
-import { isAuthenticated } from "./auth-state";
+import { getAuthToken, isAuthenticated } from "./auth-state";
 
 declare const self: ServiceWorkerGlobalScope;
 
@@ -11,9 +11,23 @@ const QUEUE_PROCESSING_INTERVAL = 10000; // 10 seconds
 // Function to process queued request
 const processRequest = async (queuedRequest: QueuedRequest): Promise<boolean> => {
   try {
+    // Use the original headers from the queued request
+    const headers = { ...queuedRequest.headers };
+
+    // Always use fresh auth token from service worker (replace any existing Authorization header)
+    // This ensures we have the most current token incase it refreshed
+    const authToken = getAuthToken();
+    if (authToken) {
+      if (headers.authorization) {
+        headers.authorization = `Bearer ${authToken}`;
+      } else {
+        headers.Authorization = `Bearer ${authToken}`;
+      }
+    }
+
     const options: RequestInit = {
       method: queuedRequest.method,
-      headers: queuedRequest.headers,
+      headers,
     };
 
     if (queuedRequest.body && queuedRequest.method !== "GET") {

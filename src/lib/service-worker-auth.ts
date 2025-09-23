@@ -14,16 +14,6 @@ export const broadcastToken = async (token: string): Promise<void> => {
   }
 };
 
-// Send API URL to service worker
-export const broadcastApiUrl = async (apiUrl: string): Promise<void> => {
-  if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
-    navigator.serviceWorker.controller.postMessage({
-      type: "API_URL_UPDATE",
-      url: apiUrl,
-    });
-  }
-};
-
 // Setup service worker auth - call this after successful login/registration
 export const setupServiceWorkerAuth = async (token: string): Promise<void> => {
   if (!("serviceWorker" in navigator)) {
@@ -34,20 +24,11 @@ export const setupServiceWorkerAuth = async (token: string): Promise<void> => {
   // Wait for service worker to be ready
   await navigator.serviceWorker.ready;
 
-  // Send API URL first (from environment variable)
-  if (import.meta.env.VITE_PUBLIC_API_URL) {
-    await broadcastApiUrl(import.meta.env.VITE_PUBLIC_API_URL);
-  }
-
   // Send token immediately if service worker is already controlling
   await broadcastToken(token);
 
   // Listen for when service worker becomes active/changes
   const handleControllerChange = async () => {
-    // Re-send API URL and token when service worker changes
-    if (import.meta.env.VITE_PUBLIC_API_URL) {
-      await broadcastApiUrl(import.meta.env.VITE_PUBLIC_API_URL);
-    }
     await broadcastToken(token);
   };
 

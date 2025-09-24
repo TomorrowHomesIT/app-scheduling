@@ -2,7 +2,6 @@ import { createBrowserRouter, Outlet, RouterProvider } from "react-router";
 import { AppLayout } from "./layout";
 import { ToastContainer } from "@/components/toast-container";
 import { StatusIndicator } from "@/components/status-indicator";
-import { PWAInstaller } from "@/components/pwa-installer";
 
 // Import all your pages (hard loaded, not lazy)
 import HomePage from "./page";
@@ -79,7 +78,6 @@ function Root() {
           <Outlet />
         </AppLayout>
       </div>
-      <PWAInstaller />
       <ToastContainer />
     </div>
   );

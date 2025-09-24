@@ -161,11 +161,23 @@ export const swStartQueueProcessing = () => {
     clearInterval(queueProcessingInterval);
   }
 
+  // Use setInterval for browsers without BackgroundSync
   queueProcessingInterval = setInterval(() => {
     swProcessQueue();
   }, QUEUE_PROCESSING_INTERVAL);
 
-  console.log("Started periodic queue processing (every 10 seconds)");
+  // Also register for periodic background sync if available (Chrome only)
+  if ("periodicSync" in self.registration) {
+    try {
+      // biome-ignore lint/suspicious/noExplicitAny: PWA doesn't have good types
+      (self.registration as any).periodicSync.register("queue-sync", {
+        minInterval: 5 * 60 * 1000, // 5 minutes minimum
+      });
+      console.log("Started periodic queue processing (every 10 seconds)");
+    } catch (err) {
+      console.log("Periodic sync registration failed:", err);
+    }
+  }
 };
 
 export const swStopQueueProcessing = () => {

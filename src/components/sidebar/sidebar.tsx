@@ -163,7 +163,7 @@ function SidebarContentInner({ onJobSelect }: { onJobSelect?: () => void }) {
       </div>
 
       <div>
-        <div className="border-t p-2 space-y-2">
+        <div className="p-2">
           <SyncStatus />
         </div>
         <div className="border-t p-2 space-y-2">

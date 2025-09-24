@@ -52,8 +52,8 @@ export function SyncStatus() {
 
   return (
     <Button
-      variant={syncState.isSyncing ? "outline" : "ghost"}
-      size="sm"
+      variant={syncState.isSyncing ? "default" : "outline"}
+      size="default"
       className="w-full justify-between px-2"
       onClick={handleManualSync}
       title={`${getStatusText()} - Last sync: ${formatLastSync(lastSyncTime)}. Click to sync now.`}

@@ -82,6 +82,16 @@ self.addEventListener("sync", (event: Event) => {
   }
 });
 
+// Periodic background sync event (for browsers that support it)
+self.addEventListener("periodicsync", (event: Event) => {
+  const syncEvent = event as ExtendableEvent & { tag?: string };
+  console.log("Periodic sync triggered:", syncEvent.tag);
+
+  if (syncEvent.tag === "queue-sync") {
+    syncEvent.waitUntil(swProcessQueue());
+  }
+});
+
 // Listen for messages from the app
 self.addEventListener("message", async (event: ExtendableMessageEvent) => {
   console.log("Service worker received message:", event.data);
@@ -99,9 +109,6 @@ self.addEventListener("message", async (event: ExtendableMessageEvent) => {
   } else if (event.data.type === "AUTH_TOKEN_CLEAR") {
     setAuthToken(null);
     console.log("Service worker: Auth token cleared - background processes will idle");
-  } else if (event.data.type === "API_URL_UPDATE") {
-    // TODO probably not needed with request clone and the que
-    console.log("Service worker: API base URL updated to", event.data.url);
   } else if (event.data.type === "VISIBILITY_CHANGE" && event.data.visible) {
     console.log("App became visible - processing queue");
     await swProcessQueue();

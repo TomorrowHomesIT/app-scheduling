@@ -1,4 +1,4 @@
-import { useEffect, Suspense } from "react";
+import { useEffect, Suspense, useRef, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { createClient } from "@/lib/supabase/client";
 import { Spinner } from "@/components/ui/spinner";
@@ -6,28 +6,36 @@ import { Spinner } from "@/components/ui/spinner";
 function CallbackContent() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const hasProcessed = useRef(false);
 
-  useEffect(() => {
-    const handleCallback = async () => {
-      const code = searchParams.get("code");
-      const next = searchParams.get("next") ?? "/";
+  const handleCallback = useCallback(async () => {
+    // Prevent multiple executions
+    if (hasProcessed.current) {
+      return;
+    }
 
-      if (code) {
-        const supabase = createClient();
-        const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const code = searchParams.get("code");
+    const next = searchParams.get("next") ?? "/";
 
-        if (!error) {
-          navigate(next);
-        } else {
-          navigate("/auth/error");
-        }
+    if (code) {
+      const supabase = createClient();
+      const { error } = await supabase.auth.exchangeCodeForSession(code);
+
+      if (!error) {
+        navigate(next);
       } else {
         navigate("/auth/error");
       }
-    };
+    } else {
+      navigate("/auth/error");
+    }
 
-    handleCallback();
+    hasProcessed.current = true;
   }, [navigate, searchParams]);
+
+  useEffect(() => {
+    handleCallback();
+  }, [handleCallback]);
 
   return (
     <div className="flex items-center justify-center min-h-screen">

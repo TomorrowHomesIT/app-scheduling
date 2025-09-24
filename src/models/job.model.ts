@@ -7,7 +7,6 @@ export interface IJob {
   tasks: IJobTask[];
 
   // Optional sync status properties - only present when loaded from local DB
-  lastUpdated?: number;
   lastSynced?: number;
 }
 
@@ -33,10 +32,6 @@ export interface IJobTask {
   purchaseOrderLinks: IJobTaskUrl[];
   planLinks: IJobTaskUrl[];
   order: number;
-
-  // Optional sync status properties - only present when task has local changes
-  lastUpdated?: number;
-  lastSynced?: number;
 }
 
 export enum EJobTaskProgress {

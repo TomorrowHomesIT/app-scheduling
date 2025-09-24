@@ -9,7 +9,6 @@ import useJobStore from "@/store/job/job-store";
 import { isUserAuthenticated } from "@/lib/supabase/client";
 import { jobsDB } from "@/lib/jobs-db";
 import { offlineQueue } from "@/lib/offline-queue";
-import api from "@/lib/api/api";
 import type { IJob } from "@/models";
 
 interface SyncConfig {
@@ -187,8 +186,7 @@ class SyncManager {
         }
 
         // Check if local job has unsaved changes
-        const hasLocalChanges =
-          localJob.lastUpdated && localJob.lastSynced && localJob.lastUpdated > localJob.lastSynced;
+        const hasLocalChanges = await offlineQueue.jobHasPendingRequests(freshJob.id);
 
         if (hasLocalChanges) {
           console.log(`Job ${freshJob.id} has local changes - skipping sync to prevent overwrite`);

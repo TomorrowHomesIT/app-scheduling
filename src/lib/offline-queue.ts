@@ -1,10 +1,4 @@
-import {
-  DB_NAME,
-  DB_VERSION,
-  JOBS_STORE_NAME,
-  QUEUE_STORE_NAME,
-  type QueuedRequest,
-} from "@/models/db.model";
+import { DB_NAME, DB_VERSION, JOBS_STORE_NAME, QUEUE_STORE_NAME, type QueuedRequest } from "@/models/db.model";
 
 class OfflineQueue {
   private db: IDBDatabase | null = null;
@@ -45,7 +39,6 @@ class OfflineQueue {
         if (!db.objectStoreNames.contains(JOBS_STORE_NAME)) {
           console.log("Creating jobs store:", JOBS_STORE_NAME);
           const jobsStore = db.createObjectStore(JOBS_STORE_NAME, { keyPath: "id" });
-          jobsStore.createIndex("lastUpdated", "lastUpdated", { unique: false });
           jobsStore.createIndex("lastSynced", "lastSynced", { unique: false });
         }
       };
@@ -94,6 +87,55 @@ class OfflineQueue {
     }
   }
 
+  // Get queued requests for a specific job
+  async getQueuedRequestsForJob(jobId: number): Promise<QueuedRequest[]> {
+    try {
+      await this.ensureDBInitialized();
+      const queue = await this.getQueue();
+      // Filter for requests related to this job (checking URL for job ID)
+      // This includes task updates and email sends sinc they are all at /tasks/id
+      return queue.filter((req) => {
+        const jobTaskPattern = new RegExp(`/jobs/${jobId}/tasks`);
+        return jobTaskPattern.test(req.url);
+      });
+    } catch (error) {
+      console.error("Failed to get job queue items:", error);
+      return [];
+    }
+  }
+
+  // Check if a job has pending requests in queue
+  async jobHasPendingRequests(jobId: number): Promise<boolean> {
+    const jobRequests = await this.getQueuedRequestsForJob(jobId);
+    return jobRequests.length > 0;
+  }
+
+  // Remove a specific request from the queue
+  async removeFromQueue(id: string): Promise<void> {
+    await this.ensureDBInitialized();
+
+    return new Promise((resolve, reject) => {
+      if (!this.db) {
+        reject(new Error("Database not initialized"));
+        return;
+      }
+
+      const transaction = this.db.transaction([QUEUE_STORE_NAME], "readwrite");
+      const store = transaction.objectStore(QUEUE_STORE_NAME);
+      const deleteRequest = store.delete(id);
+
+      deleteRequest.onsuccess = () => {
+        console.log(`Removed request ${id} from queue`);
+        resolve();
+      };
+
+      deleteRequest.onerror = () => {
+        console.error("Failed to remove request from queue:", deleteRequest.error);
+        reject(deleteRequest.error);
+      };
+    });
+  }
+
   // Clear the queue (useful for logout)
   async clearQueue(): Promise<void> {
     await this.ensureDBInitialized();
@@ -118,6 +160,41 @@ class OfflineQueue {
         reject(clearRequest.error);
       };
     });
+  }
+
+  async processRequest(request: QueuedRequest, authToken?: string): Promise<boolean> {
+    try {
+      // Use the original headers from the queued request
+      const headers = { ...request.headers };
+
+      if (authToken) {
+        if (headers.authorization) {
+          headers.authorization = `Bearer ${authToken}`;
+        } else {
+          headers.Authorization = `Bearer ${authToken}`;
+        }
+      }
+
+      const options: RequestInit = {
+        method: request.method,
+        headers,
+      };
+
+      if (request.body && request.method !== "GET") {
+        options.body = typeof request.body === "string" ? request.body : JSON.stringify(request.body);
+      }
+
+      const response = await fetch(request.url, options);
+      if (response.ok) {
+        await this.removeFromQueue(request.id);
+        return true;
+      } else {
+        return false;
+      }
+    } catch (error) {
+      console.error("Failed to process request:", error);
+      return false;
+    }
   }
 }
 

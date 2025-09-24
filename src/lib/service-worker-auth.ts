@@ -4,7 +4,6 @@
  * Handles passing auth tokens to service workers for API calls
  */
 
-
 // Function to send token to service worker
 export const broadcastToken = async (token: string): Promise<void> => {
   if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {

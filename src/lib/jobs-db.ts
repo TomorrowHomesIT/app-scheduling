@@ -1,9 +1,4 @@
-import {
-  DB_NAME,
-  DB_VERSION,
-  JOBS_STORE_NAME,
-  type StoredJob,
-} from "@/models/db.model";
+import { DB_NAME, DB_VERSION, JOBS_STORE_NAME, type StoredJob } from "@/models/db.model";
 import type { IJob } from "@/models/job.model";
 
 class JobsDB {
@@ -41,7 +36,7 @@ class JobsDB {
   }
 
   // Job operations
-  async saveJob(job: IJob, preservePendingStatus: boolean = false): Promise<void> {
+  async saveJob(job: IJob, updateLastSynced = true): Promise<void> {
     await this.ensureDBReady();
 
     return new Promise((resolve, reject) => {
@@ -53,23 +48,19 @@ class JobsDB {
 
       const transaction = this.db.transaction([JOBS_STORE_NAME], "readwrite");
       const store = transaction.objectStore(JOBS_STORE_NAME);
-      
+
       // Get existing job to check sync status
       const getRequest = store.get(job.id);
-      
+
       getRequest.onsuccess = async () => {
         const existingJob = getRequest.result as StoredJob | undefined;
         const now = Date.now();
-        
+        const lastSynced = updateLastSynced ? now : existingJob?.lastSynced || now;
+
         const storedJob: StoredJob = {
           id: job.id,
           data: job,
-          lastUpdated: preservePendingStatus && existingJob && existingJob.lastUpdated > existingJob.lastSynced
-            ? now  // Keep it marked as updated if it had pending changes
-            : job.lastUpdated || now,
-          lastSynced: preservePendingStatus && existingJob && existingJob.lastUpdated > existingJob.lastSynced
-            ? existingJob.lastSynced  // Preserve the old sync time if it had pending changes
-            : job.lastSynced || now,
+          lastSynced,
         };
 
         const putRequest = store.put(storedJob);
@@ -83,7 +74,7 @@ class JobsDB {
           reject(putRequest.error);
         };
       };
-      
+
       getRequest.onerror = () => reject(getRequest.error);
     });
   }
@@ -107,7 +98,6 @@ class JobsDB {
           // Include sync status in the job data
           const jobWithSyncStatus: IJob = {
             ...storedJob.data,
-            lastUpdated: storedJob.lastUpdated,
             lastSynced: storedJob.lastSynced,
           };
           resolve(jobWithSyncStatus);
@@ -137,78 +127,12 @@ class JobsDB {
         const storedJobs = (getAllRequest.result as StoredJob[]) || [];
         const jobs = storedJobs.map((storedJob) => ({
           ...storedJob.data,
-          lastUpdated: storedJob.lastUpdated,
           lastSynced: storedJob.lastSynced,
         }));
         resolve(jobs);
       };
 
       getAllRequest.onerror = () => reject(getAllRequest.error);
-    });
-  }
-
-  async updateJobLastUpdated(id: number): Promise<void> {
-    await this.ensureDBReady();
-
-    return new Promise((resolve, reject) => {
-      if (!this.db) {
-        reject(new Error("Database not initialized"));
-        return;
-      }
-
-      const transaction = this.db.transaction([JOBS_STORE_NAME], "readwrite");
-      const store = transaction.objectStore(JOBS_STORE_NAME);
-      const getRequest = store.get(id);
-
-      getRequest.onsuccess = () => {
-        const storedJob = getRequest.result as StoredJob;
-        if (storedJob) {
-          storedJob.lastUpdated = Date.now();
-          const putRequest = store.put(storedJob);
-          putRequest.onsuccess = () => resolve();
-          putRequest.onerror = () => reject(putRequest.error);
-        } else {
-          resolve();
-        }
-      };
-
-      getRequest.onerror = () => reject(getRequest.error);
-    });
-  }
-
-
-  // Check if there are pending updates (local changes not yet synced)
-  async hasPendingUpdates(): Promise<boolean> {
-    await this.ensureDBReady();
-
-    return new Promise((resolve, reject) => {
-      if (!this.db) {
-        reject(new Error("Database not initialized"));
-        return;
-      }
-
-      const transaction = this.db.transaction([JOBS_STORE_NAME], "readonly");
-      const jobsStore = transaction.objectStore(JOBS_STORE_NAME);
-
-      const jobsRequest = jobsStore.getAll();
-      jobsRequest.onsuccess = () => {
-        const jobs = (jobsRequest.result as StoredJob[]) || [];
-        // Check if any job has pending changes at the job level OR task level
-        const hasPending = jobs.some((job) => {
-          // Job level changes
-          if (job.lastUpdated > job.lastSynced) return true;
-          
-          // Task level changes (check inline task sync status)
-          if (job.data.tasks) {
-            return job.data.tasks.some(task => 
-              task.lastUpdated && task.lastSynced && task.lastUpdated > task.lastSynced
-            );
-          }
-          return false;
-        });
-        resolve(hasPending);
-      };
-      jobsRequest.onerror = () => reject(jobsRequest.error);
     });
   }
 

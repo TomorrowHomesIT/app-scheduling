@@ -6,6 +6,8 @@ import useOwnersStore from "@/store/owners-store";
 import useLoadingStore from "@/store/loading-store";
 import { jobsDB } from "@/lib/jobs-db";
 import api from "@/lib/api/api";
+import offlineQueue from "@/lib/offline-queue";
+import { useAuth } from "@/components/auth/auth-context";
 
 interface JobStore {
   currentJob: IJob | null;
@@ -17,7 +19,7 @@ interface JobStore {
   updateJob: (jobId: number, updates: IUpdateJobRequest) => Promise<void>;
   updateJobTask: (jobId: number, jobTaskId: number, updates: Partial<IJobTask>) => Promise<void>;
   refreshJob: (jobId: number) => Promise<void>;
-  forceSyncLocalJob: (jobId: number) => Promise<void>;
+  syncAndRefreshJob: (jobId: number) => Promise<void>;
   syncJobWithDrive: (jobId: number) => Promise<void>;
 }
 
@@ -133,47 +135,27 @@ const useJobStore = create<JobStore>((set, get) => ({
     }
   },
 
-  forceSyncLocalJob: async (jobId: number) => {
+  syncAndRefreshJob: async (jobId: number) => {
+    const { getAccessToken } = useAuth();
     try {
-      // Get the current job from DB to find pending tasks
-      const currentJob = await jobsDB.getJob(jobId);
-      if (!currentJob) {
-        throw new Error(`Job ${jobId} not found in local DB`);
-      }
+      // Get queued requests for this job from the offline queue
+      const queuedRequests = await offlineQueue.getQueuedRequestsForJob(jobId);
+      const authToken = (await getAccessToken()) ?? undefined;
 
-      // Find tasks with pending changes (where lastUpdated > lastSynced)
-      const pendingTasks = currentJob.tasks.filter(task => 
-        task.lastUpdated && task.lastSynced && task.lastUpdated > task.lastSynced
-      );
-      
-      if (pendingTasks.length > 0) {
-        console.log(`Syncing ${pendingTasks.length} pending tasks for job ${jobId}`);
-        
-        // Send each pending task update to API
-        for (const task of pendingTasks) {
-          try {
-            await api.patch(`/jobs/tasks/${task.id}`, task);
-          } catch (error) {
-            console.error(`Failed to sync task ${task.id}:`, error);
-            throw error; // Fail fast if any task sync fails
-          }
+      if (queuedRequests.length > 0) {
+        console.log(`Processing ${queuedRequests.length} queued requests for job ${jobId}`);
+        // Process each queued request - this will remove the request from the queue if successful
+        for (const request of queuedRequests) {
+          await offlineQueue.processRequest(request, authToken);
         }
       } else {
-        console.log(`No pending tasks found for job ${jobId}`);
+        console.log(`No queued requests found for job ${jobId}`);
       }
 
-      // Now fetch fresh data from API
-      const job = await fetchJobByIdFromApi(jobId);
-      if (job) {
-        // Save to IndexedDB and mark as synced
-        await jobsDB.saveJob(job);
-
-        // Load job with sync status from DB and update store
-        const jobWithSyncStatus = await jobsDB.getJob(jobId);
-        set({ currentJob: jobWithSyncStatus });
-      }
+      // Always fetch fresh data from API after sync attempt
+      await get().refreshJob(jobId);
     } catch (error) {
-      console.error("Failed to force refresh job:", error);
+      console.error("Failed to force sync job:", error);
       throw error;
     }
   },
@@ -205,8 +187,8 @@ const useJobStore = create<JobStore>((set, get) => ({
     // Save to IndexedDB and update sync status asynchronously
     const currentJob = get().currentJob;
     if (currentJob?.id === jobId) {
-      await jobsDB.saveJob(currentJob, true); // Preserve pending status when updating locally
-      await jobsDB.updateJobLastUpdated(jobId);
+      // Don't update the lastSynced time when updating locally
+      await jobsDB.saveJob(currentJob, false);
       set({ currentJob });
     }
   },
@@ -215,31 +197,24 @@ const useJobStore = create<JobStore>((set, get) => ({
   updateJobTask: async (jobId: number, jobTaskId: number, updates: Partial<IJobTask>) => {
     let updatedCurrentJob = get().currentJob;
     if (updatedCurrentJob?.id === jobId) {
-      const now = Date.now();
       updatedCurrentJob = {
         ...updatedCurrentJob,
         tasks: updatedCurrentJob.tasks.map((task) => {
           if (task.id === jobTaskId) {
-            // Mark this specific task as updated
-            return { 
-              ...task, 
+            return {
+              ...task,
               ...updates,
-              lastUpdated: now,
-              lastSynced: task.lastSynced || now, // Preserve existing sync time or set to now if first time
             };
           }
           return task;
         }),
-        lastUpdated: now, // Mark job as updated too
       };
     }
 
     // Save updated job to IndexedDB with updated timestamp
     if (updatedCurrentJob) {
-      // Save the entire job (which includes the updated task with inline sync status)
-      await jobsDB.saveJob(updatedCurrentJob, true);
-      // Mark the job as having unsaved changes
-      await jobsDB.updateJobLastUpdated(jobId);
+      // Don't update the lastSynced time when updating locally
+      await jobsDB.saveJob(updatedCurrentJob, false);
     }
 
     set(() => ({ currentJob: updatedCurrentJob }));

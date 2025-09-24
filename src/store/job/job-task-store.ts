@@ -14,9 +14,9 @@ interface JobTaskStore {
   sendTaskEmail: (taskId: number, status: EJobTaskStatus) => Promise<void>;
 }
 
-const updateTaskApi = async (taskId: number, updates: Partial<IJobTask>): Promise<IJobTask | null> => {
+const updateTaskApi = async (jobId: number, taskId: number, updates: Partial<IJobTask>): Promise<IJobTask | null> => {
   try {
-    const result = await api.patch(`/jobs/tasks/${taskId}`, updates);
+    const result = await api.patch(`/jobs/${jobId}/tasks/${taskId}`, updates);
     const updatedTask: IJobTask = result.data;
     return updatedTask;
   } catch (error) {
@@ -29,9 +29,13 @@ const updateTaskApi = async (taskId: number, updates: Partial<IJobTask>): Promis
   }
 };
 
-const sendEmailApi = async (emailRequest: IScheduleEmailRequest): Promise<boolean | null> => {
+const sendEmailApi = async (
+  jobId: number,
+  taskId: number,
+  emailRequest: IScheduleEmailRequest,
+): Promise<boolean | null> => {
   try {
-    await api.post("/email/schedule", emailRequest);
+    await api.post(`/jobs/${jobId}/tasks/${taskId}/email`, emailRequest);
     return true;
   } catch (error) {
     if (isRetryableError(error)) {
@@ -75,7 +79,7 @@ const useJobTaskStore = create<JobTaskStore>(() => ({
     const updateType = getUpdateMessage();
 
     try {
-      await toast.while(updateTaskApi(taskId, updates), {
+      await toast.while(updateTaskApi(task.jobId, taskId, updates), {
         loading: `Saving ${updateType}...`,
         success: (data) => {
           if (data === null) {
@@ -142,7 +146,7 @@ const useJobTaskStore = create<JobTaskStore>(() => ({
       const previousStatus = task.status;
       updateJobTask(currentJob.id, task.id, { status });
 
-      await toast.while(sendEmailApi(emailRequest), {
+      await toast.while(sendEmailApi(task.jobId, task.id, emailRequest), {
         loading: "Sending email...",
         success: (data) => {
           if (data === null) {

@@ -3,28 +3,36 @@ import { useEffect, useState } from "react";
 import useJobStore from "@/store/job/job-store";
 import useJobSyncStore from "@/store/job/job-sync-store";
 import { Badge } from "../ui/badge";
+import { offlineQueue } from "@/lib/offline-queue";
 
 export function JobSyncStatus() {
   const { currentJob } = useJobStore();
   const { syncState } = useJobSyncStore();
   const [currentTime, setCurrentTime] = useState(Date.now());
+  const [hasPendingUpdates, setHasPendingUpdates] = useState(false);
 
-  // Update current time every minute to refresh the "time ago" display
+  // Check queue for pending requests
   useEffect(() => {
-    const interval = setInterval(() => {
+    if (!currentJob) return;
+
+    const checkQueue = async () => {
+      const hasPending = await offlineQueue.jobHasPendingRequests(currentJob.id);
+      setHasPendingUpdates(hasPending);
       setCurrentTime(Date.now());
-    }, 5000); // Check for changes every 5 seconds
+    };
+
+    checkQueue();
+    const interval = setInterval(checkQueue, 2000); // Check every 5 seconds
 
     return () => clearInterval(interval);
-  }, []);
+  }, [currentJob]);
 
   // Only show if we have a job with sync status (from local DB)
-  if (!currentJob || !currentJob.lastSynced) {
+  if (!currentJob?.lastSynced) {
     return;
   }
 
-  const lastSynced = currentJob.lastSynced || 0;
-  const hasPendingUpdates = (currentJob.lastUpdated || 0) > lastSynced;
+  const lastSynced = currentJob.lastSynced;
 
   const formatTime = (timestamp: number) => {
     const date = new Date(timestamp);

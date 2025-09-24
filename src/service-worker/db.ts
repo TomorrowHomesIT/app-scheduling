@@ -30,7 +30,6 @@ export const swInitIndexedDB = (): Promise<IDBDatabase> => {
       if (!db.objectStoreNames.contains(JOBS_STORE_NAME)) {
         console.log("Service Worker: Creating jobs store:", JOBS_STORE_NAME);
         const jobsStore = db.createObjectStore(JOBS_STORE_NAME, { keyPath: "id" });
-        jobsStore.createIndex("lastUpdated", "lastUpdated", { unique: false });
         jobsStore.createIndex("lastSynced", "lastSynced", { unique: false });
       }
     };

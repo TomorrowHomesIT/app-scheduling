@@ -39,6 +39,7 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
   }, [isAuthenticated, loadOwners, loadSuppliers, loadTaskStages, syncUserJobs]);
 
   // Handle service worker auth - setup on login, clear on logout
+  // TODO this doesn't look to handle refreshed token? Or d
   useEffect(() => {
     const handleServiceWorkerAuth = async () => {
       if (isAuthLoading) return;

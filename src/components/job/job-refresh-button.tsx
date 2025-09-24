@@ -2,7 +2,8 @@ import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/store/toast-store";
 import useJobStore from "@/store/job/job-store";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { offlineQueue } from "@/lib/offline-queue";
 
 interface JobRefreshButtonProps {
   jobId: number;
@@ -10,20 +11,36 @@ interface JobRefreshButtonProps {
 
 export function JobRefreshButton({ jobId }: JobRefreshButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const { currentJob, refreshJob, forceSyncLocalJob } = useJobStore();
+  const [hasPendingInQueue, setHasPendingInQueue] = useState(false);
+  const { currentJob, refreshJob, syncAndRefreshJob } = useJobStore();
 
-  if (!currentJob?.lastSynced || !currentJob.lastUpdated) {
+  // Check queue for pending requests for this job
+  useEffect(() => {
+    const checkQueue = async () => {
+      const hasPending = await offlineQueue.jobHasPendingRequests(jobId);
+      setHasPendingInQueue(hasPending);
+    };
+
+    checkQueue();
+    // Re-check every 2 seconds to catch queue changes
+    const interval = setInterval(checkQueue, 2000);
+
+    return () => clearInterval(interval);
+  }, [jobId]);
+
+  if (!currentJob) {
     return null;
   }
 
-  const hasPendingUpdates = currentJob.lastUpdated > currentJob.lastSynced;
-  
+  // Check both queue and local changes
+  const hasPendingUpdates = hasPendingInQueue;
+
   const handleRefresh = async () => {
     setIsLoading(true);
     try {
       if (hasPendingUpdates) {
         // Force refresh: sync pending changes then refresh
-        await toast.while(forceSyncLocalJob(jobId), {
+        await toast.while(syncAndRefreshJob(jobId), {
           loading: "Syncing changes and refreshing job...",
           success: "Job synced and refreshed successfully",
           error: "Failed to sync and refresh job",
@@ -44,14 +61,16 @@ export function JobRefreshButton({ jobId }: JobRefreshButtonProps) {
   };
 
   return (
-    <Button 
-      variant="outline" 
-      size="icon" 
-      onClick={handleRefresh} 
+    <Button
+      variant="outline"
+      size="icon"
+      onClick={handleRefresh}
       disabled={isLoading}
       title={hasPendingUpdates ? "Sync changes and refresh" : "Refresh job"}
     >
-      <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""} ${hasPendingUpdates ? "text-orange-500" : ""}`} />
+      <RefreshCw
+        className={`h-4 w-4 ${isLoading ? "animate-spin" : ""} ${hasPendingUpdates ? "text-orange-500" : ""}`}
+      />
     </Button>
   );
 }

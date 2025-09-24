@@ -26,7 +26,7 @@ const useJobSyncStore = create<JobSyncStore>((set, get) => {
     console.log("Sync status changed in job sync store");
     const { currentJob, loadJob } = useJobStore.getState();
     if (currentJob) {
-      loadJob(currentJob.id, false);
+      loadJob(currentJob.id);
     }
 
     set({

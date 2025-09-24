@@ -2,7 +2,6 @@ import { create } from "zustand";
 import type { IJob, IJobTask } from "@/models/job.model";
 import { toast } from "@/store/toast-store";
 import { getApiErrorMessage } from "@/lib/api/error";
-import useLoadingStore from "@/store/loading-store";
 import { jobsDB } from "@/lib/jobs-db";
 import api from "@/lib/api/api";
 import offlineQueue from "@/lib/offline-queue";
@@ -12,8 +11,7 @@ interface JobStore {
   currentJob: IJob | null;
 
   fetchUserJobsFromApi: () => Promise<IJob[]>;
-  loadUserJobs: (withLoading?: boolean) => Promise<void>;
-  loadJob: (id: number, withLoading?: boolean) => Promise<void>;
+  loadJob: (id: number) => Promise<void>;
   setCurrentJob: (job: IJob | null) => void;
   updateJobTask: (jobId: number, taskId: number, updates: Partial<IJobTask>) => Promise<void>;
   refreshJob: (jobId: number) => Promise<void>;
@@ -46,36 +44,7 @@ const useJobStore = create<JobStore>((set, get) => ({
     }
   },
 
-  loadUserJobs: async (withLoading = true) => {
-    const loading = useLoadingStore.getState();
-    // TODO: this is probably not a ideal solution, we should just call loading where we need with load jobs etc.
-    if (withLoading) {
-      loading.setLoading("jobs", true);
-    }
-
-    try {
-      const userJobs = await get().fetchUserJobsFromApi();
-      for (const job of userJobs) {
-        await jobsDB.saveJob(job);
-      }
-      loading.setLoaded("jobs", true);
-    } catch (error) {
-      const errorMessage = await getApiErrorMessage(error);
-      loading.setError("jobs", errorMessage);
-      throw error;
-    } finally {
-      if (withLoading) {
-        loading.setLoading("jobs", false);
-      }
-    }
-  },
-
-  loadJob: async (id: number, withLoading = true) => {
-    const loading = useLoadingStore.getState();
-    if (withLoading) {
-      loading.setLoading("currentJob", true);
-    }
-
+  loadJob: async (id: number) => {
     try {
       /** Load the job from the DB, it may have been updated by sync */
       const localJob = await jobsDB.getJob(id);
@@ -92,10 +61,6 @@ const useJobStore = create<JobStore>((set, get) => ({
     } catch (error) {
       toast.error(await getApiErrorMessage(error, "Failed to load job"));
       throw error;
-    } finally {
-      if (withLoading) {
-        loading.setLoading("currentJob", false);
-      }
     }
   },
 

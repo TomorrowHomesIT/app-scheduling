@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/client";
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
 import offlineQueue from "@/lib/offline-queue";
 import { jobsDB } from "@/lib/jobs-db";
+import { clearServiceWorkerAuth, setupServiceWorkerAuth } from "@/lib/service-worker-auth";
+import { swVisibilityNotifier } from "@/lib/sw-visibility-notifier";
 
 interface AuthContextType {
   isAuthLoading: boolean;
@@ -28,6 +30,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const supabase = createClient();
 
+  /**
+   * Common tasks to be handled when Supabase lets us know the user is authenticated
+   */
   const handleLogin = useCallback(async () => {
     setIsAuthenticated(true);
     setIsAuthLoading(false);
@@ -44,17 +49,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       data: { session },
     } = await supabase.auth.getSession();
     setAccessToken(session?.access_token || null);
+
+    if (session?.access_token) {
+      await setupServiceWorkerAuth(session.access_token);
+      swVisibilityNotifier.initialize();
+    }
   }, [supabase.auth]);
 
+  /**
+   * Common tasks to be handled when Supabase lets us know the user is logged out
+   */
   const handleLogout = useCallback(async () => {
     setIsAuthenticated(false);
     setIsAuthLoading(false);
     setUser(null);
     setAccessToken(null);
+    // Database
     await offlineQueue.clearQueue();
     await jobsDB.clearAll();
+    // Service worker
+    clearServiceWorkerAuth();
+    swVisibilityNotifier.destroy();
   }, []);
 
+  /**
+   * Listen for auth state changes - fires on page load and when user logs in/out
+   */
   useEffect(() => {
     const {
       data: { subscription },

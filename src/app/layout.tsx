@@ -8,59 +8,37 @@ import type { ReactNode } from "react";
 import useTaskStore from "@/store/task-store";
 import useLoadingStore from "@/store/loading-store";
 import { Spinner } from "@/components/ui/spinner";
-import { setupServiceWorkerAuth, clearServiceWorkerAuth } from "@/lib/service-worker-auth";
 import useJobSyncStore from "@/store/job/job-sync-store";
-import { swVisibilityNotifier } from "@/lib/sw-visibility-notifier";
 
 /** Function is required so that useSidebar is used within the context */
 function AppLayoutContent({ children }: { children: ReactNode }) {
   const { isSidebarOpen, setIsSidebarOpen } = useSidebar();
-  const { isAuthenticated, getAccessToken, isAuthLoading } = useAuth();
+  const { isAuthenticated } = useAuth();
   const { loadOwners } = useOwnersStore();
   const { loadSuppliers } = useSupplierStore();
   const { loadTaskStages } = useTaskStore();
-  const { isLoading } = useLoadingStore();
+  const { isLoading, setLoading } = useLoadingStore();
   const { syncUserJobs } = useJobSyncStore();
+
   // Bootstrap core data when user is authenticated (runs when isAuthenticated changes)
   useEffect(() => {
     if (!isAuthenticated) return;
 
     const bootstrapCoreData = async () => {
+      setLoading(true);
       try {
         console.log("Bootstrapping core data...");
         await Promise.all([loadOwners(), syncUserJobs(), loadSuppliers(), loadTaskStages()]);
         console.log("Core data bootstrapped successfully");
       } catch (error) {
         console.error("Failed to bootstrap core data:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
     bootstrapCoreData();
-  }, [isAuthenticated, loadOwners, loadSuppliers, loadTaskStages, syncUserJobs]);
-
-  // Handle service worker auth - setup on login, clear on logout
-  // TODO this doesn't look to handle refreshed token? Or d
-  useEffect(() => {
-    const handleServiceWorkerAuth = async () => {
-      if (isAuthLoading) return;
-
-      if (isAuthenticated) {
-        const accessToken = getAccessToken();
-        if (accessToken) {
-          await setupServiceWorkerAuth(accessToken);
-          swVisibilityNotifier.initialize();
-          console.log("Service worker auth setup complete");
-        }
-      } else {
-        // Clear auth when user logs out
-        clearServiceWorkerAuth();
-        swVisibilityNotifier.destroy();
-        console.log("Service worker auth cleared");
-      }
-    };
-
-    handleServiceWorkerAuth();
-  }, [isAuthenticated, getAccessToken, isAuthLoading]);
+  }, [isAuthenticated, loadOwners, loadSuppliers, loadTaskStages, syncUserJobs, setLoading]);
 
   // Show full loading screen during initial data loading
   if (isLoading && isAuthenticated) {

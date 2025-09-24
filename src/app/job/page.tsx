@@ -1,4 +1,4 @@
-import { useEffect, Suspense } from "react";
+import { useEffect, Suspense, useState } from "react";
 import { useNavigate, Link } from "react-router";
 import { EJobTaskProgress } from "@/models/job.model";
 import { Accordion, AccordionContent, AccordionHeader, AccordionItem } from "@/components/ui/accordion";
@@ -13,16 +13,14 @@ import { JobTaskStatus } from "@/components/job/job-task-status";
 import { JobTaskTableHeader } from "@/components/job/job-task-table-header";
 import { JobSyncStatus } from "@/components/job/job-sync-status";
 import { JobRefreshButton } from "@/components/job/job-refresh-button";
-import useLoadingStore from "@/store/loading-store";
 import { useParams } from "react-router";
 
 function JobDetailContent() {
   const navigate = useNavigate();
   const { id } = useParams();
-
+  const [isLoading, setIsLoading] = useState(false);
   const { taskStages } = useTaskStore();
   const { currentJob, loadJob } = useJobStore();
-  const jobLoadingState = useLoadingStore((state) => state.currentJob);
 
   // Redirect to jobs list if no jobId
   useEffect(() => {
@@ -35,9 +33,12 @@ function JobDetailContent() {
 
     const loadCurrentJob = async (id: number) => {
       try {
+        setIsLoading(true);
         await loadJob(id);
       } catch {
         navigate("/404");
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -50,13 +51,10 @@ function JobDetailContent() {
     }
   }, [id, currentJob, loadJob, navigate]);
 
-  if (!currentJob || jobLoadingState.isLoading) {
+  if (!currentJob || isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-full">
         <Spinner variant="default" size="xl" />
-        <div className="text-center mt-3">
-          <p className="text-xs text-gray-600">{jobLoadingState.message}</p>
-        </div>
       </div>
     );
   }

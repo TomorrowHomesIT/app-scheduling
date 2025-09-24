@@ -2,10 +2,10 @@ import { create } from "zustand";
 import type { ISupplier } from "@/models/supplier.model";
 import { toast } from "./toast-store";
 import { getApiErrorMessage } from "@/lib/api/error";
-import useLoadingStore from "@/store/loading-store";
 import api from "@/lib/api/api";
 
 interface SupplierStore {
+  isLoading: boolean;
   suppliers: ISupplier[];
   activeSuppliers: ISupplier[];
   archivedSuppliers: ISupplier[];
@@ -14,15 +14,14 @@ interface SupplierStore {
 }
 
 const useSupplierStore = create<SupplierStore>((set, get) => ({
+  isLoading: false,
   suppliers: [],
   activeSuppliers: [],
   archivedSuppliers: [],
 
   loadSuppliers: async () => {
-    const loading = useLoadingStore.getState();
-    if (loading.suppliers.isLoading) return;
-
-    loading.setLoading("suppliers", true);
+    if (get().isLoading) return;
+    set({ isLoading: true });
 
     try {
       const response = await api.get(`/suppliers`);
@@ -32,13 +31,11 @@ const useSupplierStore = create<SupplierStore>((set, get) => ({
       const archivedSuppliers = suppliers.filter((supplier) => !supplier.active);
 
       set({ suppliers, activeSuppliers, archivedSuppliers });
-      loading.setLoaded("suppliers", true);
     } catch (error) {
-      const errorMessage = await getApiErrorMessage(error);
-      loading.setError("suppliers", errorMessage);
+      const errorMessage = await getApiErrorMessage(error, "Error loading suppliers");
       toast.error(errorMessage);
     } finally {
-      loading.setLoading("suppliers", false);
+      set({ isLoading: false });
     }
   },
 

@@ -1,34 +1,32 @@
 import { create } from "zustand";
 import type { IOwner } from "@/models/owner.model";
 import { toast } from "@/store/toast-store";
-import useLoadingStore from "@/store/loading-store";
+import { getApiErrorMessage } from "@/lib/api/error";
 import api from "@/lib/api/api";
 
 interface OwnersStore {
   owners: IOwner[];
+  isLoading: boolean;
   loadOwners: () => Promise<void>;
 }
 
-const useOwnersStore = create<OwnersStore>((set) => ({
+const useOwnersStore = create<OwnersStore>((set, get) => ({
   owners: [],
+  isLoading: false,
 
   loadOwners: async () => {
-    const loading = useLoadingStore.getState();
-
-    if (loading.owners.isLoading) return;
-    loading.setLoading("owners", true);
+    if (get().isLoading) return;
+    set({ isLoading: true });
 
     try {
       const response = await api.get("/owners");
       const owners: IOwner[] = response.data;
       set({ owners });
-      loading.setLoaded("owners", true);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to fetch owners";
-      loading.setError("owners", errorMessage);
-      toast.error("Failed to fetch owners");
+      const errorMessage = await getApiErrorMessage(error, "Failed to fetch owners");
+      toast.error(errorMessage);
     } finally {
-      loading.setLoading("owners", false);
+      set({ isLoading: false });
     }
   },
 }));

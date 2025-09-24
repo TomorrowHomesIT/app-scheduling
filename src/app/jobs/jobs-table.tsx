@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router";
 import type { IOwner } from "@/models/owner.model";
 import { Folder, MapPin } from "lucide-react";
-import { Button } from "../../components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface JobsTableProps {

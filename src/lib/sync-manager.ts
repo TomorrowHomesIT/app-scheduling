@@ -6,19 +6,23 @@
  */
 
 import useJobStore from "@/store/job/job-store";
+import useSupplierStore from "@/store/supplier-store";
 import { isUserAuthenticated } from "@/lib/supabase/client";
 import { jobsDB } from "@/lib/jobs-db";
 import { offlineQueue } from "@/lib/offline-queue";
 import type { IJob } from "@/models";
 
 interface SyncConfig {
-  syncIntervalMs: number;
+  jobSyncIntervalMs: number;
+  supplierSyncIntervalMs: number;
   storageKey: string;
 }
 
 interface SyncState {
   lastSync: number;
+  lastSupplierSync: number;
   isSyncing: boolean;
+  isSupplierSyncing: boolean;
   isOnline: boolean;
   isVisible: boolean;
 }
@@ -27,18 +31,22 @@ class SyncManager {
   private config: SyncConfig;
   private state: SyncState;
   private intervalId: NodeJS.Timeout | null = null;
+  private supplierIntervalId: NodeJS.Timeout | null = null;
   private syncCallbacks: Array<(isSyncing: boolean) => void> = [];
 
   constructor(config: Partial<SyncConfig> = {}) {
     this.config = {
-      syncIntervalMs: 1 * 60 * 1000, // 30 minutes
+      jobSyncIntervalMs: 30 * 60 * 1000, // 30 minutes
+      supplierSyncIntervalMs: 12 * 60 * 60 * 1000, // 12 hours
       storageKey: "app-sync-state",
       ...config,
     };
 
     this.state = {
       lastSync: this.getStoredLastSync(),
+      lastSupplierSync: this.getStoredLastSupplierSync(),
       isSyncing: false,
+      isSupplierSyncing: false,
       isOnline: navigator.onLine,
       isVisible: !document.hidden,
     };
@@ -57,6 +65,16 @@ class SyncManager {
     }
   }
 
+  private getStoredLastSupplierSync(): number {
+    try {
+      const stored = localStorage.getItem(`${this.config.storageKey}-suppliers`);
+      return stored ? parseInt(stored, 10) : 0;
+    } catch (error) {
+      console.warn("Failed to read supplier sync state from localStorage:", error);
+      return 0;
+    }
+  }
+
   private setStoredLastSync(timestamp: number): void {
     try {
       localStorage.setItem(this.config.storageKey, timestamp.toString());
@@ -66,13 +84,23 @@ class SyncManager {
     }
   }
 
+  private setStoredLastSupplierSync(timestamp: number): void {
+    try {
+      localStorage.setItem(`${this.config.storageKey}-suppliers`, timestamp.toString());
+      this.state.lastSupplierSync = timestamp;
+    } catch (error) {
+      console.warn("Failed to write supplier sync state to localStorage:", error);
+    }
+  }
+
   private setupEventListeners(): void {
     // Listen for visibility changes
     document.addEventListener("visibilitychange", () => {
       this.state.isVisible = !document.hidden;
       if (this.state.isVisible) {
         console.log("App became visible - checking if sync needed");
-        this.triggerSyncIfNeeded("visibility");
+        this.triggerJobSyncIfNeeded("visibility");
+        this.triggerSupplierSyncIfNeeded("visibility");
       }
     });
 
@@ -80,7 +108,8 @@ class SyncManager {
     window.addEventListener("online", () => {
       this.state.isOnline = true;
       console.log("App came online - checking if sync needed");
-      this.triggerSyncIfNeeded("online");
+      this.triggerJobSyncIfNeeded("online");
+      this.triggerSupplierSyncIfNeeded("online");
     });
 
     window.addEventListener("offline", () => {
@@ -96,14 +125,15 @@ class SyncManager {
 
     this.intervalId = setInterval(() => {
       if (this.state.isVisible && this.state.isOnline) {
-        this.triggerSyncIfNeeded("interval");
+        this.triggerJobSyncIfNeeded("interval");
+        this.triggerSupplierSyncIfNeeded("interval");
       }
-    }, this.config.syncIntervalMs);
+    }, this.config.jobSyncIntervalMs);
 
-    console.log(`Started periodic sync (every ${this.config.syncIntervalMs / 60000} minutes)`);
+    console.log(`Started periodic sync (every ${this.config.jobSyncIntervalMs / 60000} minutes)`);
   }
 
-  private async triggerSyncIfNeeded(reason: string): Promise<void> {
+  private async triggerJobSyncIfNeeded(reason: string): Promise<void> {
     if (this.state.isSyncing) {
       console.log(`Sync already in progress - skipping ${reason} trigger`);
       return;
@@ -117,8 +147,9 @@ class SyncManager {
     const now = Date.now();
     const timeSinceLastSync = now - this.state.lastSync;
 
-    const syncIsDue = timeSinceLastSync >= this.config.syncIntervalMs;
+    const syncIsDue = timeSinceLastSync >= this.config.jobSyncIntervalMs;
     const justCameOnline = reason === "online";
+
     if (!syncIsDue && !justCameOnline) {
       console.log(`Sync interval active - skipping ${reason} trigger (${Math.round(timeSinceLastSync / 1000)}s ago)`);
       return;
@@ -126,6 +157,36 @@ class SyncManager {
 
     console.log(`Triggering sync due to ${reason} (${Math.round(timeSinceLastSync / 1000)}s since last sync)`);
     await this.performUserJobsSync();
+  }
+
+  private async triggerSupplierSyncIfNeeded(reason: string): Promise<void> {
+    if (this.state.isSupplierSyncing) {
+      console.log(`Supplier sync already in progress - skipping ${reason} trigger`);
+      return;
+    }
+
+    if (!this.state.isOnline) {
+      console.log(`App is offline - skipping ${reason} supplier trigger`);
+      return;
+    }
+
+    const now = Date.now();
+    const timeSinceLastSupplierSync = now - this.state.lastSupplierSync;
+
+    const supplierSyncIsDue = timeSinceLastSupplierSync >= this.config.supplierSyncIntervalMs;
+    const justCameOnline = reason === "online";
+
+    if (!supplierSyncIsDue && !justCameOnline) {
+      console.log(
+        `Supplier sync interval active - skipping ${reason} trigger (${Math.round(timeSinceLastSupplierSync / 1000)}s ago)`,
+      );
+      return;
+    }
+
+    console.log(
+      `Triggering supplier sync due to ${reason} (${Math.round(timeSinceLastSupplierSync / 1000)}s since last sync)`,
+    );
+    await this.performSupplierSync();
   }
 
   private async performUserJobsSync(): Promise<void> {
@@ -211,6 +272,33 @@ class SyncManager {
     }
   }
 
+  private async performSupplierSync(): Promise<void> {
+    if (this.state.isSupplierSyncing) return;
+
+    const isAuthenticated = await isUserAuthenticated();
+    if (!isAuthenticated) {
+      console.log("User not authenticated - aborting supplier sync");
+      return;
+    }
+
+    console.log("Starting supplier sync...");
+    this.state.isSupplierSyncing = true;
+
+    try {
+      // Use the supplier store's loadSuppliers method
+      const { loadSuppliers } = useSupplierStore.getState();
+      await loadSuppliers();
+
+      // Update last supplier sync timestamp
+      this.setStoredLastSupplierSync(Date.now());
+      console.log("Supplier sync completed successfully");
+    } catch (error) {
+      console.error("Supplier sync failed:", error);
+    } finally {
+      this.state.isSupplierSyncing = false;
+    }
+  }
+
   private notifySyncCallbacks(isSyncing: boolean): void {
     this.syncCallbacks.forEach((callback) => {
       try {
@@ -247,14 +335,27 @@ class SyncManager {
     return this.state.lastSync;
   }
 
+  public getLastSupplierSyncTime(): number {
+    return this.state.lastSupplierSync;
+  }
+
   public isSyncingNow(): boolean {
     return this.state.isSyncing;
+  }
+
+  public isSupplierSyncingNow(): boolean {
+    return this.state.isSupplierSyncing;
   }
 
   public destroy(): void {
     if (this.intervalId) {
       clearInterval(this.intervalId);
       this.intervalId = null;
+    }
+
+    if (this.supplierIntervalId) {
+      clearInterval(this.supplierIntervalId);
+      this.supplierIntervalId = null;
     }
 
     document.removeEventListener("visibilitychange", () => {});

@@ -51,7 +51,7 @@ function JobDetailContent() {
     }
 
     if (currentJob) {
-      document.title = `${currentJob.name} | BASD On-Site`;
+      document.title = `${currentJob.name} | BASD Onsite`;
     }
   }, [id, currentJob, loadJob, navigate]);
 

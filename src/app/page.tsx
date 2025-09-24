@@ -18,7 +18,7 @@ export default function HomePage() {
   const { isAuthenticated, isAuthLoading } = useAuth();
 
   useEffect(() => {
-    document.title = "BASD On-Site";
+    document.title = "BASD Onsite";
   }, []);
 
   if (isAuthLoading) {

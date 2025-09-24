@@ -3,7 +3,6 @@ import {
   DB_VERSION,
   JOBS_STORE_NAME,
   QUEUE_STORE_NAME,
-  TASKS_STORE_NAME,
   type QueuedRequest,
 } from "@/models/db.model";
 
@@ -48,15 +47,6 @@ class OfflineQueue {
           const jobsStore = db.createObjectStore(JOBS_STORE_NAME, { keyPath: "id" });
           jobsStore.createIndex("lastUpdated", "lastUpdated", { unique: false });
           jobsStore.createIndex("lastSynced", "lastSynced", { unique: false });
-        }
-
-        // Create tasks store if it doesn't exist
-        if (!db.objectStoreNames.contains(TASKS_STORE_NAME)) {
-          console.log("Creating tasks store:", TASKS_STORE_NAME);
-          const tasksStore = db.createObjectStore(TASKS_STORE_NAME, { keyPath: "id" });
-          tasksStore.createIndex("jobId", "jobId", { unique: false });
-          tasksStore.createIndex("lastUpdated", "lastUpdated", { unique: false });
-          tasksStore.createIndex("lastSynced", "lastSynced", { unique: false });
         }
       };
     });

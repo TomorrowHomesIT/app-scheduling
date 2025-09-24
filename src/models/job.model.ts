@@ -33,6 +33,10 @@ export interface IJobTask {
   purchaseOrderLinks: IJobTaskUrl[];
   planLinks: IJobTaskUrl[];
   order: number;
+
+  // Optional sync status properties - only present when task has local changes
+  lastUpdated?: number;
+  lastSynced?: number;
 }
 
 export enum EJobTaskProgress {

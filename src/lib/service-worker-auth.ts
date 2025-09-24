@@ -4,17 +4,9 @@
  * Handles passing auth tokens to service workers for API calls
  */
 
-let lastToken: string | null = null;
 
 // Function to send token to service worker
 export const broadcastToken = async (token: string): Promise<void> => {
-  console.log("Broadcasting token to service worker:", token);
-  if (lastToken === token) {
-    return;
-  }
-
-  lastToken = token;
-
   if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
     navigator.serviceWorker.controller.postMessage({
       type: "AUTH_TOKEN_UPDATE",

@@ -2,11 +2,9 @@ import {
   DB_NAME,
   DB_VERSION,
   JOBS_STORE_NAME,
-  TASKS_STORE_NAME,
   type StoredJob,
-  type StoredTask,
 } from "@/models/db.model";
-import type { IJob, IJobTask } from "@/models/job.model";
+import type { IJob } from "@/models/job.model";
 
 class JobsDB {
   private db: IDBDatabase | null = null;
@@ -43,7 +41,7 @@ class JobsDB {
   }
 
   // Job operations
-  async saveJob(job: IJob): Promise<void> {
+  async saveJob(job: IJob, preservePendingStatus: boolean = false): Promise<void> {
     await this.ensureDBReady();
 
     return new Promise((resolve, reject) => {
@@ -53,25 +51,40 @@ class JobsDB {
         return;
       }
 
-      const storedJob: StoredJob = {
-        id: job.id,
-        data: job,
-        lastUpdated: Date.now(),
-        lastSynced: Date.now(),
-      };
-
       const transaction = this.db.transaction([JOBS_STORE_NAME], "readwrite");
       const store = transaction.objectStore(JOBS_STORE_NAME);
-      const putRequest = store.put(storedJob);
+      
+      // Get existing job to check sync status
+      const getRequest = store.get(job.id);
+      
+      getRequest.onsuccess = async () => {
+        const existingJob = getRequest.result as StoredJob | undefined;
+        const now = Date.now();
+        
+        const storedJob: StoredJob = {
+          id: job.id,
+          data: job,
+          lastUpdated: preservePendingStatus && existingJob && existingJob.lastUpdated > existingJob.lastSynced
+            ? now  // Keep it marked as updated if it had pending changes
+            : job.lastUpdated || now,
+          lastSynced: preservePendingStatus && existingJob && existingJob.lastUpdated > existingJob.lastSynced
+            ? existingJob.lastSynced  // Preserve the old sync time if it had pending changes
+            : job.lastSynced || now,
+        };
 
-      putRequest.onsuccess = () => {
-        console.log("Successfully saved job to IndexedDB:", job.id);
-        resolve();
+        const putRequest = store.put(storedJob);
+
+        putRequest.onsuccess = () => {
+          console.log("Successfully saved job to IndexedDB:", job.id);
+          resolve();
+        };
+        putRequest.onerror = () => {
+          console.error("Failed to save job to IndexedDB:", putRequest.error);
+          reject(putRequest.error);
+        };
       };
-      putRequest.onerror = () => {
-        console.error("Failed to save job to IndexedDB:", putRequest.error);
-        reject(putRequest.error);
-      };
+      
+      getRequest.onerror = () => reject(getRequest.error);
     });
   }
 
@@ -163,61 +176,6 @@ class JobsDB {
     });
   }
 
-  // Task operations
-  async saveTask(jobId: number, task: IJobTask): Promise<void> {
-    await this.ensureDBReady();
-
-    return new Promise((resolve, reject) => {
-      if (!this.db) {
-        reject(new Error("Database not initialized"));
-        return;
-      }
-
-      const storedTask: StoredTask = {
-        id: task.id,
-        jobId: jobId,
-        data: task,
-        lastUpdated: Date.now(),
-        lastSynced: Date.now(),
-      };
-
-      const transaction = this.db.transaction([TASKS_STORE_NAME], "readwrite");
-      const store = transaction.objectStore(TASKS_STORE_NAME);
-      const putRequest = store.put(storedTask);
-
-      putRequest.onsuccess = () => resolve();
-      putRequest.onerror = () => reject(putRequest.error);
-    });
-  }
-
-  async updateTaskLastUpdated(jobId: number, taskId: number): Promise<void> {
-    await this.ensureDBReady();
-
-    return new Promise((resolve, reject) => {
-      if (!this.db) {
-        reject(new Error("Database not initialized"));
-        return;
-      }
-
-      const transaction = this.db.transaction([TASKS_STORE_NAME], "readwrite");
-      const store = transaction.objectStore(TASKS_STORE_NAME);
-      const getRequest = store.get(taskId);
-
-      getRequest.onsuccess = () => {
-        const storedTask = getRequest.result as StoredTask;
-        if (storedTask && storedTask.jobId === jobId) {
-          storedTask.lastUpdated = Date.now();
-          const putRequest = store.put(storedTask);
-          putRequest.onsuccess = () => resolve();
-          putRequest.onerror = () => reject(putRequest.error);
-        } else {
-          resolve();
-        }
-      };
-
-      getRequest.onerror = () => reject(getRequest.error);
-    });
-  }
 
   // Check if there are pending updates (local changes not yet synced)
   async hasPendingUpdates(): Promise<boolean> {
@@ -229,44 +187,33 @@ class JobsDB {
         return;
       }
 
-      const transaction = this.db.transaction([JOBS_STORE_NAME, TASKS_STORE_NAME], "readonly");
+      const transaction = this.db.transaction([JOBS_STORE_NAME], "readonly");
       const jobsStore = transaction.objectStore(JOBS_STORE_NAME);
-      const tasksStore = transaction.objectStore(TASKS_STORE_NAME);
 
-      let pendingJobs = 0;
-      let pendingTasks = 0;
-      let completed = 0;
-
-      const checkComplete = () => {
-        completed++;
-        if (completed === 2) {
-          resolve(pendingJobs > 0 || pendingTasks > 0);
-        }
-      };
-
-      // Check jobs
       const jobsRequest = jobsStore.getAll();
       jobsRequest.onsuccess = () => {
         const jobs = (jobsRequest.result as StoredJob[]) || [];
-        pendingJobs = jobs.filter((job) => job.lastUpdated > job.lastSynced).length;
-        checkComplete();
+        // Check if any job has pending changes at the job level OR task level
+        const hasPending = jobs.some((job) => {
+          // Job level changes
+          if (job.lastUpdated > job.lastSynced) return true;
+          
+          // Task level changes (check inline task sync status)
+          if (job.data.tasks) {
+            return job.data.tasks.some(task => 
+              task.lastUpdated && task.lastSynced && task.lastUpdated > task.lastSynced
+            );
+          }
+          return false;
+        });
+        resolve(hasPending);
       };
       jobsRequest.onerror = () => reject(jobsRequest.error);
-
-      // Check tasks
-      const tasksRequest = tasksStore.getAll();
-      tasksRequest.onsuccess = () => {
-        const tasks = (tasksRequest.result as StoredTask[]) || [];
-        pendingTasks = tasks.filter((task) => task.lastUpdated > task.lastSynced).length;
-        checkComplete();
-      };
-      tasksRequest.onerror = () => reject(tasksRequest.error);
     });
   }
 
-  // Clear all data (useful for logout or disabling offline mode)
+  // Clear all data (useful for logout)
   async clearAll(): Promise<void> {
-    // Always allow clearing, even when offline mode is disabled
     await this.ensureDBReady();
 
     return new Promise((resolve, reject) => {
@@ -275,25 +222,18 @@ class JobsDB {
         return;
       }
 
-      const transaction = this.db.transaction([JOBS_STORE_NAME, TASKS_STORE_NAME], "readwrite");
-      const jobsStore = transaction.objectStore(JOBS_STORE_NAME);
-      const tasksStore = transaction.objectStore(TASKS_STORE_NAME);
+      const transaction = this.db.transaction([JOBS_STORE_NAME], "readwrite");
+      const store = transaction.objectStore(JOBS_STORE_NAME);
 
-      let completed = 0;
-      const checkComplete = () => {
-        completed++;
-        if (completed === 2) {
-          resolve();
-        }
+      const clearRequest = store.clear();
+      clearRequest.onsuccess = () => {
+        console.log("Cleared all jobs from IndexedDB");
+        resolve();
       };
-
-      const clearJobsRequest = jobsStore.clear();
-      clearJobsRequest.onsuccess = () => checkComplete();
-      clearJobsRequest.onerror = () => reject(clearJobsRequest.error);
-
-      const clearTasksRequest = tasksStore.clear();
-      clearTasksRequest.onsuccess = () => checkComplete();
-      clearTasksRequest.onerror = () => reject(clearTasksRequest.error);
+      clearRequest.onerror = () => {
+        console.error("Failed to clear jobs:", clearRequest.error);
+        reject(clearRequest.error);
+      };
     });
   }
 }

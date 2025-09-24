@@ -1,4 +1,4 @@
-import { useEffect, Suspense } from "react";
+import { useEffect, Suspense, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { createClient } from "@/lib/supabase/client";
 import type { EmailOtpType } from "@supabase/supabase-js";
@@ -7,12 +7,19 @@ import { Spinner } from "@/components/ui/spinner";
 function ConfirmContent() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const hasProcessed = useRef(false);
 
   useEffect(() => {
+    if (hasProcessed.current) {
+      return;
+    }
+
     const confirmAuth = async () => {
       const token_hash = searchParams.get("token_hash");
       const type = searchParams.get("type") as EmailOtpType | null;
       const next = searchParams.get("next") ?? "/";
+
+      console.log("Auth via callback");
 
       if (token_hash && type) {
         const supabase = createClient();
@@ -32,6 +39,7 @@ function ConfirmContent() {
       }
     };
 
+    hasProcessed.current = true;
     confirmAuth();
   }, [navigate, searchParams]);
 

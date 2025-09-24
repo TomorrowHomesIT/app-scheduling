@@ -1,4 +1,4 @@
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, Suspense } from "react";
 import { useNavigate, Link } from "react-router";
 import { EJobTaskProgress } from "@/models/job.model";
 import { Accordion, AccordionContent, AccordionHeader, AccordionItem } from "@/components/ui/accordion";
@@ -24,23 +24,20 @@ function JobDetailContent() {
   const { currentJob, loadJob } = useJobStore();
   const jobLoadingState = useLoadingStore((state) => state.currentJob);
 
-  const [error, setError] = useState<boolean>(false);
-
   // Redirect to jobs list if no jobId
   useEffect(() => {
     const parsedJobId = id ? parseInt(id, 10) : null;
 
     if (!parsedJobId || Number.isNaN(parsedJobId)) {
-      navigate("/jobs");
+      navigate("/404");
       return;
     }
 
     const loadCurrentJob = async (id: number) => {
       try {
         await loadJob(id);
-      } catch (error) {
-        setError(true);
-        console.error(error);
+      } catch {
+        navigate("/404");
       }
     };
 
@@ -53,19 +50,7 @@ function JobDetailContent() {
     }
   }, [id, currentJob, loadJob, navigate]);
 
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full">
-        <div className="text-center mt-3">
-          <h2 className="text-2xl font-bold text-gray-900">Job not found</h2>
-          <p className="text-gray-600 mt-2">The job you're looking for doesn't exist.</p>
-          <Link to="/jobs" className="text-blue-600 hover:text-blue-800 mt-4 inline-block">
-            ← Back to Jobs
-          </Link>
-        </div>
-      </div>
-    );
-  } else if (!currentJob || jobLoadingState.isLoading) {
+  if (!currentJob || jobLoadingState.isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-full">
         <Spinner variant="default" size="xl" />

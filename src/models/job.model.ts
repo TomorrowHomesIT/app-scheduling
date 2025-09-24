@@ -56,23 +56,3 @@ export interface IJobTaskStage {
   name: string;
   order: number;
 }
-
-export interface ICreateJobRequest {
-  name: string;
-  location: string;
-  ownerId: number;
-  tasks: {
-    taskId: number;
-    name: string;
-    taskStageId: number;
-    docTags: string[];
-    order: number;
-    costCenter: number;
-  }[];
-}
-
-export interface IUpdateJobRequest {
-  name: string;
-  location?: string;
-  ownerId: number;
-}

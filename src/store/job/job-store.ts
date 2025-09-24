@@ -1,8 +1,7 @@
 import { create } from "zustand";
-import type { IJob, IJobTask, IUpdateJobRequest } from "@/models/job.model";
+import type { IJob, IJobTask } from "@/models/job.model";
 import { toast } from "@/store/toast-store";
 import { getApiErrorMessage } from "@/lib/api/error";
-import useOwnersStore from "@/store/owners-store";
 import useLoadingStore from "@/store/loading-store";
 import { jobsDB } from "@/lib/jobs-db";
 import api from "@/lib/api/api";
@@ -16,11 +15,9 @@ interface JobStore {
   loadUserJobs: (withLoading?: boolean) => Promise<void>;
   loadJob: (id: number, withLoading?: boolean) => Promise<void>;
   setCurrentJob: (job: IJob | null) => void;
-  updateJob: (jobId: number, updates: IUpdateJobRequest) => Promise<void>;
   updateJobTask: (jobId: number, taskId: number, updates: Partial<IJobTask>) => Promise<void>;
   refreshJob: (jobId: number) => Promise<void>;
   syncAndRefreshJob: (jobId: number) => Promise<void>;
-  syncJobWithDrive: (jobId: number) => Promise<void>;
 }
 
 const fetchJobByIdFromApi = async (id: number): Promise<IJob | null> => {
@@ -30,18 +27,6 @@ const fetchJobByIdFromApi = async (id: number): Promise<IJob | null> => {
     return job;
   } catch (error) {
     console.error("Error fetching job:", error);
-    throw error;
-  }
-};
-
-const updateJobApi = async (jobId: number, updates: IUpdateJobRequest): Promise<boolean | null> => {
-  try {
-    const response = await api.patch(`/jobs/${jobId}`, updates);
-    const updatedJob: boolean = response.data;
-
-    return updatedJob;
-  } catch (error) {
-    console.error("Error updating job:", error);
     throw error;
   }
 };
@@ -106,6 +91,7 @@ const useJobStore = create<JobStore>((set, get) => ({
       }
     } catch (error) {
       toast.error(await getApiErrorMessage(error, "Failed to load job"));
+      throw error;
     } finally {
       if (withLoading) {
         loading.setLoading("currentJob", false);
@@ -160,39 +146,6 @@ const useJobStore = create<JobStore>((set, get) => ({
     }
   },
 
-  updateJob: async (jobId: number, updates: IUpdateJobRequest) => {
-    await toast.while(updateJobApi(jobId, updates), {
-      loading: "Updating job...",
-      success: "Job updated",
-      error: "Failed to update job",
-    });
-
-    const ownersStore = useOwnersStore.getState();
-    if (updates.name) {
-      ownersStore.setJobName(jobId, updates.name);
-    }
-    if (updates.ownerId !== undefined) {
-      ownersStore.setJobOwner(jobId, updates.ownerId);
-    }
-
-    // Update the store state
-    set((state) => {
-      const updatedCurrentJob = state.currentJob?.id === jobId ? { ...state.currentJob, ...updates } : state.currentJob;
-
-      return {
-        currentJob: updatedCurrentJob,
-      };
-    });
-
-    // Save to IndexedDB and update sync status asynchronously
-    const currentJob = get().currentJob;
-    if (currentJob?.id === jobId) {
-      // Don't update the lastSynced time when updating locally
-      await jobsDB.saveJob(currentJob, false);
-      set({ currentJob });
-    }
-  },
-
   // Sync the job with the updated task
   updateJobTask: async (jobId: number, taskId: number, updates: Partial<IJobTask>) => {
     let updatedCurrentJob = get().currentJob;
@@ -218,23 +171,6 @@ const useJobStore = create<JobStore>((set, get) => ({
     }
 
     set(() => ({ currentJob: updatedCurrentJob }));
-  },
-
-  syncJobWithDrive: async (jobId: number) => {
-    const { setLoading } = useLoadingStore.getState();
-    setLoading("currentJob", true, "Syncing with Google Drive. This may take a while...");
-
-    try {
-      const response = await api.post(`/jobs/${jobId}/sync-drive`);
-      const data = response.data;
-
-      toast.success(`Job created and synced with Google Drive. Updated ${data?.updatedTasks || 0} task(s).`, 5000);
-      await get().loadJob(jobId);
-    } catch (error) {
-      toast.error(await getApiErrorMessage(error, "Failed to sync with Google Drive"));
-    } finally {
-      setLoading("currentJob", false);
-    }
   },
 }));
 

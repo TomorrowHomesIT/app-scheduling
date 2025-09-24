@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { IOwner, IOwnerJob } from "@/models/owner.model";
+import type { IOwner } from "@/models/owner.model";
 import { toast } from "@/store/toast-store";
 import useLoadingStore from "@/store/loading-store";
 import api from "@/lib/api/api";
@@ -7,8 +7,6 @@ import api from "@/lib/api/api";
 interface OwnersStore {
   owners: IOwner[];
   loadOwners: () => Promise<void>;
-  setJobName: (jobId: number, name: string) => void;
-  setJobOwner: (jobId: number, ownerId: number) => void;
 }
 
 const useOwnersStore = create<OwnersStore>((set) => ({
@@ -32,38 +30,6 @@ const useOwnersStore = create<OwnersStore>((set) => ({
     } finally {
       loading.setLoading("owners", false);
     }
-  },
-
-  setJobName: (jobId: number, name: string) => {
-    set((state) => ({
-      owners: state.owners.map((owner) => ({
-        ...owner,
-        jobs: owner.jobs?.map((job) => (job.id === jobId ? { ...job, name } : job)),
-      })),
-    }));
-  },
-
-  setJobOwner: (jobId: number, newOwnerId: number) => {
-    set((state) => {
-      const matchingJob = state.owners.flatMap((owner) => owner.jobs).find((job) => job?.id === jobId);
-      if (!matchingJob) return state;
-
-      const updatedJob: IOwnerJob = { ...matchingJob, ownerId: newOwnerId };
-
-      // Update owners: remove job from old owner, add to new owner
-      return {
-        owners: state.owners.map((owner) => {
-          // Remove job from any current owner
-          const filteredJobs = owner.jobs?.filter((j) => j.id !== jobId) || [];
-
-          if (owner.id === newOwnerId) {
-            return { ...owner, jobs: [...filteredJobs, updatedJob] };
-          }
-
-          return { ...owner, jobs: filteredJobs };
-        }),
-      };
-    });
   },
 }));
 

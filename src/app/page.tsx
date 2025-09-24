@@ -4,6 +4,7 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 import { useAuth } from "@/components/auth/auth-context";
 import { Spinner } from "@/components/ui/spinner";
 import { useNavigate } from "react-router";
+import { useEffect } from "react";
 
 interface NavigationCard {
   title: string;
@@ -15,6 +16,10 @@ interface NavigationCard {
 export default function HomePage() {
   const navigate = useNavigate();
   const { isAuthenticated, isAuthLoading } = useAuth();
+
+  useEffect(() => {
+    document.title = "BASD On-Site";
+  }, []);
 
   if (isAuthLoading) {
     return (

@@ -17,7 +17,7 @@ interface JobStore {
   loadJob: (id: number, withLoading?: boolean) => Promise<void>;
   setCurrentJob: (job: IJob | null) => void;
   updateJob: (jobId: number, updates: IUpdateJobRequest) => Promise<void>;
-  updateJobTask: (jobId: number, jobTaskId: number, updates: Partial<IJobTask>) => Promise<void>;
+  updateJobTask: (jobId: number, taskId: number, updates: Partial<IJobTask>) => Promise<void>;
   refreshJob: (jobId: number) => Promise<void>;
   syncAndRefreshJob: (jobId: number) => Promise<void>;
   syncJobWithDrive: (jobId: number) => Promise<void>;
@@ -194,13 +194,13 @@ const useJobStore = create<JobStore>((set, get) => ({
   },
 
   // Sync the job with the updated task
-  updateJobTask: async (jobId: number, jobTaskId: number, updates: Partial<IJobTask>) => {
+  updateJobTask: async (jobId: number, taskId: number, updates: Partial<IJobTask>) => {
     let updatedCurrentJob = get().currentJob;
     if (updatedCurrentJob?.id === jobId) {
       updatedCurrentJob = {
         ...updatedCurrentJob,
         tasks: updatedCurrentJob.tasks.map((task) => {
-          if (task.id === jobTaskId) {
+          if (task.id === taskId) {
             return {
               ...task,
               ...updates,

@@ -28,7 +28,7 @@ export default defineConfig({
       includeAssets: ["favicon.ico", "icon-192x192.png", "icon-512x512.png"],
       manifest: {
         name: "BASD On-Site",
-        short_name: "On-Site",
+        short_name: "BASD On-Site",
         description: "Construction application designed for on-site use",
         theme_color: "#122601",
         background_color: "#ffffff",

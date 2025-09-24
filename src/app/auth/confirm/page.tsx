@@ -19,7 +19,7 @@ function ConfirmContent() {
       const type = searchParams.get("type") as EmailOtpType | null;
       const next = searchParams.get("next") ?? "/";
 
-      console.log("Auth via callback");
+      console.log("Auth via confirm");
 
       if (token_hash && type) {
         const supabase = createClient();

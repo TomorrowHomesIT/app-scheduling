@@ -14,6 +14,8 @@ function CallbackContent() {
       return;
     }
 
+    console.log("Auth via callback");
+
     const handleCallback = async () => {
       const code = searchParams.get("code");
       const next = searchParams.get("next") ?? "/";

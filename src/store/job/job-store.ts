@@ -140,7 +140,7 @@ const useJobStore = create<JobStore>((set, get) => ({
     try {
       // Get queued requests for this job from the offline queue
       const queuedRequests = await offlineQueue.getQueuedRequestsForJob(jobId);
-      const authToken = (await getAccessToken()) ?? undefined;
+      const authToken = getAccessToken() ?? undefined;
 
       if (queuedRequests.length > 0) {
         console.log(`Processing ${queuedRequests.length} queued requests for job ${jobId}`);

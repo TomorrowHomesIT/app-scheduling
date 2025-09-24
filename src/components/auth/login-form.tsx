@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Link } from "react-router";
 import { useNavigate } from "react-router";
 import { useState } from "react";
-import { useAuth } from "./auth-context";
 import { GoogleButton } from "./google-button";
 
 export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
@@ -15,7 +14,6 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -25,12 +23,12 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
     setError(null);
 
     try {
+      // This will trigger the auth state change listener in the auth context to login
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       if (error) throw error;
-      login();
       navigate("/");
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");

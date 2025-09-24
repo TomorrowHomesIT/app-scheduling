@@ -45,7 +45,7 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
       if (isAuthLoading) return;
 
       if (isAuthenticated) {
-        const accessToken = await getAccessToken();
+        const accessToken = getAccessToken();
         if (accessToken) {
           await setupServiceWorkerAuth(accessToken);
           swVisibilityNotifier.initialize();

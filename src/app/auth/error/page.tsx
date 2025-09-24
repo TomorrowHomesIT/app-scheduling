@@ -1,11 +1,20 @@
-import { Suspense } from "react";
-import { useSearchParams } from "react-router";
+import { Suspense, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
+import { useAuth } from "@/components/auth/auth-context";
 
 function ErrorContent() {
   const [searchParams] = useSearchParams();
   const error = searchParams.get("error");
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/");
+    }
+  }, [isAuthenticated, navigate]);
 
   return (
     <div className="flex flex-col gap-6">

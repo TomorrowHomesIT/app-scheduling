@@ -22,6 +22,7 @@ import UpdatePasswordPage from "./auth/update-password/page";
 import CallbackPage from "./auth/callback/page";
 import ConfirmPage from "./auth/confirm/page";
 import ErrorPage from "./auth/error/page";
+import NotFoundPage from "./404/page";
 
 // Protected layout
 import { ProtectedLayout } from "@/components/auth/protected-layout";
@@ -61,8 +62,7 @@ const router = createBrowserRouter([
         ],
       },
 
-      // TODO 404 fallback
-      { path: "*", element: <HomePage /> },
+      { path: "*", element: <NotFoundPage /> },
     ],
   },
 ]);

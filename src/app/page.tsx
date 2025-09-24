@@ -1,4 +1,4 @@
-import { BookUser, Hammer, House } from "lucide-react";
+import { House } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/components/auth/auth-context";
@@ -36,22 +36,10 @@ export default function HomePage() {
 
   const navigationCards: NavigationCard[] = [
     {
-      title: "Jobs",
-      description: "View and manage all construction jobs",
+      title: "Scheduling",
+      description: "View and schedule your jobs",
       icon: <House className="h-6 w-6 text-green-100" />,
       href: "/jobs",
-    },
-    {
-      title: "Create",
-      description: "Stand up a new job",
-      icon: <Hammer className="h-6 w-6 text-green-100" />,
-      href: "/jobs/create",
-    },
-    {
-      title: "Suppliers",
-      description: "View supplier information",
-      icon: <BookUser className="h-6 w-6 text-green-100" />,
-      href: "/suppliers",
     },
   ];
 

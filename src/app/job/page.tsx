@@ -1,11 +1,10 @@
 import { useEffect, useState, Suspense } from "react";
 import { useNavigate, Link } from "react-router";
-import { EJobTaskProgress, type IUpdateJobRequest } from "@/models/job.model";
+import { EJobTaskProgress } from "@/models/job.model";
 import { Accordion, AccordionContent, AccordionHeader, AccordionItem } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { JobTaskTable } from "@/components/job/job-task-table";
-import { JobEditModal } from "@/components/modals/job-edit/job-edit-modal";
-import { Settings, HardDrive } from "lucide-react";
+import { HardDrive } from "lucide-react";
 import useJobStore from "@/store/job/job-store";
 import useTaskStore from "@/store/task-store";
 import { Spinner } from "@/components/ui/spinner";
@@ -22,8 +21,7 @@ function JobDetailContent() {
   const { id } = useParams();
 
   const { taskStages } = useTaskStore();
-  const { currentJob, loadJob, updateJob } = useJobStore();
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const { currentJob, loadJob } = useJobStore();
   const jobLoadingState = useLoadingStore((state) => state.currentJob);
 
   const [error, setError] = useState<boolean>(false);
@@ -86,10 +84,6 @@ function JobDetailContent() {
   const totalTasks = currentJob.tasks.length;
   const completedTasks = currentJob.tasks.filter((task) => task.progress === EJobTaskProgress.Completed).length;
 
-  const handleUpdateJob = async (jobId: number, updates: IUpdateJobRequest) => {
-    await updateJob(jobId, updates);
-  };
-
   return (
     <div className="flex flex-col h-full">
       <div className="border-b bg-background">
@@ -114,9 +108,6 @@ function JobDetailContent() {
               </Button>
             </Link>
           )}
-          <Button variant="outline" size="icon" className="flex" onClick={() => setIsEditModalOpen(true)}>
-            <Settings className="h-4 w-4" />
-          </Button>
         </PageHeader>
       </div>
 
@@ -140,13 +131,6 @@ function JobDetailContent() {
           })}
         </Accordion>
       </div>
-
-      <JobEditModal
-        job={currentJob}
-        onSave={handleUpdateJob}
-        open={isEditModalOpen}
-        onOpenChange={setIsEditModalOpen}
-      />
     </div>
   );
 }

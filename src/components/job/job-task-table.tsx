@@ -7,10 +7,8 @@ import { EmailStatusTrigger } from "@/components/modals/send-email/send-email-mo
 import { ProgressTrigger } from "@/components/modals/progress/progress-modal";
 import { SupplierTrigger } from "@/components/modals/supplier/supplier-modal";
 import { FileLinkModalTrigger } from "@/components/modals/file-link/file-link-modal";
-import { JobTaskEditTrigger } from "./job-task-edit-trigger";
 import { CTaskProgressConfig } from "@/models/job.const";
 import useJobTaskStore from "@/store/job/job-task-store";
-import useJobStore from "@/store/job/job-store";
 
 interface JobTaskTableProps {
   tasks: IJobTask[];
@@ -18,7 +16,6 @@ interface JobTaskTableProps {
 
 export function JobTaskTable({ tasks }: JobTaskTableProps) {
   const { updateTask, sendTaskEmail } = useJobTaskStore();
-  const { loadJob } = useJobStore();
 
   const handleDateChange = async (taskId: number, date: Date | undefined) => {
     await updateTask(taskId, { startDate: date ?? null });
@@ -49,20 +46,6 @@ export function JobTaskTable({ tasks }: JobTaskTableProps) {
     await updateTask(taskId, { planLinks: links });
   };
 
-  const handleTaskDetailsChange = async (taskId: number, updates: Partial<IJobTask>) => {
-    // Convert docTags to null if empty array for consistency
-    const processedUpdates = {
-      ...updates,
-      docTags: updates.docTags && updates.docTags.length === 0 ? null : updates.docTags,
-    };
-    await updateTask(taskId, processedUpdates);
-  };
-
-  const handleTaskSync = async (jobId: number) => {
-    // after sync reload the job to show the updated task
-    await loadJob(jobId);
-  };
-
   return (
     <div className="overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0">
       <Table className="min-w-[900px] lg:min-w-full">
@@ -77,9 +60,7 @@ export function JobTaskTable({ tasks }: JobTaskTableProps) {
                   className="sticky left-2 z-15 bg-white w-22 sm:w-28 lg:w-48 xl:w-64 font-medium truncate after:absolute after:right-0 after:top-0 after:bottom-0 after:w-px after:bg-gray-200"
                   title={task.name}
                 >
-                  <JobTaskEditTrigger task={task} onSave={handleTaskDetailsChange} onSync={handleTaskSync}>
-                    <span className="block truncate max-w-[120px] lg:max-w-none">{task.name}</span>
-                  </JobTaskEditTrigger>
+                  <span className="block truncate max-w-[120px] lg:max-w-none">{task.name}</span>
                 </TableCell>
                 <TableCell className="w-28 lg:w-36 p-0">
                   <SupplierTrigger

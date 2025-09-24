@@ -23,7 +23,7 @@ createRoot(domNode).render(
 registerSW({
   onNeedRefresh() {
     console.log("New content available, will refresh when all tabs are closed");
-    
+
     // Use app store to show the update dialog
     useAppStore.getState().showServiceWorkerUpdateDialog();
   },

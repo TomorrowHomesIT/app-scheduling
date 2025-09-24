@@ -9,8 +9,6 @@ import useAppStore from "@/store/app.store";
 import HomePage from "./page";
 import JobsPage from "./jobs/page";
 import JobPage from "./job/page";
-import CreateJobPage from "./jobs/create/page";
-import SuppliersPage from "./suppliers/page";
 import SettingsPage from "./settings/page";
 import OfflinePage from "./offline/page";
 
@@ -42,9 +40,7 @@ const router = createBrowserRouter([
         element: <ProtectedLayout />,
         children: [
           { path: "jobs", element: <JobsPage /> },
-          { path: "jobs/create", element: <CreateJobPage /> },
           { path: "jobs/:id", element: <JobPage /> },
-          { path: "suppliers", element: <SuppliersPage /> },
           { path: "settings", element: <SettingsPage /> },
         ],
       },
@@ -83,7 +79,7 @@ function Root() {
         </AppLayout>
       </div>
       <ToastContainer />
-      
+
       {/* Global Service Worker Update Dialog */}
       <ConfirmationModal
         open={showUpdateDialog}

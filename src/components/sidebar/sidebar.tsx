@@ -97,7 +97,7 @@ function SidebarContentInner({ onJobSelect }: { onJobSelect?: () => void }) {
   return (
     <>
       <button type="button" onClick={() => navigate("/")}>
-        <Logo className="border-b p-4" />
+        <Logo text="Scheduling" className="border-b p-4" />
       </button>
 
       <div className="p-4">

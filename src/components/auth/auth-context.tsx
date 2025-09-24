@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/client";
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
 import offlineQueue from "@/lib/offline-queue";
 import { jobsDB } from "@/lib/jobs-db";
-import { clearServiceWorkerAuth, setupServiceWorkerAuth } from "@/lib/service-worker-auth";
+import { clearServiceWorkerAuth, sendAuthToServiceWorker } from "@/lib/service-worker-auth";
 import { swVisibilityNotifier } from "@/lib/sw-visibility-notifier";
 
 interface AuthContextType {
@@ -51,7 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAccessToken(session?.access_token || null);
 
     if (session?.access_token) {
-      await setupServiceWorkerAuth(session.access_token);
+      await sendAuthToServiceWorker(session.access_token);
       swVisibilityNotifier.initialize();
     }
   }, [supabase.auth]);

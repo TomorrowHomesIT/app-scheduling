@@ -5,7 +5,7 @@
  */
 
 // Function to send token to service worker
-export const broadcastToken = async (token: string): Promise<void> => {
+const broadcastTokenToServiceWorker = async (token: string): Promise<void> => {
   if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
     navigator.serviceWorker.controller.postMessage({
       type: "AUTH_TOKEN_UPDATE",
@@ -15,7 +15,7 @@ export const broadcastToken = async (token: string): Promise<void> => {
 };
 
 // Setup service worker auth - call this after successful login/registration
-export const setupServiceWorkerAuth = async (token: string): Promise<void> => {
+export const sendAuthToServiceWorker = async (token: string): Promise<void> => {
   if (!("serviceWorker" in navigator)) {
     console.warn("Service Worker not supported");
     return;
@@ -25,11 +25,11 @@ export const setupServiceWorkerAuth = async (token: string): Promise<void> => {
   await navigator.serviceWorker.ready;
 
   // Send token immediately if service worker is already controlling
-  await broadcastToken(token);
+  await broadcastTokenToServiceWorker(token);
 
   // Listen for when service worker becomes active/changes
   const handleControllerChange = async () => {
-    await broadcastToken(token);
+    await broadcastTokenToServiceWorker(token);
   };
 
   // Remove any existing listener to avoid duplicates

@@ -19,13 +19,12 @@ const isRetryableError = (status: number): boolean => {
 self.addEventListener("fetch", (event: FetchEvent) => {
   const url = new URL(event.request.url);
 
-  const isApiRequest = url.pathname.includes("/api/") && !url.pathname.includes("/auth/");
-  if (!isApiRequest) {
+  // We only include task updates and email at this time
+  const isRetryableRequest = url.pathname.includes("/api/email") || url.pathname.includes("/api/jobs/tasks");
+  if (!isRetryableRequest) {
     console.log(`Not an API request, skipping: ${event.request.method} ${event.request.url}`);
     return;
   }
-
-  console.log(`Intercepting API request: ${event.request.method} ${event.request.url}`);
 
   event.respondWith(
     (async () => {

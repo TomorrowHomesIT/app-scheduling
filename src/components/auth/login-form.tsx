@@ -40,7 +40,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
   };
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div className={cn("flex flex-col gap-3", className)} {...props}>
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">Login</CardTitle>
@@ -83,7 +83,6 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? "Logging in..." : "Login"}
                 </Button>
-                <GoogleButton isSignUp={false} />
               </div>
             </div>
             <div className="mt-4 text-center text-sm">
@@ -95,6 +94,8 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
           </form>
         </CardContent>
       </Card>
+      <div className="text-center text-sm text-muted-foreground">or</div>
+      <GoogleButton isSignUp={false} />
     </div>
   );
 }

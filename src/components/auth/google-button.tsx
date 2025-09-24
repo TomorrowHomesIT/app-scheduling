@@ -29,6 +29,7 @@ export function GoogleButton({ isSignUp }: { isSignUp: boolean }) {
       variant="outline"
       disabled={isLoading}
       type="button"
+      size="lg"
       className="w-full bg-transparent"
       onClick={onHandleOAuth}
     >

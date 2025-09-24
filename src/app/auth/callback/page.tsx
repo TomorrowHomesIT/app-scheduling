@@ -27,9 +27,11 @@ function CallbackContent() {
         if (!error) {
           navigate(next);
         } else {
+          console.log("Error exchanging code for session, navigating to error");
           navigate("/auth/error");
         }
       } else {
+        console.log("No code found, navigating to error");
         navigate("/auth/error");
       }
     };

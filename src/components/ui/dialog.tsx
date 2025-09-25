@@ -45,6 +45,8 @@ function DialogContent({ className, children, showCloseButton = true, ...props }
     setTimeout(() => {
       if (autoFocusElement instanceof HTMLElement) {
         autoFocusElement.focus();
+        autoFocusElement.click();
+        autoFocusElement.focus();
       }
     }, 200);
     // Fix for iPad/touch devices - handle touch events properly

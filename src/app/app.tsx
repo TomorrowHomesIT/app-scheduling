@@ -2,8 +2,6 @@ import { createBrowserRouter, Outlet, RouterProvider } from "react-router";
 import { AppLayout } from "./layout";
 import { ToastContainer } from "@/components/toast-container";
 import { StatusIndicator } from "@/components/status-indicator";
-import { ConfirmationModal } from "@/components/modals/confirm/confirm-modal";
-import useAppStore from "@/store/app.store";
 
 // Import all your pages (hard loaded, not lazy)
 import HomePage from "./page";
@@ -69,8 +67,6 @@ const router = createBrowserRouter([
 ]);
 
 function Root() {
-  const { showUpdateDialog, hideServiceWorkerUpdateDialog, confirmServiceWorkerUpdate } = useAppStore();
-
   return (
     <div className="flex flex-col basd-h-dvh">
       <StatusIndicator />
@@ -80,18 +76,6 @@ function Root() {
         </AppLayout>
       </div>
       <ToastContainer />
-
-      {/* Global Service Worker Update Dialog */}
-      <ConfirmationModal
-        open={showUpdateDialog}
-        onOpenChange={hideServiceWorkerUpdateDialog}
-        title="App Update Available"
-        description="A new version of the app is available. Would you like to refresh to get the latest updates?"
-        confirmText="Update Now"
-        cancelText="Later"
-        onConfirm={confirmServiceWorkerUpdate}
-        onCancel={hideServiceWorkerUpdateDialog}
-      />
     </div>
   );
 }

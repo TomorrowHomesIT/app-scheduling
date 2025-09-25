@@ -11,6 +11,7 @@ import { isUserAuthenticated } from "@/lib/supabase/client";
 import { jobsDB } from "@/lib/jobs-db";
 import { offlineQueue } from "@/lib/offline-queue";
 import type { IJob } from "@/models";
+import useOwnersStore from "@/store/owners-store";
 
 interface SyncConfig {
   jobSyncIntervalMs: number;
@@ -229,6 +230,7 @@ class SyncManager {
 
     try {
       const userJobs: IJob[] = await fetchUserJobsFromApi();
+      useOwnersStore.getState().syncOwnerUserJobs(userJobs);
       const localJobs = await jobsDB.getAllJobs();
       const localJobsMap = new Map(localJobs.map((job) => [job.id, job]));
 

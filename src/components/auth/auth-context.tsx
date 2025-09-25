@@ -100,6 +100,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // We mainly just want to ensure the auth token is as up to date as possible for the service worker
         setAccessTokenFromSession();
       }
+
+      setIsAuthLoading(false);
     });
 
     return () => {

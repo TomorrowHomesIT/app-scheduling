@@ -1,65 +1,79 @@
-import type React from "react";
-import {
-  Description,
-  DialogBackdrop,
-  Dialog as HeadlessDialog,
-  DialogPanel,
-  DialogTitle as HeadlessDialogTitle,
-  CloseButton,
-} from "@headlessui/react";
-import { cn } from "@/lib/utils";
+"use client";
+
+import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { XIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useEffect, useRef } from "react";
 
-interface DialogProps {
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  children?: React.ReactNode;
+function Dialog({ ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
+  return <DialogPrimitive.Root data-slot="dialog" {...props} />;
 }
 
-function Dialog({ open = false, onOpenChange, children }: DialogProps) {
+function DialogTrigger({ ...props }: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
+  return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />;
+}
+
+function DialogPortal({ ...props }: React.ComponentProps<typeof DialogPrimitive.Portal>) {
+  return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />;
+}
+
+function DialogClose({ ...props }: React.ComponentProps<typeof DialogPrimitive.Close>) {
+  return <DialogPrimitive.Close data-slot="dialog-close" {...props} />;
+}
+
+function DialogOverlay({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Overlay>) {
   return (
-    <HeadlessDialog
-      open={open}
-      onClose={() => onOpenChange?.(false)}
-      transition
-      className="relative z-50 transition duration-300 ease-out data-[closed]:opacity-0"
-      data-slot="dialog"
-    >
-      <DialogBackdrop className="fixed inset-0 bg-black/50" />
-      {children}
-    </HeadlessDialog>
+    <DialogPrimitive.Overlay
+      data-slot="dialog-overlay"
+      className={cn(
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50 pointer-events-none",
+        className,
+      )}
+      {...props}
+    />
   );
 }
 
-interface DialogContentProps extends React.ComponentProps<"div"> {
+function DialogContent({
+  className,
+  children,
+  showCloseButton = true,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean;
-}
-
-function DialogContent({ className, children, showCloseButton = true, ...props }: DialogContentProps) {
-  const panelRef = useRef<HTMLDivElement>(null);
+}) {
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!panelRef.current) return;
+    if (!contentRef.current) return;
 
-    const panel = panelRef.current;
-
-    // Auto-focus first input or element with data-autofocus
-    setTimeout(() => {
-      const autoFocusElement = panel.querySelector('[data-autofocus], input:not([type="hidden"]), textarea, select');
-      if (autoFocusElement instanceof HTMLElement) {
-        autoFocusElement.focus();
-      }
-    }, 100);
+    const content = contentRef.current;
 
     // Fix for iPad/touch devices - handle touch events properly
     let touchTarget: EventTarget | null = null;
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchStartTime = 0;
 
     const handleTouchStart = (e: TouchEvent) => {
       touchTarget = e.target;
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      touchStartTime = Date.now();
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
+      if (!touchTarget) return;
+
+      // Calculate if this was a drag
+      const touchEndX = e.changedTouches[0].clientX;
+      const touchEndY = e.changedTouches[0].clientY;
+      const touchDuration = Date.now() - touchStartTime;
+      const distance = Math.sqrt((touchEndX - touchStartX) ** 2 + (touchEndY - touchStartY) ** 2);
+
+      // If it was a drag (moved more than 10px or took longer than 200ms), don't trigger click
+      const isDrag = distance > 10 || touchDuration > 200;
+
       // If touching outside of an input, blur the active element
       const activeElement = document.activeElement;
       if (
@@ -73,55 +87,56 @@ function DialogContent({ className, children, showCloseButton = true, ...props }
         activeElement.blur();
       }
 
-      // Handle button/link clicks for touch devices
-      if (touchTarget === e.target && e.target instanceof HTMLElement) {
-        const clickable = (e.target as HTMLElement).closest('button, a, [role="button"], [role="menuitem"]');
+      // Handle button/link clicks for touch devices (only if not dragging)
+      if (!isDrag && touchTarget === e.target && e.target instanceof HTMLElement) {
+        const clickable = (e.target as HTMLElement).closest(
+          'button, a, [role="button"], [role="menuitem"], [role="option"], input, select, textarea',
+        );
         if (clickable && clickable instanceof HTMLElement) {
           // Dispatch a click event for touch devices
-          setTimeout(() => {
-            clickable.click();
-          }, 0);
+          setTimeout(() => clickable.click(), 0);
         }
       }
 
       touchTarget = null;
+      touchStartX = 0;
+      touchStartY = 0;
+      touchStartTime = 0;
     };
 
-    panel.addEventListener("touchstart", handleTouchStart, { passive: true });
-    panel.addEventListener("touchend", handleTouchEnd, { passive: true });
+    content.addEventListener("touchstart", handleTouchStart, { passive: true });
+    content.addEventListener("touchend", handleTouchEnd, { passive: true });
 
     return () => {
-      panel.removeEventListener("touchstart", handleTouchStart);
-      panel.removeEventListener("touchend", handleTouchEnd);
+      content.removeEventListener("touchstart", handleTouchStart);
+      content.removeEventListener("touchend", handleTouchEnd);
     };
   }, []);
 
   return (
-    /** Allows the dialog to be scrollable */
-    <div className="fixed inset-0 overflow-y-auto">
-      <div className="fixed inset-0 flex w-screen items-center justify-center p-4">
-        <DialogPanel
-          ref={panelRef}
-          className={cn(
-            "bg-background relative transform overflow-hidden rounded-lg text-left shadow-xl transition-all duration-300 ease-out data-[closed]:opacity-0 data-[closed]:scale-95 sm:my-8 sm:w-full sm:max-w-lg border p-6",
-            className,
-          )}
-          data-slot="dialog-content"
-          {...props}
-        >
-          {showCloseButton && (
-            <CloseButton
-              className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
-              data-slot="dialog-close"
-            >
-              <XIcon />
-              <span className="sr-only">Close</span>
-            </CloseButton>
-          )}
-          {children}
-        </DialogPanel>
-      </div>
-    </div>
+    <DialogPortal data-slot="dialog-portal">
+      <DialogOverlay />
+      <DialogPrimitive.Content
+        ref={contentRef}
+        data-slot="dialog-content"
+        className={cn(
+          "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg top-[5%] translate-y-0 2xl:top-[50%] 2xl:translate-y-[-50%] pointer-events-auto",
+          className,
+        )}
+        {...props}
+      >
+        {children}
+        {showCloseButton && (
+          <DialogPrimitive.Close
+            data-slot="dialog-close"
+            className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+          >
+            <XIcon />
+            <span className="sr-only">Close</span>
+          </DialogPrimitive.Close>
+        )}
+      </DialogPrimitive.Content>
+    </DialogPortal>
   );
 }
 
@@ -145,30 +160,35 @@ function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-function DialogTitle({ className, children, ...props }: React.ComponentProps<"h3">) {
+function DialogTitle({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Title>) {
   return (
-    <HeadlessDialogTitle
-      as="h3"
-      className={cn("text-lg leading-none font-semibold", className)}
+    <DialogPrimitive.Title
       data-slot="dialog-title"
+      className={cn("text-lg leading-none font-semibold", className)}
       {...props}
-    >
-      {children}
-    </HeadlessDialogTitle>
+    />
   );
 }
 
-function DialogDescription({ className, children, ...props }: React.ComponentProps<"p">) {
+function DialogDescription({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Description>) {
   return (
-    <Description
-      as="p"
-      className={cn("text-muted-foreground text-sm mb-2", className)}
+    <DialogPrimitive.Description
       data-slot="dialog-description"
+      className={cn("text-muted-foreground text-sm", className)}
       {...props}
-    >
-      {children}
-    </Description>
+    />
   );
 }
 
-export { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle };
+export {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogOverlay,
+  DialogPortal,
+  DialogTitle,
+  DialogTrigger,
+};

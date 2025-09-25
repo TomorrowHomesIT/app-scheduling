@@ -9,6 +9,7 @@ import {
 } from "@headlessui/react";
 import { cn } from "@/lib/utils";
 import { XIcon } from "lucide-react";
+import { useEffect, useRef } from "react";
 
 interface DialogProps {
   open?: boolean;
@@ -36,11 +37,71 @@ interface DialogContentProps extends React.ComponentProps<"div"> {
 }
 
 function DialogContent({ className, children, showCloseButton = true, ...props }: DialogContentProps) {
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!panelRef.current) return;
+
+    const panel = panelRef.current;
+
+    // Auto-focus first input or element with data-autofocus
+    setTimeout(() => {
+      const autoFocusElement = panel.querySelector('[data-autofocus], input:not([type="hidden"]), textarea, select');
+      if (autoFocusElement instanceof HTMLElement) {
+        autoFocusElement.focus();
+      }
+    }, 100);
+
+    // Fix for iPad/touch devices - handle touch events properly
+    let touchTarget: EventTarget | null = null;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      touchTarget = e.target;
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      // If touching outside of an input, blur the active element
+      const activeElement = document.activeElement;
+      if (
+        activeElement instanceof HTMLElement &&
+        (activeElement.tagName === "INPUT" ||
+          activeElement.tagName === "TEXTAREA" ||
+          activeElement.tagName === "SELECT") &&
+        touchTarget &&
+        !activeElement.contains(touchTarget as Node)
+      ) {
+        activeElement.blur();
+      }
+
+      // Handle button/link clicks for touch devices
+      if (touchTarget === e.target && e.target instanceof HTMLElement) {
+        const clickable = (e.target as HTMLElement).closest('button, a, [role="button"], [role="menuitem"]');
+        if (clickable && clickable instanceof HTMLElement) {
+          // Dispatch a click event for touch devices
+          setTimeout(() => {
+            clickable.click();
+          }, 0);
+        }
+      }
+
+      touchTarget = null;
+    };
+
+    panel.addEventListener("touchstart", handleTouchStart, { passive: true });
+    panel.addEventListener("touchend", handleTouchEnd, { passive: true });
+
+    return () => {
+      panel.removeEventListener("touchstart", handleTouchStart);
+      panel.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, []);
+
   return (
     /** Allows the dialog to be scrollable */
     <div className="fixed inset-0 overflow-y-auto">
       <div className="fixed inset-0 flex w-screen items-center justify-center p-4">
         <DialogPanel
+          ref={panelRef}
           className={cn(
             "bg-background relative transform overflow-hidden rounded-lg text-left shadow-xl transition-all duration-300 ease-out data-[closed]:opacity-0 data-[closed]:scale-95 sm:my-8 sm:w-full sm:max-w-lg border p-6",
             className,
@@ -48,10 +109,15 @@ function DialogContent({ className, children, showCloseButton = true, ...props }
           data-slot="dialog-content"
           {...props}
         >
-          <CloseButton data-slot="dialog-close">
-            <XIcon />
-            <span className="sr-only">Close</span>
-          </CloseButton>
+          {showCloseButton && (
+            <CloseButton
+              className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+              data-slot="dialog-close"
+            >
+              <XIcon />
+              <span className="sr-only">Close</span>
+            </CloseButton>
+          )}
           {children}
         </DialogPanel>
       </div>

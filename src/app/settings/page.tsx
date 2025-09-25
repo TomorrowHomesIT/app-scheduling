@@ -22,7 +22,7 @@ export default function SettingsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Version</CardTitle>
-            <CardDescription>Beta 1.0.2</CardDescription>
+            <CardDescription>Beta 1.0.3</CardDescription>
           </CardHeader>
         </Card>
 

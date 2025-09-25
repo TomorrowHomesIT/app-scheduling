@@ -31,32 +31,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const supabase = createClient();
 
   /**
-   * Common tasks to be handled when Supabase lets us know the user is authenticated
-   */
-  const handleLogin = useCallback(async () => {
-    setIsAuthenticated(true);
-    setIsAuthLoading(false);
-
-    const { data } = await supabase.auth.getClaims();
-    setUser({
-      id: data?.claims?.sub,
-      email: data?.claims?.email,
-      name: data?.claims?.full_name || data?.claims?.name,
-      avatar_url: data?.claims?.avatar_url,
-    });
-
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    setAccessToken(session?.access_token || null);
-
-    if (session?.access_token) {
-      await sendAuthToServiceWorker(session.access_token);
-      swVisibilityNotifier.initialize();
-    }
-  }, [supabase.auth]);
-
-  /**
    * Common tasks to be handled when Supabase lets us know the user is logged out
    */
   const handleLogout = useCallback(async () => {
@@ -72,6 +46,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     swVisibilityNotifier.destroy();
   }, []);
 
+  const setAccessTokenFromSession = useCallback(async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    setAccessToken(session?.access_token || null);
+
+    if (session?.access_token) {
+      await sendAuthToServiceWorker(session.access_token);
+    }
+
+    return session?.access_token;
+  }, [supabase.auth]);
+
+  /**
+   * Common tasks to be handled when Supabase lets us know the user is authenticated
+   */
+  const handleLogin = useCallback(async () => {
+    try {
+      setIsAuthenticated(true);
+      setIsAuthLoading(false);
+
+      const { data } = await supabase.auth.getClaims();
+      setUser({
+        id: data?.claims?.sub,
+        email: data?.claims?.email,
+        name: data?.claims?.full_name || data?.claims?.name,
+        avatar_url: data?.claims?.avatar_url,
+      });
+
+      await setAccessTokenFromSession();
+      swVisibilityNotifier.initialize();
+    } catch (error) {
+      console.error("Error during login handling:", error);
+      await handleLogout();
+      await supabase.auth.signOut();
+    }
+  }, [supabase.auth, handleLogout, setAccessTokenFromSession]);
+
   /**
    * Listen for auth state changes - fires on page load and when user logs in/out
    */
@@ -81,15 +93,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_OUT" || (event === "TOKEN_REFRESHED" && !session)) {
         handleLogout();
-      } else if (event === "SIGNED_IN" || (event === "TOKEN_REFRESHED" && session)) {
+      } else if (!isAuthenticated && event === "SIGNED_IN") {
         handleLogin();
+      } else if (event === "SIGNED_IN" || (event === "TOKEN_REFRESHED" && session)) {
+        // This event fires quite often from Supabase, i.e. even on visibilty change.
+        // We mainly just want to ensure the auth token is as up to date as possible for the service worker
+        setAccessTokenFromSession();
       }
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [supabase.auth, handleLogin, handleLogout]);
+  }, [supabase.auth, handleLogin, handleLogout, setAccessTokenFromSession, isAuthenticated]);
 
   const logout = async () => {
     await supabase.auth.signOut();

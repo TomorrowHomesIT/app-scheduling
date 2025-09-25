@@ -22,7 +22,6 @@ self.addEventListener("fetch", (event: FetchEvent) => {
   // We only include task updates and email at this time
   const isRetryableRequest = url.pathname.includes("/api/jobs/") && url.pathname.includes("/tasks/");
   if (!isRetryableRequest) {
-    console.log(`SW not handling request: ${event.request.method} ${event.request.url}`);
     return;
   }
 

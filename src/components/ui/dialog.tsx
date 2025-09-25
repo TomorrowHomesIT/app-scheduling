@@ -41,53 +41,48 @@ function DialogContent({ className, children, showCloseButton = true, ...props }
     // Auto-focus first input or element with data-autofocus
     // Use multiple attempts for PWA mode and iPad where timing can be different
     const autoFocusElement = content.querySelector('[data-autofocus], input:not([type="hidden"]), textarea, select');
-    if (autoFocusElement instanceof HTMLElement && document.activeElement !== autoFocusElement) {
-      autoFocusElement.focus();
-      // For iOS/iPad, sometimes we need to trigger additional events
-      autoFocusElement.click();
-      autoFocusElement.focus();
-    }
-
+    const focusAttempts = [];
+    setTimeout(() => {
+      if (autoFocusElement instanceof HTMLElement) {
+        autoFocusElement.focus();
+      }
+    }, 200);
     // Fix for iPad/touch devices - handle touch events properly
-    let touchTarget: EventTarget | null = null;
-    let touchStartX = 0;
-    let touchStartY = 0;
-    let touchStartTime = 0;
+    const touchTarget: EventTarget | null = null;
+    const touchStartX = 0;
+    const touchStartY = 0;
+    const touchStartTime = 0;
 
     const handleTouchStart = (e: TouchEvent) => {
-      touchTarget = e.target;
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
-      touchStartTime = Date.now();
+      // touchTarget = e.target;
+      // touchStartX = e.touches[0].clientX;
+      // touchStartY = e.touches[0].clientY;
+      // touchStartTime = Date.now();
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
-      if (!touchTarget) return;
-
-      // Calculate if this was a drag
-      const touchEndX = e.changedTouches[0].clientX;
-      const touchEndY = e.changedTouches[0].clientY;
-      const touchDuration = Date.now() - touchStartTime;
-      const distance = Math.sqrt((touchEndX - touchStartX) ** 2 + (touchEndY - touchStartY) ** 2);
-
-      // If it was a drag (moved more than 10px or took longer than 200ms), don't trigger click
-      const isDrag = distance > 10 || touchDuration > 200;
-
-      // Handle button/link clicks for touch devices (only if not dragging)
-      if (!isDrag && touchTarget === e.target && e.target instanceof HTMLElement) {
-        const clickable = (e.target as HTMLElement).closest(
-          'button, a, [role="button"], [role="menuitem"], [role="option"], input, select, textarea',
-        );
-        if (clickable && clickable instanceof HTMLElement) {
-          // Dispatch a click event for touch devices
-          setTimeout(() => clickable.click(), 0);
-        }
-      }
-
-      touchTarget = null;
-      touchStartX = 0;
-      touchStartY = 0;
-      touchStartTime = 0;
+      // if (!touchTarget) return;
+      // // Calculate if this was a drag
+      // const touchEndX = e.changedTouches[0].clientX;
+      // const touchEndY = e.changedTouches[0].clientY;
+      // const touchDuration = Date.now() - touchStartTime;
+      // const distance = Math.sqrt((touchEndX - touchStartX) ** 2 + (touchEndY - touchStartY) ** 2);
+      // // If it was a drag (moved more than 10px or took longer than 200ms), don't trigger click
+      // const isDrag = distance > 10 || touchDuration > 200;
+      // // Handle button/link clicks for touch devices (only if not dragging)
+      // if (!isDrag && touchTarget === e.target && e.target instanceof HTMLElement) {
+      //   const clickable = (e.target as HTMLElement).closest(
+      //     'button, a, [role="button"], [role="menuitem"], [role="option"], input, select, textarea',
+      //   );
+      //   if (clickable && clickable instanceof HTMLElement) {
+      //     // Dispatch a click event for touch devices
+      //     setTimeout(() => clickable.click(), 0);
+      //   }
+      // }
+      // touchTarget = null;
+      // touchStartX = 0;
+      // touchStartY = 0;
+      // touchStartTime = 0;
     };
 
     const handlePointerUp = (event: PointerEvent) => {
@@ -98,7 +93,7 @@ function DialogContent({ className, children, showCloseButton = true, ...props }
 
       // If touching outside of an input, blur the active element
       const activeElement = document.activeElement;
-      console.log("activeElement", activeElement);
+      // console.log("activeElement", activeElement);
       if (
         activeElement instanceof HTMLElement &&
         (activeElement.tagName === "INPUT" ||

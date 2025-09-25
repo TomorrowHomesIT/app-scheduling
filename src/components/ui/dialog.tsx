@@ -19,13 +19,7 @@ interface DialogProps {
 
 function Dialog({ open = false, onOpenChange, children }: DialogProps) {
   return (
-    <HeadlessDialog
-      open={open}
-      onClose={() => onOpenChange?.(false)}
-      transition
-      className="relative z-50 transition duration-300 ease-out data-[closed]:opacity-0"
-      data-slot="dialog"
-    >
+    <HeadlessDialog open={open} onClose={() => onOpenChange?.(false)} className="relative z-50" data-slot="dialog">
       <DialogBackdrop className="fixed inset-0 bg-black/50" />
       {children}
     </HeadlessDialog>
@@ -46,18 +40,13 @@ function DialogContent({ className, children, showCloseButton = true, ...props }
 
     // Auto-focus first input or element with data-autofocus
     // Use multiple attempts for PWA mode and iPad where timing can be different
-    const focusAttempts = [50, 150, 300];
-    focusAttempts.forEach(delay => {
-      setTimeout(() => {
-        const autoFocusElement = content.querySelector('[data-autofocus], input:not([type="hidden"]), textarea, select');
-        if (autoFocusElement instanceof HTMLElement && document.activeElement !== autoFocusElement) {
-          autoFocusElement.focus();
-          // For iOS/iPad, sometimes we need to trigger additional events
-          autoFocusElement.click();
-          autoFocusElement.focus();
-        }
-      }, delay);
-    });
+    const autoFocusElement = content.querySelector('[data-autofocus], input:not([type="hidden"]), textarea, select');
+    if (autoFocusElement instanceof HTMLElement && document.activeElement !== autoFocusElement) {
+      autoFocusElement.focus();
+      // For iOS/iPad, sometimes we need to trigger additional events
+      autoFocusElement.click();
+      autoFocusElement.focus();
+    }
 
     // Fix for iPad/touch devices - handle touch events properly
     let touchTarget: EventTarget | null = null;
@@ -84,19 +73,6 @@ function DialogContent({ className, children, showCloseButton = true, ...props }
       // If it was a drag (moved more than 10px or took longer than 200ms), don't trigger click
       const isDrag = distance > 10 || touchDuration > 200;
 
-      // If touching outside of an input, blur the active element
-      const activeElement = document.activeElement;
-      if (
-        activeElement instanceof HTMLElement &&
-        (activeElement.tagName === "INPUT" ||
-          activeElement.tagName === "TEXTAREA" ||
-          activeElement.tagName === "SELECT") &&
-        touchTarget &&
-        !activeElement.contains(touchTarget as Node)
-      ) {
-        activeElement.blur();
-      }
-
       // Handle button/link clicks for touch devices (only if not dragging)
       if (!isDrag && touchTarget === e.target && e.target instanceof HTMLElement) {
         const clickable = (e.target as HTMLElement).closest(
@@ -114,12 +90,35 @@ function DialogContent({ className, children, showCloseButton = true, ...props }
       touchStartTime = 0;
     };
 
+    const handlePointerUp = (event: PointerEvent) => {
+      // Check if it's an Apple Pencil (or similar stylus)
+      if (event.pointerType === "pen") {
+        // TODO move here if it works
+      }
+
+      // If touching outside of an input, blur the active element
+      const activeElement = document.activeElement;
+      console.log("activeElement", activeElement);
+      if (
+        activeElement instanceof HTMLElement &&
+        (activeElement.tagName === "INPUT" ||
+          activeElement.tagName === "TEXTAREA" ||
+          activeElement.tagName === "SELECT") &&
+        touchTarget &&
+        !activeElement.contains(touchTarget as Node)
+      ) {
+        activeElement.blur();
+      }
+    };
+
     content.addEventListener("touchstart", handleTouchStart, { passive: true });
     content.addEventListener("touchend", handleTouchEnd, { passive: true });
+    document.addEventListener("pointerup", handlePointerUp);
 
     return () => {
       content.removeEventListener("touchstart", handleTouchStart);
       content.removeEventListener("touchend", handleTouchEnd);
+      document.removeEventListener("pointerup", handlePointerUp);
     };
   }, []);
 
@@ -137,10 +136,10 @@ function DialogContent({ className, children, showCloseButton = true, ...props }
         >
           {showCloseButton && (
             <CloseButton
-              className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+              className="focus:ring-ring absolute top-4 right-4 rounded-xs cursor-pointer"
               data-slot="dialog-close"
             >
-              <XIcon />
+              <XIcon className="size-5" />
               <span className="sr-only">Close</span>
             </CloseButton>
           )}

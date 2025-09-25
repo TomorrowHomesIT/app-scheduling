@@ -52,6 +52,7 @@ export function NotesModal({ value, onChange, open, onOpenChange, taskName }: No
         </DialogHeader>
         <div className="py-4">
           <Textarea
+            data-autofocus
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Add notes for this task..."

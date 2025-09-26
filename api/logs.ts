@@ -9,7 +9,6 @@ interface LogEntry {
   metadata?: Record<string, unknown>;
   timestamp: string;
   url?: string;
-  userAgent?: string;
   sessionId?: string;
   userId?: string;
 }
@@ -26,10 +25,8 @@ interface LogPayload {
 
 interface RequestMeta {
   ip: string;
-  userAgent: string;
   referer?: string;
   timestamp: string;
-  requestId: string;
 }
 
 interface EnrichedLog extends LogEntry {
@@ -95,12 +92,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
     // Parse and validate request body
     const body = req.body as LogPayload;
-    const { logs, meta } = body;
-
-    if (!logs || !Array.isArray(logs)) {
+    if (!body.logs || !Array.isArray(body.logs)) {
       res.status(400).json({ error: "Invalid logs payload" });
       return;
     }
+
+    const { logs, meta } = body;
 
     // Extract request metadata
     const requestMeta: RequestMeta = {
@@ -110,14 +107,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
           : req.headers["x-forwarded-for"]) ||
         req.socket?.remoteAddress ||
         "unknown",
-      userAgent:
-        (Array.isArray(req.headers["user-agent"]) ? req.headers["user-agent"][0] : req.headers["user-agent"]) ||
-        "unknown",
       referer: Array.isArray(req.headers.referer) ? req.headers.referer[0] : req.headers.referer,
       timestamp: new Date().toISOString(),
-      requestId:
-        (Array.isArray(req.headers["x-vercel-id"]) ? req.headers["x-vercel-id"][0] : req.headers["x-vercel-id"]) ||
-        generateId(),
     };
 
     // Process each log entry
@@ -157,13 +148,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       timestamp: new Date().toISOString(),
     });
 
-    res.status(200).json({ success: false });
+    res.status(500).json({ success: false });
   }
-}
-
-// Helper function to generate request ID
-function generateId(): string {
-  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
 
 interface SlackMessage {

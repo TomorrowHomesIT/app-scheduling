@@ -174,6 +174,8 @@ async function sendAlert(logEntry: EnrichedLog, user: User | null): Promise<void
     const slackWebhook = process.env.SLACK_WEBHOOK_URL;
 
     if (slackWebhook) {
+      const userName = user?.user_metadata.full_name || user?.user_metadata.email || user?.email || "Anonymous";
+      console.log("UserName:", userName);
       const slackMessage: SlackMessage = {
         text: "Critical Error Alert",
         blocks: [
@@ -181,7 +183,7 @@ async function sendAlert(logEntry: EnrichedLog, user: User | null): Promise<void
             type: "section",
             text: {
               type: "mrkdwn",
-              text: `*Error:* ${logEntry.message}\n*User:* ${user?.user_metadata.full_name || "Anonymous"}\n*URL:* ${logEntry.url}\n*Time:* ${logEntry.timestamp}`,
+              text: `*Error:* ${logEntry.message}\n*User:* ${userName}\n*URL:* ${logEntry.url}\n*Time:* ${logEntry.timestamp}`,
             },
           },
         ],

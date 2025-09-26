@@ -3,11 +3,18 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "functions": {
+        "api/logs.ts": {
+          "maxDuration": 10
+        }
+      }
+    },
+    {
       "source": "/sw.js",
       "destination": "/sw.js"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
   ]

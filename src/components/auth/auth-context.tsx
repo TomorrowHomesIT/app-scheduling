@@ -39,6 +39,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsAuthLoading(false);
     setUser(null);
     setAccessToken(null);
+    logger.setAccessToken("");
+    logger.setUserId("");
+
     // Database
     await offlineQueue.clearQueue();
     await jobsDB.clearAll();
@@ -55,6 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (session?.access_token) {
       await sendAuthToServiceWorker(session.access_token);
+      logger.setAccessToken(session.access_token);
     }
 
     return session?.access_token;
@@ -75,6 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         name: data?.claims?.full_name || data?.claims?.name,
         avatar_url: data?.claims?.avatar_url,
       });
+      logger.setUserId(data?.claims?.sub || "unknown");
 
       await setAccessTokenFromSession();
       swVisibilityNotifier.initialize();

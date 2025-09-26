@@ -1,14 +1,12 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "functions": {
+    "api/logs.ts": {
+      "maxDuration": 10
+    }
+  },
   "rewrites": [
-    {
-      "functions": {
-        "api/logs.ts": {
-          "maxDuration": 10
-        }
-      }
-    },
     {
       "source": "/sw.js",
       "destination": "/sw.js"

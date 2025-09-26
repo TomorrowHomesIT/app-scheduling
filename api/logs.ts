@@ -128,8 +128,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
         processedAt: new Date().toISOString(),
       };
 
-      console.log("user:", user);
-
       // Log out to Vercel via console.log
       if (logEntry.level === "error") {
         // Alert errors to Slack
@@ -176,7 +174,7 @@ async function sendAlert(logEntry: EnrichedLog, user: User | null): Promise<void
     const slackWebhook = process.env.SLACK_WEBHOOK_URL;
 
     if (slackWebhook) {
-      const userName = user?.user_metadata.full_name || user?.user_metadata.email || user?.email || "Anonymous";
+      const userName = user?.user_metadata.full_name || user?.user_metadata.email || user?.email || logEntry.userId || "Anonymous";
       const slackMessage: SlackMessage = {
         text: "Critical Error Alert",
         blocks: [

@@ -6,6 +6,7 @@ import { jobsDB } from "@/lib/jobs-db";
 import api from "@/lib/api/api";
 import offlineQueue from "@/lib/offline-queue";
 import { useAuth } from "@/components/auth/auth-context";
+import logger from "@/lib/logger";
 
 interface JobStore {
   currentJob: IJob | null;
@@ -24,7 +25,7 @@ const fetchJobByIdFromApi = async (id: number): Promise<IJob | null> => {
     const job: IJob = response.data;
     return job;
   } catch (error) {
-    console.error("Error fetching job:", error);
+    logger.error("Error fetching job:", { id, error: JSON.stringify(error) });
     throw error;
   }
 };
@@ -39,7 +40,7 @@ const useJobStore = create<JobStore>((set, get) => ({
       const job: IJob[] = response.data;
       return job;
     } catch (error) {
-      console.error("Error fetching user jobs:", error);
+      logger.error("Error fetching user jobs:", { error: JSON.stringify(error) });
       throw error;
     }
   },
@@ -81,7 +82,7 @@ const useJobStore = create<JobStore>((set, get) => ({
         set({ currentJob: jobWithSyncStatus });
       }
     } catch (error) {
-      console.error("Failed to refresh job:", error);
+      logger.error("Failed to refresh job:", { jobId, error: JSON.stringify(error) });
       throw error;
     }
   },
@@ -94,7 +95,7 @@ const useJobStore = create<JobStore>((set, get) => ({
       const authToken = getAccessToken() ?? undefined;
 
       if (queuedRequests.length > 0) {
-        console.log(`Processing ${queuedRequests.length} queued requests for job ${jobId}`);
+        logger.log(`Processing ${queuedRequests.length} queued requests for job ${jobId}`);
         // Process each queued request - this will remove the request from the queue if successful
         for (const request of queuedRequests) {
           await offlineQueue.processRequest(request, authToken);
@@ -106,7 +107,7 @@ const useJobStore = create<JobStore>((set, get) => ({
       // Always fetch fresh data from API after sync attempt
       await get().refreshJob(jobId);
     } catch (error) {
-      console.error("Failed to force sync job:", error);
+      logger.error("Failed to force sync job:", { jobId, error: JSON.stringify(error) });
       throw error;
     }
   },

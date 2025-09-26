@@ -9,6 +9,7 @@ import useTaskStore from "@/store/task-store";
 import useLoadingStore from "@/store/loading-store";
 import { Spinner } from "@/components/ui/spinner";
 import useJobSyncStore from "@/store/job/job-sync-store";
+import logger from "@/lib/logger";
 
 /** Function is required so that useSidebar is used within the context */
 function AppLayoutContent({ children }: { children: ReactNode }) {
@@ -29,9 +30,9 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
       try {
         console.log("Bootstrapping core data...");
         await Promise.all([loadOwners(), syncUserJobs(), loadSuppliers(), loadTaskStages()]);
-        console.log("Core data bootstrapped successfully");
+        logger.log("App bootstrapped successfully");
       } catch (error) {
-        console.error("Failed to bootstrap core data:", error);
+        logger.error("App bootstrap failed", { Error: JSON.stringify(error) });
       } finally {
         setLoading(false);
       }

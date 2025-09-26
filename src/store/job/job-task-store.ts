@@ -8,6 +8,7 @@ import { isRetryableError } from "@/lib/api/error";
 import useJobStore from "./job-store";
 import useSupplierStore from "@/store/supplier-store";
 import api from "@/lib/api/api";
+import logger from "@/lib/logger";
 
 interface JobTaskStore {
   updateTask: (taskId: number, updates: Partial<IJobTask>) => Promise<void>;
@@ -24,7 +25,7 @@ const updateTaskApi = async (jobId: number, taskId: number, updates: Partial<IJo
       return null; // Request was queued for offline processing
     }
 
-    console.error("Error updating task:", error);
+    logger.error("Error updating task", { jobId, taskId, updates, error: JSON.stringify(error) });
     throw error;
   }
 };
@@ -42,7 +43,7 @@ const sendEmailApi = async (
       return null; // Request was queued for offline processing
     }
 
-    console.error("Error sending email:", error);
+    logger.error("Error sending email", { jobId, taskId, emailRequest, error: JSON.stringify(error) });
     throw error;
   }
 };

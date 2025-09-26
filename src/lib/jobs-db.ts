@@ -1,5 +1,6 @@
 import { DB_NAME, DB_VERSION, JOBS_STORE_NAME, type StoredJob } from "@/models/db.model";
 import type { IJob } from "@/models/job.model";
+import logger from "./logger";
 
 class JobsDB {
   private db: IDBDatabase | null = null;
@@ -17,7 +18,7 @@ class JobsDB {
       const request = indexedDB.open(DB_NAME, DB_VERSION);
 
       request.onerror = () => {
-        console.error("Failed to open IndexedDB:", request.error);
+        logger.error("Failed to open IndexedDB", { error: JSON.stringify(request.error) });
         reject(request.error);
       };
 
@@ -41,7 +42,7 @@ class JobsDB {
 
     return new Promise((resolve, reject) => {
       if (!this.db) {
-        console.log("Database still not ready after initialization");
+        logger.error("Database still not ready after initialization");
         reject(new Error("Database not initialized"));
         return;
       }
@@ -70,7 +71,11 @@ class JobsDB {
           resolve();
         };
         putRequest.onerror = () => {
-          console.error("Failed to save job to IndexedDB:", putRequest.error);
+          const jobForLogging = { ...job, tasks: [] }; // send less data to Mixpanel
+          logger.error("Failed to save job to IndexedDB", {
+            job: jobForLogging,
+            error: JSON.stringify(putRequest.error),
+          });
           reject(putRequest.error);
         };
       };

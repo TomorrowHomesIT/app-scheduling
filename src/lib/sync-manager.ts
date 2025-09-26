@@ -12,6 +12,7 @@ import { jobsDB } from "@/lib/jobs-db";
 import { offlineQueue } from "@/lib/offline-queue";
 import type { IJob } from "@/models";
 import useOwnersStore from "@/store/owners-store";
+import logger from "./logger";
 
 interface SyncConfig {
   jobSyncIntervalMs: number;
@@ -218,7 +219,7 @@ class SyncManager {
       this.setStoredLastSync(Date.now());
       console.log("User jobs sync completed successfully");
     } catch (error) {
-      console.error("User jobs sync failed:", error);
+      logger.error("User jobs sync failed:", { error: JSON.stringify(error) });
     } finally {
       this.state.isSyncing = false;
       this.notifySyncCallbacks(false);
@@ -264,12 +265,14 @@ class SyncManager {
       }
 
       if (conflictedJobs.length > 0) {
-        console.log(`Sync completed with conflicts. ${conflictedJobs.length} jobs preserved locally:`, conflictedJobs);
+        logger.warn(`Sync completed with conflicts. ${conflictedJobs.length} jobs preserved locally:`, {
+          conflictedJobs,
+        });
       } else {
         console.log(`Job-level sync completed successfully. Updated ${safeJobsToUpdate.length} jobs.`);
       }
     } catch (error) {
-      console.error("Failed to fetch jobs for sync:", error);
+      logger.error("Failed to fetch jobs for sync:", { error: JSON.stringify(error) });
       throw error;
     }
   }
@@ -295,7 +298,7 @@ class SyncManager {
       this.setStoredLastSupplierSync(Date.now());
       console.log("Supplier sync completed successfully");
     } catch (error) {
-      console.error("Supplier sync failed:", error);
+      logger.error("Supplier sync failed:", { error: JSON.stringify(error) });
     } finally {
       this.state.isSupplierSyncing = false;
     }

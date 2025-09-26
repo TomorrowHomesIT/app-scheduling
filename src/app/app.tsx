@@ -2,6 +2,7 @@ import { createBrowserRouter, Outlet, RouterProvider } from "react-router";
 import { AppLayout } from "./layout";
 import { ToastContainer } from "@/components/toast-container";
 import { StatusIndicator } from "@/components/status-indicator";
+import logger from "@/lib/logger";
 
 // Import all your pages (hard loaded, not lazy)
 import HomePage from "./page";
@@ -67,6 +68,9 @@ const router = createBrowserRouter([
 ]);
 
 function Root() {
+  /** Initilize Mixpanel */
+  logger.init();
+
   return (
     <div className="flex flex-col basd-h-dvh">
       <StatusIndicator />

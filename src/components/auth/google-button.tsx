@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "../ui/button";
 import { createClient } from "@/lib/supabase/client";
+import logger from "@/lib/logger";
 
 export function GoogleButton({ isSignUp }: { isSignUp: boolean }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -19,7 +20,7 @@ export function GoogleButton({ isSignUp }: { isSignUp: boolean }) {
     });
 
     if (error) {
-      console.error("Error signing in with Google:", error);
+      logger.error("Error signing in with Google", { error: JSON.stringify(error) });
       setIsLoading(false);
     }
   };

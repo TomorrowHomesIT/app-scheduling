@@ -4,6 +4,7 @@ import { toast } from "@/store/toast-store";
 import useJobStore from "@/store/job/job-store";
 import { useState, useEffect } from "react";
 import { offlineQueue } from "@/lib/offline-queue";
+import logger from "@/lib/logger";
 
 interface JobRefreshButtonProps {
   jobId: number;
@@ -54,7 +55,7 @@ export function JobRefreshButton({ jobId }: JobRefreshButtonProps) {
         });
       }
     } catch (error) {
-      console.error("Refresh failed:", error);
+      logger.error("Job refresh failed", { jobId, error: JSON.stringify(error) });
     } finally {
       setIsLoading(false);
     }

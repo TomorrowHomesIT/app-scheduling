@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { toast } from "./toast-store";
+import logger from "@/lib/logger";
 
 interface AppStore {
   isRestarting: boolean;
@@ -38,7 +39,7 @@ const useAppStore = create<AppStore>((set) => ({
 
       setTimeout(() => window.location.reload(), 500);
     } catch (error) {
-      console.error("Error during full refresh:", error);
+      logger.error("Error during full refresh:", { error: JSON.stringify(error) });
       toast.error("Error during full refresh");
     } finally {
       set({ isRestarting: false });

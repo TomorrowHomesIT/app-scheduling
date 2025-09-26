@@ -23,7 +23,6 @@ const useJobSyncStore = create<JobSyncStore>((set, get) => {
   // Subscribe to sync manager changes and update store
   // Update current job from the background sync change
   syncManager.onSyncStatusChange(() => {
-    console.log("Sync status changed in job sync store");
     const { currentJob, loadJob } = useJobStore.getState();
     if (currentJob) {
       loadJob(currentJob.id);

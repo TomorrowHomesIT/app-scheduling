@@ -1,4 +1,5 @@
 import { DB_NAME, DB_VERSION, JOBS_STORE_NAME, QUEUE_STORE_NAME, type QueuedRequest } from "@/models/db.model";
+import logger from "./logger";
 
 class OfflineQueue {
   private db: IDBDatabase | null = null;
@@ -15,7 +16,7 @@ class OfflineQueue {
       const request = indexedDB.open(DB_NAME, DB_VERSION);
 
       request.onerror = () => {
-        console.error("Failed to open IndexedDB:", request.error);
+        logger.error("Failed to open IndexedDB", { error: JSON.stringify(request.error) });
         reject(request.error);
       };
 
@@ -69,7 +70,7 @@ class OfflineQueue {
       };
 
       getAllRequest.onerror = () => {
-        console.error("Failed to get queue from IndexedDB:", getAllRequest.error);
+        logger.error("Failed to get queue from IndexedDB:", { error: JSON.stringify(getAllRequest.error) });
         reject(getAllRequest.error);
       };
     });
@@ -82,7 +83,7 @@ class OfflineQueue {
       const queue = await this.getQueue();
       return queue.length;
     } catch (error) {
-      console.error("Failed to get queue status:", error);
+      logger.error("Failed to get queue status:", { error: JSON.stringify(error) });
       return 0;
     }
   }
@@ -99,7 +100,7 @@ class OfflineQueue {
         return jobTaskPattern.test(req.url);
       });
     } catch (error) {
-      console.error("Failed to get job queue items:", error);
+      logger.error("Failed to get job queue items:", { jobId, error: JSON.stringify(error) });
       return [];
     }
   }
@@ -130,7 +131,10 @@ class OfflineQueue {
       };
 
       deleteRequest.onerror = () => {
-        console.error("Failed to remove request from queue:", deleteRequest.error);
+        logger.error("Failed to remove request from queue:", {
+          queueId: id,
+          error: JSON.stringify(deleteRequest.error),
+        });
         reject(deleteRequest.error);
       };
     });
@@ -192,7 +196,11 @@ class OfflineQueue {
         return false;
       }
     } catch (error) {
-      console.error("Failed to process request:", error);
+      logger.error("Failed to process queued request:", {
+        error: JSON.stringify(error),
+        requestUrl: request.url,
+        body: request.body,
+      });
       return false;
     }
   }

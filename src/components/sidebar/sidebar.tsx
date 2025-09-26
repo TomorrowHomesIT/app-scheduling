@@ -48,7 +48,7 @@ function SidebarContentInner({ onJobSelect }: { onJobSelect?: () => void }) {
 
     if (ownersToExpand.size > 0) {
       // Merge with existing expanded owners to preserve currently open ones
-      setExpandedOwners(prev => new Set([...prev, ...ownersToExpand]));
+      setExpandedOwners((prev) => new Set([...prev, ...ownersToExpand]));
     }
   }, [owners, currentUserOwner, pathname, id]);
 

@@ -7,7 +7,8 @@
     "dev": "vite --port 3000",
     "build": "vite build",
     "start": "vite preview",
-    "lint": "npx tsc --noEmit && biome check",
+    "typecheck": "npx tsc --noEmit",
+    "lint": "npm run typecheck && biome check",
     "format": "biome format --write"
   },
   "dependencies": {
@@ -32,6 +33,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.542.0",
+    "mixpanel-browser": "^2.70.0",
     "react": "19.1.0",
     "react-day-picker": "^9.9.0",
     "react-dom": "19.1.0",

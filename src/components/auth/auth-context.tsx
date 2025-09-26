@@ -4,6 +4,7 @@ import offlineQueue from "@/lib/offline-queue";
 import { jobsDB } from "@/lib/jobs-db";
 import { clearServiceWorkerAuth, sendAuthToServiceWorker } from "@/lib/service-worker-auth";
 import { swVisibilityNotifier } from "@/lib/sw-visibility-notifier";
+import logger from "@/lib/logger";
 
 interface AuthContextType {
   isAuthLoading: boolean;
@@ -78,7 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await setAccessTokenFromSession();
       swVisibilityNotifier.initialize();
     } catch (error) {
-      console.error("Error during login handling:", error);
+      logger.error("Error during login handling", { error: JSON.stringify(error) });
       await handleLogout();
       await supabase.auth.signOut();
     }

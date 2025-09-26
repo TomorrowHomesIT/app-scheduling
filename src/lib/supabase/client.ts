@@ -21,7 +21,7 @@ export function createClient() {
 /**
  * Check if the user is currently authenticated
  * This function can be called from outside React components
- * 
+ *
  * Ideally we shouldn't use session as it just checks LS but we want to avoid just making a request to the API to check if the user is authenticated
  * When outside of the react scope
  */

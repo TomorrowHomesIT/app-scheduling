@@ -169,16 +169,24 @@ async function sendAlert(logEntry: EnrichedLog, user: User | null): Promise<void
     return;
   }
 
+  console.log("user:", user);
+
   try {
     // Example: Send to Slack webhook
     const slackWebhook = process.env.SLACK_WEBHOOK_URL;
 
     if (slackWebhook) {
       const userName = user?.user_metadata.full_name || user?.user_metadata.email || user?.email || "Anonymous";
-      console.log("UserName:", userName);
       const slackMessage: SlackMessage = {
         text: "Critical Error Alert",
         blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: `*BASD Onsite Alert*`,
+            },
+          },
           {
             type: "section",
             text: {

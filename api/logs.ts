@@ -175,13 +175,13 @@ async function sendAlert(logEntry: EnrichedLog, user: User | null): Promise<void
 
     if (slackWebhook) {
       const slackMessage: SlackMessage = {
-        text: `🚨 Critical Error Alert`,
+        text: "Critical Error Alert",
         blocks: [
           {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: `*Error:* ${logEntry.message}\n*User:* ${user?.email || "Anonymous"}\n*URL:* ${logEntry.url}\n*Time:* ${logEntry.timestamp}`,
+              text: `*Error:* ${logEntry.message}\n*User:* ${user?.user_metadata.full_name || "Anonymous"}\n*URL:* ${logEntry.url}\n*Time:* ${logEntry.timestamp}`,
             },
           },
         ],

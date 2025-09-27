@@ -158,7 +158,10 @@ class SyncManager {
       return;
     }
 
-    logger.log(`Triggering sync due to ${reason} (${Math.round(timeSinceLastSync / 1000)}s since last sync)`);
+    logger.log(`Triggering sync due to ${reason} (${Math.round(timeSinceLastSync / 1000)}s since last sync)`, {
+      isVisible: this.state.isVisible,
+      isOnline: this.state.isOnline,
+    });
     await this.performUserJobsSync();
   }
 

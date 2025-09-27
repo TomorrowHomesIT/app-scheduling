@@ -70,7 +70,7 @@ class OfflineQueue {
       };
 
       getAllRequest.onerror = () => {
-        logger.error("Failed to get queue from IndexedDB:", { error: JSON.stringify(getAllRequest.error) });
+        logger.error("Failed to get queue from IndexedDB", { error: JSON.stringify(getAllRequest.error) });
         reject(getAllRequest.error);
       };
     });
@@ -83,7 +83,7 @@ class OfflineQueue {
       const queue = await this.getQueue();
       return queue.length;
     } catch (error) {
-      logger.error("Failed to get queue status:", { error: JSON.stringify(error) });
+      logger.error("Failed to get queue count from DB", { error: JSON.stringify(error) });
       return 0;
     }
   }
@@ -100,7 +100,7 @@ class OfflineQueue {
         return jobTaskPattern.test(req.url);
       });
     } catch (error) {
-      logger.error("Failed to get job queue items:", { jobId, error: JSON.stringify(error) });
+      logger.error("Failed to getQueuedRequestsForJob", { jobId, error: JSON.stringify(error) });
       return [];
     }
   }
@@ -131,7 +131,7 @@ class OfflineQueue {
       };
 
       deleteRequest.onerror = () => {
-        logger.error("Failed to remove request from queue:", {
+        logger.error("Failed to removeFromQueue", {
           queueId: id,
           error: JSON.stringify(deleteRequest.error),
         });
@@ -160,7 +160,7 @@ class OfflineQueue {
       };
 
       clearRequest.onerror = () => {
-        console.error("Failed to clear queue:", clearRequest.error);
+        console.error("Failed to clear queue", clearRequest.error);
         reject(clearRequest.error);
       };
     });
@@ -196,7 +196,7 @@ class OfflineQueue {
         return false;
       }
     } catch (error) {
-      logger.error("Failed to process queued request:", {
+      logger.error("Failed to process queued request", {
         error: JSON.stringify(error),
         requestUrl: request.url,
         body: request.body,

@@ -4,7 +4,7 @@ import type { IJobTask } from "@/models/job.model";
 import type { EJobTaskStatus } from "@/models/job.model";
 import type { IScheduleEmailRequest } from "@/models/email";
 import { toast } from "@/store/toast-store";
-import { isRetryableError } from "@/lib/api/error";
+import { getApiErrorMessage, isRetryableError } from "@/lib/api/error";
 import useJobStore from "./job-store";
 import useSupplierStore from "@/store/supplier-store";
 import api from "@/lib/api/api";
@@ -25,7 +25,7 @@ const updateTaskApi = async (jobId: number, taskId: number, updates: Partial<IJo
       return null; // Request was queued for offline processing
     }
 
-    logger.error("Error updating task", { jobId, taskId, updates, error: JSON.stringify(error) });
+    logger.error("Error in updateTaskApi", { jobId, taskId, updates, error: await getApiErrorMessage(error) });
     throw error;
   }
 };
@@ -43,7 +43,7 @@ const sendEmailApi = async (
       return null; // Request was queued for offline processing
     }
 
-    logger.error("Error sending email", { jobId, taskId, emailRequest, error: JSON.stringify(error) });
+    logger.error("Error in sendEmailApi", { jobId, taskId, emailRequest, error: await getApiErrorMessage(error) });
     throw error;
   }
 };
@@ -163,7 +163,7 @@ const useJobTaskStore = create<JobTaskStore>(() => ({
       });
     } catch (error) {
       // Error is already handled by toast
-      console.error("Failed to send email:", error);
+      logger.error("Error sending email in sendTaskEmail", { error: JSON.stringify(error) });
       throw error;
     }
   },

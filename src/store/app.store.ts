@@ -39,7 +39,7 @@ const useAppStore = create<AppStore>((set) => ({
 
       setTimeout(() => window.location.reload(), 500);
     } catch (error) {
-      logger.error("Error during full refresh:", { error: JSON.stringify(error) });
+      logger.error("Error during full refresh in hardRestartApp", { error: JSON.stringify(error) });
       toast.error("Error during full refresh");
     } finally {
       set({ isRestarting: false });

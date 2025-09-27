@@ -54,8 +54,6 @@ export function JobRefreshButton({ jobId }: JobRefreshButtonProps) {
           error: "Failed to refresh job",
         });
       }
-    } catch (error) {
-      logger.error("Job refresh failed", { jobId, error: JSON.stringify(error) });
     } finally {
       setIsLoading(false);
     }

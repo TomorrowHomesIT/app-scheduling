@@ -1,3 +1,5 @@
+import type { IUserProfile } from "@/models/auth.model";
+
 // biome-ignore lint/suspicious/noExplicitAny: We want to be able to send any data to logs
 type ILogBody = Record<string, any>;
 
@@ -10,6 +12,7 @@ interface LogEntry {
   userAgent?: string;
   sessionId?: string;
   userId?: string;
+  userName?: string;
 }
 
 interface LoggerConfig {
@@ -23,7 +26,7 @@ class Logger {
   private isOnline: boolean = navigator.onLine;
   private flushTimer?: NodeJS.Timeout;
   private sessionId: string = this.generateSessionId();
-  private userId?: string;
+  private user?: IUserProfile | null;
   private accessToken: string = "";
 
   // Configuration
@@ -51,9 +54,8 @@ class Logger {
     this.accessToken = accessToken;
   }
 
-  // Set user ID for better tracking
-  setUserId(userId: string) {
-    this.userId = userId;
+  setUser(user: IUserProfile | null) {
+    this.user = user;
   }
 
   log(event: string, body: ILogBody = {}) {
@@ -116,7 +118,8 @@ class Logger {
       url: window.location.href,
       userAgent: navigator.userAgent,
       sessionId: this.sessionId,
-      userId: this.userId,
+      userId: this.user?.id,
+      userName: this.user?.name,
     };
 
     this.logs.push(logEntry);

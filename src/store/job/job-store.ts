@@ -25,7 +25,7 @@ const fetchJobByIdFromApi = async (id: number): Promise<IJob | null> => {
     const job: IJob = response.data;
     return job;
   } catch (error) {
-    logger.error("Error fetching job:", { id, error: JSON.stringify(error) });
+    logger.error("Error fetchJobByIdFromApi", { id, error: await getApiErrorMessage(error) });
     throw error;
   }
 };
@@ -40,7 +40,7 @@ const useJobStore = create<JobStore>((set, get) => ({
       const job: IJob[] = response.data;
       return job;
     } catch (error) {
-      logger.error("Error fetching user jobs:", { error: JSON.stringify(error) });
+      logger.error("Error fetchUserJobsFromApi", { error: await getApiErrorMessage(error) });
       throw error;
     }
   },
@@ -82,7 +82,7 @@ const useJobStore = create<JobStore>((set, get) => ({
         set({ currentJob: jobWithSyncStatus });
       }
     } catch (error) {
-      logger.error("Failed to refresh job:", { jobId, error: JSON.stringify(error) });
+      logger.error("Failed to refreshJob", { jobId, error: await getApiErrorMessage(error) });
       throw error;
     }
   },
@@ -107,7 +107,7 @@ const useJobStore = create<JobStore>((set, get) => ({
       // Always fetch fresh data from API after sync attempt
       await get().refreshJob(jobId);
     } catch (error) {
-      logger.error("Failed to force sync job:", { jobId, error: JSON.stringify(error) });
+      logger.error("Failed to syncAndRefreshJob", { jobId, error: await getApiErrorMessage(error) });
       throw error;
     }
   },

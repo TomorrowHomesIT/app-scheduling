@@ -13,6 +13,7 @@ import { offlineQueue } from "@/lib/offline-queue";
 import type { IJob } from "@/models";
 import useOwnersStore from "@/store/owners-store";
 import logger from "./logger";
+import { getApiErrorMessage } from "./api/error";
 
 interface SyncConfig {
   jobSyncIntervalMs: number;
@@ -62,7 +63,7 @@ class SyncManager {
       const stored = localStorage.getItem(this.config.storageKey);
       return stored ? parseInt(stored, 10) : 0;
     } catch (error) {
-      console.warn("Failed to read sync state from localStorage:", error);
+      logger.warn("Failed to read sync state from localStorage", { error: JSON.stringify(error) });
       return 0;
     }
   }
@@ -72,7 +73,7 @@ class SyncManager {
       const stored = localStorage.getItem(`${this.config.storageKey}-suppliers`);
       return stored ? parseInt(stored, 10) : 0;
     } catch (error) {
-      console.warn("Failed to read supplier sync state from localStorage:", error);
+      logger.warn("Failed to read supplier sync state from localStorage", { error: JSON.stringify(error) });
       return 0;
     }
   }
@@ -82,7 +83,7 @@ class SyncManager {
       localStorage.setItem(this.config.storageKey, timestamp.toString());
       this.state.lastSync = timestamp;
     } catch (error) {
-      console.warn("Failed to write sync state to localStorage:", error);
+      logger.warn("Failed to write sync state to localStorage", { error: JSON.stringify(error) });
     }
   }
 
@@ -91,7 +92,7 @@ class SyncManager {
       localStorage.setItem(`${this.config.storageKey}-suppliers`, timestamp.toString());
       this.state.lastSupplierSync = timestamp;
     } catch (error) {
-      console.warn("Failed to write supplier sync state to localStorage:", error);
+      logger.warn("Failed to write supplier sync state to localStorage", { error: JSON.stringify(error) });
     }
   }
 
@@ -157,7 +158,7 @@ class SyncManager {
       return;
     }
 
-    console.log(`Triggering sync due to ${reason} (${Math.round(timeSinceLastSync / 1000)}s since last sync)`);
+    logger.log(`Triggering sync due to ${reason} (${Math.round(timeSinceLastSync / 1000)}s since last sync)`);
     await this.performUserJobsSync();
   }
 
@@ -185,7 +186,7 @@ class SyncManager {
       return;
     }
 
-    console.log(
+    logger.log(
       `Triggering supplier sync due to ${reason} (${Math.round(timeSinceLastSupplierSync / 1000)}s since last sync)`,
     );
     await this.performSupplierSync();
@@ -219,7 +220,7 @@ class SyncManager {
       this.setStoredLastSync(Date.now());
       console.log("User jobs sync completed successfully");
     } catch (error) {
-      logger.error("User jobs sync failed:", { error: JSON.stringify(error) });
+      logger.error("performUserJobsSync error", { error: await getApiErrorMessage(error) });
     } finally {
       this.state.isSyncing = false;
       this.notifySyncCallbacks(false);
@@ -272,7 +273,7 @@ class SyncManager {
         console.log(`Job-level sync completed successfully. Updated ${safeJobsToUpdate.length} jobs.`);
       }
     } catch (error) {
-      logger.error("Failed to fetch jobs for sync:", { error: JSON.stringify(error) });
+      logger.error("performJobLevelSync failed", { error: await getApiErrorMessage(error) });
       throw error;
     }
   }
@@ -298,7 +299,7 @@ class SyncManager {
       this.setStoredLastSupplierSync(Date.now());
       console.log("Supplier sync completed successfully");
     } catch (error) {
-      logger.error("Supplier sync failed:", { error: JSON.stringify(error) });
+      logger.error("performSupplierSync failed", { error: await getApiErrorMessage(error) });
     } finally {
       this.state.isSupplierSyncing = false;
     }

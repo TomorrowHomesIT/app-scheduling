@@ -5,6 +5,7 @@ import { jobsDB } from "@/lib/jobs-db";
 import { clearServiceWorkerAuth, sendAuthToServiceWorker } from "@/lib/service-worker-auth";
 import { swVisibilityNotifier } from "@/lib/sw-visibility-notifier";
 import logger from "@/lib/logger";
+import type { IUserProfile } from "@/models/auth.model";
 
 interface AuthContextType {
   isAuthLoading: boolean;
@@ -13,13 +14,6 @@ interface AuthContextType {
   accessToken: string | null;
   logout: () => Promise<void>;
   getAccessToken: () => string | null;
-}
-
-interface IUserProfile {
-  id?: string;
-  email?: string;
-  name?: string;
-  avatar_url?: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -40,7 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setAccessToken(null);
     logger.setAccessToken("");
-    logger.setUserId("");
+    logger.setUser(null);
 
     // Database
     await offlineQueue.clearQueue();
@@ -73,13 +67,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsAuthLoading(false);
 
       const { data } = await supabase.auth.getClaims();
-      setUser({
+      const user: IUserProfile = {
         id: data?.claims?.sub,
         email: data?.claims?.email,
         name: data?.claims?.full_name || data?.claims?.name,
         avatar_url: data?.claims?.avatar_url,
-      });
-      logger.setUserId(data?.claims?.sub || "unknown");
+      };
+      setUser(user);
+      logger.setUser(user);
 
       await setAccessTokenFromSession();
       swVisibilityNotifier.initialize();

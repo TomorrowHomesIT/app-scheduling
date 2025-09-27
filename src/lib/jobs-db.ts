@@ -160,7 +160,7 @@ class JobsDB {
         resolve();
       };
       clearRequest.onerror = () => {
-        console.error("Failed to clear jobs:", clearRequest.error);
+        console.error("Failed to clear jobs", clearRequest.error);
         reject(clearRequest.error);
       };
     });

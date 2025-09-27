@@ -11,7 +11,7 @@ export function useOfflineQueue() {
         const count = await offlineQueue.getQueueCount();
         setQueueCount(count);
       } catch (error) {
-        console.error("Failed to get initial queue count:", error);
+        console.error("Failed to get initial queue count", error);
         setQueueCount(0);
       }
     };
@@ -24,7 +24,7 @@ export function useOfflineQueue() {
         const count = await offlineQueue.getQueueCount();
         setQueueCount(count);
       } catch (error) {
-        console.error("Failed to poll queue count:", error);
+        console.error("Failed to poll queue count", error);
       }
     }, 5000);
 

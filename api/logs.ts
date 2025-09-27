@@ -1,7 +1,6 @@
 // api/logs.ts - Vercel Serverless Function for Vite/React Router SPA
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createClient } from "@supabase/supabase-js";
-import type { User } from "@supabase/supabase-js";
 
 interface LogEntry {
   level: string;
@@ -11,6 +10,7 @@ interface LogEntry {
   url?: string;
   sessionId?: string;
   userId?: string;
+  userName?: string;
 }
 
 interface LogPayload {
@@ -66,7 +66,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   try {
     // Extract and validate auth token
     const authHeader = req.headers.authorization || req.headers.Authorization;
-    let user: User | null = null;
 
     if (authHeader && typeof authHeader === "string" && authHeader.startsWith("Bearer ")) {
       const token = authHeader.substring(7);
@@ -82,8 +81,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
           res.status(401).json({ error: "Unauthorized - Invalid token" });
           return;
         }
-
-        user = authUser;
       } catch {
         res.status(401).json({ error: "Unauthorized - Token validation failed" });
         return;
@@ -131,12 +128,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       // Log out to Vercel via console.log
       if (logEntry.level === "error") {
         // Alert errors to Slack
-        await sendAlert(enrichedLog, user);
-        console.error(JSON.stringify(enrichedLog));
+        await sendAlert(enrichedLog);
+        console.error(enrichedLog.message, JSON.stringify(enrichedLog));
       } else if (logEntry.level === "warn") {
-        console.warn(JSON.stringify(enrichedLog));
+        console.warn(enrichedLog.message, JSON.stringify(enrichedLog));
       } else {
-        console.log(JSON.stringify(enrichedLog));
+        console.log(enrichedLog.message, JSON.stringify(enrichedLog));
       }
     }
 
@@ -164,7 +161,7 @@ interface SlackMessage {
 }
 
 // Optional: Send alerts for critical errors
-async function sendAlert(logEntry: EnrichedLog, user: User | null): Promise<void> {
+async function sendAlert(logEntry: EnrichedLog): Promise<void> {
   if (!process.env.SLACK_WEBHOOK_URL) {
     return;
   }
@@ -174,22 +171,27 @@ async function sendAlert(logEntry: EnrichedLog, user: User | null): Promise<void
     const slackWebhook = process.env.SLACK_WEBHOOK_URL;
 
     if (slackWebhook) {
-      const userName = user?.user_metadata.full_name || user?.user_metadata.email || user?.email || logEntry.userId || "Anonymous";
+      const userName = logEntry?.userName || logEntry.userId || "Unknown";
       const slackMessage: SlackMessage = {
-        text: "Critical Error Alert",
+        text: "BASD Onsite Alert",
         blocks: [
           {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: `*BASD Onsite Alert*`,
+              text: `*app-basd-onsite*`,
             },
           },
           {
             type: "section",
             text: {
               type: "mrkdwn",
-              text: `*Error:* ${logEntry.message}\n*User:* ${userName}\n*URL:* ${logEntry.url}\n*Time:* ${logEntry.timestamp}`,
+              text: `
+                *Error:* ${logEntry.message}\n
+                *User:* ${userName}\n
+                *URL:* ${logEntry.url}\n
+                *Time:* ${logEntry.timestamp}
+              `,
             },
           },
         ],
